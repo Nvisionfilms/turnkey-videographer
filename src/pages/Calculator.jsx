@@ -802,8 +802,8 @@ export default function Calculator() {
                     }}
                   />
                   <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
-                    <span>Include Audio Pre & Post Production</span>
-                    <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}> (Flat rate: ${dayRates.find(r => r.role === "Audio Pre & Post")?.full_day_rate || 0})</span>
+                    <span>Include Audio Pre- and Post-Production</span>
+                    <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>(Flat fee: ${dayRates.find(r => r.role === "Audio Pre & Post")?.full_day_rate || 0})</span>
                   </Label>
                 </div>
               </CardContent>
