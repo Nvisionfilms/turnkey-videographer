@@ -792,7 +792,7 @@ export default function Calculator() {
 
             {/* Audio Pre & Post */}
             <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}>
-              <CardContent className="p-6">
+              <CardContent className="py-4 px-6">
                 <div className="flex items-center space-x-3">
                   <Checkbox
                     checked={formData.include_audio_pre_post}
