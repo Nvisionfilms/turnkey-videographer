@@ -1,6 +1,6 @@
 // LOCAL DATA MANAGER
 // Provides CRUD operations for localStorage-backed data
-// Mimics the base44.entities API for easier refactoring
+// Mimics the nvision.entities API for easier refactoring
 
 import { STORAGE_KEYS } from './defaults';
 

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,9 @@ export default function Calculator() {
   const [gearCosts, setGearCosts] = useState(DEFAULT_GEAR_COSTS);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Ref for debounced save timeout
+  const saveTimeoutRef = React.useRef(null);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -64,8 +67,8 @@ export default function Calculator() {
     notes_for_quote: ""
   });
 
-  // Load data from localStorage on mount
-  useEffect(() => {
+  // Helper function to load data from localStorage
+  const loadAllData = useCallback((includeFormData = true) => {
     try {
       console.log('=== LOADING DATA FROM LOCALSTORAGE ===');
       
@@ -78,6 +81,7 @@ export default function Calculator() {
       } else {
         console.log('No day rates in localStorage, using defaults');
         localStorage.setItem(STORAGE_KEYS.DAY_RATES, JSON.stringify(DEFAULT_DAY_RATES));
+        setDayRates(DEFAULT_DAY_RATES);
       }
 
       // Load gear costs
@@ -89,6 +93,7 @@ export default function Calculator() {
       } else {
         console.log('No gear costs in localStorage, using defaults');
         localStorage.setItem(STORAGE_KEYS.GEAR_COSTS, JSON.stringify(DEFAULT_GEAR_COSTS));
+        setGearCosts(DEFAULT_GEAR_COSTS);
       }
 
       // Load settings
@@ -100,29 +105,50 @@ export default function Calculator() {
       } else {
         console.log('No settings in localStorage, using defaults');
         localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
+        setSettings(DEFAULT_SETTINGS);
       }
 
-      // Load saved form data
-      const savedFormData = localStorage.getItem(STORAGE_KEYS.CALCULATOR_SESSION);
-      if (savedFormData) {
-        const parsed = JSON.parse(savedFormData);
-        console.log('Loaded saved form data:', parsed);
-        setFormData(parsed);
+      // Load saved form data (only on initial mount)
+      if (includeFormData) {
+        const savedFormData = localStorage.getItem(STORAGE_KEYS.CALCULATOR_SESSION);
+        if (savedFormData) {
+          const parsed = JSON.parse(savedFormData);
+          console.log('Loaded saved form data:', parsed);
+          setFormData(parsed);
+        }
       }
-
-      setIsLoading(false);
     } catch (error) {
       console.error('Error loading from localStorage:', error);
-      setIsLoading(false);
     }
   }, []);
 
-  // Save form data to localStorage whenever it changes
+  // Load data from localStorage on mount
+  useEffect(() => {
+    loadAllData(true);
+    setIsLoading(false);
+  }, [loadAllData]);
+
+  // Save form data to localStorage with debouncing (1 second delay)
   useEffect(() => {
     if (!isLoading) {
-      localStorage.setItem(STORAGE_KEYS.CALCULATOR_SESSION, JSON.stringify(formData));
-      console.log('Saved form data to localStorage:', formData);
+      // Clear existing timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      // Set new timeout for debounced save
+      saveTimeoutRef.current = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEYS.CALCULATOR_SESSION, JSON.stringify(formData));
+        console.log('Saved form data to localStorage:', formData);
+      }, 1000); // 1 second delay
     }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [formData, isLoading]);
 
   // Listen for storage changes from Admin page
@@ -149,6 +175,29 @@ export default function Calculator() {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  // Reload data when page becomes visible (e.g., navigating back from Setup)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page became visible, reloading data from localStorage');
+        loadAllData(false); // Don't reload form data, only rates/gear/settings
+      }
+    };
+
+    const handleFocus = () => {
+      console.log('Window focused, reloading data from localStorage');
+      loadAllData(false); // Don't reload form data, only rates/gear/settings
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadAllData]);
 
   // Set default gear selection when gear costs first load
   useEffect(() => {
@@ -401,7 +450,7 @@ export default function Calculator() {
               <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Quote Calculator</h1>
               <p style={{ color: 'var(--color-text-secondary)' }}>Create professional quotes with industry-standard pricing</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 w-full justify-between md:justify-end">
               {!isUnlocked && hasUsedFreeQuote && (
                 <Button
                   onClick={() => navigate(createPageUrl("Unlock"))}

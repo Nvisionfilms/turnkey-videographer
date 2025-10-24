@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isSubscriptionActive, activateSubscriptionCode, getSubscriptionDetails } from '@/services/serialCodeService';
 
 const STORAGE_KEYS = {
   UNLOCKED: 'nvision_is_unlocked',
@@ -7,6 +8,9 @@ const STORAGE_KEYS = {
   TRIAL_USED: 'nvision_trial_ever_used',
   TRIAL_TIMESTAMP: 'nvision_trial_timestamp',
   USED_FREE: 'nvision_has_used_free_quote',
+  DIRECT_UNLOCK: 'nvision_direct_unlock',
+  DIRECT_UNLOCK_DATE: 'nvision_direct_unlock_date',
+  DIRECT_UNLOCK_EMAIL: 'nvision_direct_unlock_email',
 };
 
 export function useUnlockStatus() {
@@ -14,10 +18,18 @@ export function useUnlockStatus() {
   const [hasUsedFreeQuote, setHasUsedFreeQuote] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(null);
   const [isTrialActive, setIsTrialActive] = useState(false);
+  const [subscriptionDetails, setSubscriptionDetails] = useState(null);
 
   const checkStatus = () => {
-    // Check if permanently unlocked (subscription)
-    const unlocked = localStorage.getItem(STORAGE_KEYS.UNLOCKED) === 'true';
+    // Check if permanently unlocked (legacy or subscription)
+    const legacyUnlocked = localStorage.getItem(STORAGE_KEYS.UNLOCKED) === 'true';
+    
+    // Check direct unlock (payment-based, no serial code needed)
+    const directUnlock = localStorage.getItem(STORAGE_KEYS.DIRECT_UNLOCK) === 'true';
+    
+    // Check subscription status (new serial code system)
+    const hasActiveSubscription = isSubscriptionActive();
+    const subDetails = hasActiveSubscription ? getSubscriptionDetails() : null;
     
     // Check trial status
     const trialEnd = localStorage.getItem(STORAGE_KEYS.TRIAL_END);
@@ -41,10 +53,11 @@ export function useUnlockStatus() {
     // Check free quote usage
     const usedFree = localStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
     
-    setIsUnlocked(unlocked || trialActive);
+    setIsUnlocked(legacyUnlocked || directUnlock || hasActiveSubscription || trialActive);
     setIsTrialActive(trialActive);
     setTrialDaysLeft(daysLeft);
     setHasUsedFreeQuote(usedFree);
+    setSubscriptionDetails(subDetails);
   };
 
   useEffect(() => {
@@ -97,16 +110,57 @@ export function useUnlockStatus() {
     return { success: true, message: "3-day trial activated" };
   };
 
-  const activateSubscription = (code) => {
-    if (code.length >= 8) {
-      localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
+  const activateSubscription = (code, email = '') => {
+    const result = activateSubscriptionCode(code, email);
+    
+    if (result.success) {
+      // Clean up trial and free quote data
       localStorage.removeItem(STORAGE_KEYS.TRIAL_START);
       localStorage.removeItem(STORAGE_KEYS.TRIAL_END);
       localStorage.removeItem(STORAGE_KEYS.USED_FREE);
+      
+      // Also set legacy unlock flag for backward compatibility
+      localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
+      
       checkStatus();
-      return { success: true, message: "Subscription activated" };
     }
-    return { success: false, message: "Invalid subscription code" };
+    
+    return result;
+  };
+
+  const activateDirectUnlock = (email = '') => {
+    try {
+      // Activate direct unlock (no serial code needed)
+      localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
+      localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK_DATE, new Date().toISOString());
+      
+      if (email) {
+        localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK_EMAIL, email);
+      }
+      
+      // Clean up trial and free quote data
+      localStorage.removeItem(STORAGE_KEYS.TRIAL_START);
+      localStorage.removeItem(STORAGE_KEYS.TRIAL_END);
+      localStorage.removeItem(STORAGE_KEYS.USED_FREE);
+      
+      // Also set legacy unlock flag for backward compatibility
+      localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
+      
+      checkStatus();
+      
+      return {
+        success: true,
+        message: 'Calculator unlocked successfully! You now have unlimited access.',
+        code: 'DIRECT_UNLOCK'
+      };
+    } catch (error) {
+      console.error('Error activating direct unlock:', error);
+      return {
+        success: false,
+        message: 'Failed to unlock calculator. Please try again.',
+        code: 'UNLOCK_ERROR'
+      };
+    }
   };
 
   return {
@@ -114,9 +168,11 @@ export function useUnlockStatus() {
     hasUsedFreeQuote,
     trialDaysLeft,
     isTrialActive,
+    subscriptionDetails,
     markFreeQuoteUsed,
     hasUsedTrialBefore,
     activateTrial,
     activateSubscription,
+    activateDirectUnlock,
   };
 }

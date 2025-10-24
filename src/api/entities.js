@@ -1,13 +1,13 @@
-import { base44 } from './base44Client';
+import { nvision } from './nvisionClient';
 
 
-export const DayRate = base44.entities.DayRate;
+export const DayRate = nvision.entities.DayRate;
 
-export const GearCost = base44.entities.GearCost;
+export const GearCost = nvision.entities.GearCost;
 
-export const Settings = base44.entities.Settings;
+export const Settings = nvision.entities.Settings;
 
 
 
 // auth sdk:
-export const User = base44.auth;
+export const User = nvision.auth;

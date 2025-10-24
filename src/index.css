@@ -2,6 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global mobile fixes */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Prevent containers from overflowing */
+  .container {
+    max-width: 100% !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Force text wrapping */
+  p, span, div, td, th {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Make tables responsive - stack on very small screens */
+  @media (max-width: 640px) {
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+    
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+    
+    tr {
+      margin-bottom: 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+    }
+    
+    td {
+      border: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem !important;
+      text-align: center;
+    }
+    
+    td:before {
+      content: attr(data-label);
+      font-weight: bold;
+      text-align: center;
+      flex: 1;
+    }
+    
+    td > * {
+      text-align: center;
+      flex: 1;
+    }
+    
+    /* Special handling for checkboxes - keep them next to their label */
+    td:has(input[type="checkbox"]) {
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    td:has(input[type="checkbox"]):before {
+      flex: 0 0 auto;
+      margin-right: 0.5rem;
+    }
+    
+    td:has(input[type="checkbox"]) > * {
+      flex: 0 0 auto;
+    }
+  }
+  
+  /* For larger mobile screens, allow horizontal scroll */
+  @media (min-width: 641px) and (max-width: 768px) {
+    table {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Reduce padding on mobile */
+  .card {
+    padding: 0.75rem !important;
+  }
+
+  /* Stack buttons vertically on mobile */
+  .flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Ensure inputs don't overflow */
+  input, select, textarea {
+    max-width: 100%;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+
+  /* Make table cells more compact */
+  td, th {
+    padding: 0.5rem !important;
+    font-size: 0.875rem;
+  }
+
+  /* Hide less important columns on very small screens */
+  @media (max-width: 480px) {
+    .hide-on-mobile {
+      display: none;
+    }
+  }
+}
+
 
 /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

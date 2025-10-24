@@ -1,0 +1,35 @@
+{
+  "name": "nvision-calculator-server",
+  "version": "1.0.0",
+  "description": "Server-side API for NVision Calculator subscription management",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "node test-setup.js",
+    "test:setup": "node test-setup.js"
+  },
+  "keywords": [
+    "nvision",
+    "calculator",
+    "subscription",
+    "stripe",
+    "sendgrid"
+  ],
+  "author": "NVision Films",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "stripe": "^14.7.0",
+    "@sendgrid/mail": "^8.1.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "body-parser": "^1.20.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

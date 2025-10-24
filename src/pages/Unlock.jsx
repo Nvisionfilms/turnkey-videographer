@@ -1,24 +1,89 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Check, Clock, Zap } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { useUnlockStatus } from "@/components/hooks/useUnlockStatus"; // New import
+import { useUnlockStatus } from "@/components/hooks/useUnlockStatus";
+import { getDeviceId } from "@/utils/deviceFingerprint";
 
 export default function Unlock() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   
   // Use the new hook for unlock status management
-  const { hasUsedTrialBefore, activateTrial, activateSubscription } = useUnlockStatus();
+  const { hasUsedTrialBefore, activateTrial, activateSubscription, subscriptionDetails, activateDirectUnlock } = useUnlockStatus();
   const trialAlreadyUsed = hasUsedTrialBefore();
+
+  // Get device ID on mount
+  useEffect(() => {
+    getDeviceId().then(id => setDeviceId(id));
+  }, []);
+
+  // Check for payment success from Stripe redirect
+  useEffect(() => {
+    const checkPaymentSuccess = async () => {
+      const sessionId = searchParams.get('session_id');
+      const paymentSuccess = searchParams.get('payment');
+      
+      if (sessionId || paymentSuccess === 'success') {
+        setIsCheckingPayment(true);
+        
+        // Activate direct unlock (payment verified by Stripe redirect)
+        const result = await activateDirectUnlock(email || 'customer@email.com');
+        
+        if (result.success) {
+          toast({
+            title: "Payment Successful!",
+            description: "Your calculator is now unlocked. Redirecting...",
+          });
+          
+          // Redirect to calculator after short delay
+          setTimeout(() => {
+            navigate(createPageUrl("/"));
+          }, 2000);
+        }
+        
+        setIsCheckingPayment(false);
+      }
+    };
+    
+    checkPaymentSuccess();
+  }, [searchParams, navigate, toast, activateDirectUnlock, email]);
+
+  // Format code as user types (auto-add dashes)
+  const formatCode = (value) => {
+    // Remove all non-alphanumeric characters
+    const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Add dashes at appropriate positions for NV-XXXX-XXXX-XXXX-XXXX format
+    if (cleaned.startsWith('NV')) {
+      const parts = [];
+      parts.push(cleaned.substring(0, 2)); // NV
+      if (cleaned.length > 2) parts.push(cleaned.substring(2, 6)); // First 4
+      if (cleaned.length > 6) parts.push(cleaned.substring(6, 10)); // Second 4
+      if (cleaned.length > 10) parts.push(cleaned.substring(10, 14)); // Third 4
+      if (cleaned.length > 14) parts.push(cleaned.substring(14, 18)); // Fourth 4
+      return parts.join('-');
+    }
+    
+    return cleaned;
+  };
+
+  const handleCodeChange = (e) => {
+    const formatted = formatCode(e.target.value);
+    setUnlockCode(formatted);
+  };
 
   const handleUnlock = () => {
     const code = unlockCode.trim().toUpperCase();
@@ -44,8 +109,8 @@ export default function Unlock() {
     }
     
     // Check for permanent unlock code (subscription confirmation)
-    // Call the hook's activateSubscription method
-    const result = activateSubscription(code); 
+    // Call the hook's activateSubscription method with email
+    const result = activateSubscription(code, email); 
     
     if (result.success) {
       toast({
@@ -128,31 +193,55 @@ export default function Unlock() {
               </div>
             </div>
 
-            {/* PayPal Subscribe Button */}
-            <div className="flex justify-center">
-              <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+            {/* Payment Options */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* PayPal Option */}
+              <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" className="w-full">
                 <input type="hidden" name="cmd" value="_s-xclick" />
                 <input type="hidden" name="hosted_button_id" value="RCYH47CU7D4CC" />
                 <input type="hidden" name="currency_code" value="USD" />
                 <button
                   type="submit"
-                  className="px-8 py-4 rounded-lg font-semibold text-lg transition-all hover:shadow-lg flex items-center gap-2"
+                  className="w-full px-6 py-4 rounded-lg font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2"
                   style={{ 
-                    background: 'linear-gradient(135deg, var(--color-accent-primary) 0%, var(--color-accent-secondary) 100%)',
-                    color: 'var(--color-button-text)'
+                    background: '#0070BA',
+                    color: 'white'
                   }}
                 >
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.805.681l-.856 5.424a.634.634 0 0 1-.629.533H7.769a.38.38 0 0 1-.377-.443l1.234-7.828.002-.011.002-.011 1.053-6.666a.952.952 0 0 1 .944-.808h3.288c1.527 0 2.739.193 3.593.53.797.315 1.387.794 1.743 1.417z"/>
                     <path d="M9.43 5.508a.895.895 0 0 1 .887-.758h5.762c.917 0 1.683.145 2.288.415.155.07.302.145.441.226.18.105.345.22.495.346a3.32 3.32 0 0 1 .305.29c.105.115.197.24.277.374.14.234.245.494.318.776.14.544.17 1.165.082 1.856-.745 3.748-3.232 5.03-6.388 5.03h-.506a.79.79 0 0 0-.79.67l-.855 5.424a.624.624 0 0 1-.617.523H7.775a.375.375 0 0 1-.372-.436L9.43 5.508z"/>
                   </svg>
-                  Subscribe with PayPal
+                  PayPal
                 </button>
               </form>
+
+              {/* Stripe Option */}
+              <button
+                onClick={async () => {
+                  const deviceId = await getDeviceId();
+                  const currentUrl = window.location.origin;
+                  const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
+                  const cancelUrl = `${currentUrl}/#/unlock`;
+                  
+                  // Redirect to Stripe with success/cancel URLs
+                  window.location.href = `https://buy.stripe.com/fZu7sLh1l3YsanfaNIcIE03?client_reference_id=${deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+                }}
+                className="w-full px-6 py-4 rounded-lg font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2"
+                style={{ 
+                  background: '#635BFF',
+                  color: 'white'
+                }}
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+                </svg>
+                Stripe
+              </button>
             </div>
 
             <p className="text-xs text-center mt-4" style={{ color: 'var(--color-text-muted)' }}>
-              After subscribing, you'll receive an unlock code via email within 24 hours
+              After payment, your calculator will be instantly unlocked on this device
             </p>
           </div>
 
@@ -181,6 +270,24 @@ export default function Unlock() {
           {/* Unlock Code Input */}
           <div className="space-y-4 pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
             <div>
+              <Label htmlFor="email" style={{ color: 'var(--color-text-secondary)' }}>
+                Email (Optional - for subscription tracking)
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your.email@example.com"
+                className="mt-2"
+                style={{ background: 'var(--color-input-bg)', borderColor: 'var(--color-input-border)', color: 'var(--color-text-primary)' }}
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                Optional: Enter the email you used for subscription purchase
+              </p>
+            </div>
+            
+            <div>
               <Label htmlFor="unlock_code" style={{ color: 'var(--color-text-secondary)' }}>
                 Enter Unlock or Trial Code
               </Label>
@@ -188,19 +295,24 @@ export default function Unlock() {
                 id="unlock_code"
                 type="text"
                 value={unlockCode}
-                onChange={(e) => setUnlockCode(e.target.value)}
-                placeholder={trialAlreadyUsed ? "Enter subscription code" : "TRIAL3DAY or subscription code"}
-                className="mt-2"
+                onChange={handleCodeChange}
+                placeholder={trialAlreadyUsed ? "NV-XXXX-XXXX-XXXX-XXXX" : "TRIAL3DAY or NV-XXXX-XXXX-XXXX-XXXX"}
+                className="mt-2 font-mono text-lg tracking-wider"
                 style={{ background: 'var(--color-input-bg)', borderColor: 'var(--color-input-border)', color: 'var(--color-text-primary)' }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleUnlock();
                 }}
+                maxLength={22}
               />
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                Format: NV-XXXX-XXXX-XXXX-XXXX (dashes added automatically)
+              </p>
             </div>
             <Button
               onClick={handleUnlock}
               className="w-full py-6 text-lg font-semibold"
               style={{ background: 'linear-gradient(135deg, var(--color-accent-primary) 0%, var(--color-accent-secondary) 100%)' }}
+              disabled={!unlockCode.trim()}
             >
               Activate Code
             </Button>

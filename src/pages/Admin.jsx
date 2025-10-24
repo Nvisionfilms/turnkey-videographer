@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { nvision } from "@/api/base44Client";
+import { nvision } from "@/api/nvisionClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -476,7 +476,7 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
             Configure your day rates, gear costs, and business settings. This information is stored locally on your computer and will be used to calculate quotes.
             Start by entering your rates manually or use the AI Auto-Fill feature to populate industry-standard pricing.
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
               onClick={loadAllDefaults}
               variant="outline"
@@ -529,7 +529,7 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
           <TabsContent value="rates">
             <Card className="shadow-lg" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)' }}>
               <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border)' }}>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex-1">
                     <CardTitle className="flex items-center gap-2 mb-2" style={{ color: 'var(--color-text-primary)' }}>
                       <DollarSign className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
@@ -540,7 +540,7 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                       Set your custom pricing for each role based on what you feel you should earn, or use the AI Auto-Fill button to populate with current industry-standard rates.
                     </p>
                   </div>
-                  <div className="flex gap-2 ml-4">
+                  <div className="flex gap-2 flex-shrink-0">
                     <Button
                       size="sm"
                       onClick={() => autoFillRates()}
@@ -641,12 +641,12 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                 <Table>
                   <TableHeader>
                     <TableRow style={{ borderColor: 'var(--color-border)' }}>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Role</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Unit Type</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Half Day Rate</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Full Day Rate</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Active</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Actions</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Role</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Unit Type</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Half Day Rate</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Full Day Rate</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Active</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -657,11 +657,11 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                     ) : (
                       dayRates.map((rate) => (
                         <TableRow key={rate.id} style={{ borderColor: 'var(--color-border)' }} className="hover:bg-[var(--color-bg-tertiary)]">
-                          <TableCell className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{rate.role}</TableCell>
-                          <TableCell>
+                          <TableCell data-label="Role" className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{rate.role}</TableCell>
+                          <TableCell data-label="Unit Type">
                             <Badge variant="outline" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>{rate.unit_type}</Badge>
                           </TableCell>
-                          <TableCell style={{ color: 'var(--color-text-primary)' }}>
+                          <TableCell data-label="Half Day Rate" style={{ color: 'var(--color-text-primary)' }}>
                             {editingRate?.id === rate.id ? (
                               <Input
                                 type="number"
@@ -676,7 +676,7 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                               `$${rate.half_day_rate}`
                             )}
                           </TableCell>
-                          <TableCell style={{ color: 'var(--color-text-primary)' }}>
+                          <TableCell data-label="Full Day Rate" style={{ color: 'var(--color-text-primary)' }}>
                             {editingRate?.id === rate.id ? (
                               <Input
                                 type="number"
@@ -691,13 +691,13 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                               `$${rate.full_day_rate}`
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell data-label="Active">
                             <Checkbox 
                               checked={rate.active} 
                               onCheckedChange={(checked) => toggleRateActive(rate.id, checked)}
                             />
                           </TableCell>
-                          <TableCell className="flex gap-2">
+                          <TableCell data-label="Actions" className="flex gap-2">
                             {editingRate?.id === rate.id ? (
                               <>
                                 <Button
@@ -755,7 +755,7 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
           <TabsContent value="gear">
             <Card className="shadow-lg" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)' }}>
               <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border)' }}>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex-1">
                     <CardTitle className="flex items-center gap-2 mb-2" style={{ color: 'var(--color-text-primary)' }}>
                       <Camera className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
@@ -772,7 +772,7 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                     size="sm"
                     onClick={() => setShowAddGear(!showAddGear)}
                     style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
-                    className="ml-4"
+                    className="flex-shrink-0"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New Gear
@@ -828,10 +828,10 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                 <Table>
                   <TableHeader>
                     <TableRow style={{ borderColor: 'var(--color-border)' }}>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Item</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Total Investment</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Include by Default</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Actions</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Item</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Total Investment</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Include by Default</TableHead>
+                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -842,8 +842,8 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                     ) : (
                       gearCosts.map((gear) => (
                         <TableRow key={gear.id} style={{ borderColor: 'var(--color-border)' }} className="hover:bg-[var(--color-bg-tertiary)]">
-                          <TableCell className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{gear.item}</TableCell>
-                          <TableCell style={{ color: 'var(--color-text-primary)' }}>
+                          <TableCell data-label="Item" className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{gear.item}</TableCell>
+                          <TableCell data-label="Total Investment" style={{ color: 'var(--color-text-primary)' }}>
                             {editingGear?.id === gear.id ? (
                               <Input
                                 type="number"
@@ -858,13 +858,13 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                               `$${gear.total_investment.toLocaleString()}`
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell data-label="Include by Default">
                             <Checkbox 
                               checked={gear.include_by_default} 
                               onCheckedChange={(checked) => toggleGearIncludeByDefault(gear.id, checked)}
                             />
                           </TableCell>
-                          <TableCell className="flex gap-2">
+                          <TableCell data-label="Actions" className="flex gap-2">
                             {editingGear?.id === gear.id ? (
                               <>
                                 <Button
@@ -1281,7 +1281,7 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                   </p>
                   <div className="space-y-3">
                     {localSettings?.experience_levels && Object.keys(localSettings.experience_levels).map((level) => (
-                      <div key={level} className="flex items-center gap-2">
+                      <div key={level} className="flex flex-row items-center gap-2 flex-wrap">
                         <Label className="w-24" style={{ color: 'var(--color-text-primary)' }}>{level}</Label>
                         {editingExperienceLevel === level ? (
                           <>

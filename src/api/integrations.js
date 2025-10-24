@@ -1,4 +1,4 @@
-import { nvision } from './base44Client';
+import { nvision } from './nvisionClient';
 
 export const Core = nvision.integrations.Core;
 

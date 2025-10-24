@@ -4,7 +4,7 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-// Note: These primitives are provided by the base44 platform
+// Note: These primitives are provided by the NVision platform
 const ToastPrimitives = window.RadixToast || {};
 
 const ToastProvider = ToastPrimitives.Provider
