@@ -793,16 +793,18 @@ export default function Calculator() {
             {/* Audio Pre & Post */}
             <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}>
               <CardContent className="py-4 px-6">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    checked={formData.include_audio_pre_post}
-                    onCheckedChange={(checked) => {
-                      console.log('Audio checkbox changed:', checked);
-                      setFormData({...formData, include_audio_pre_post: checked});
-                    }}
-                  />
-                  <div className="flex-1">
-                    <Label className="cursor-pointer block" style={{ color: 'var(--color-text-primary)' }}>
+                <div className="flex items-center justify-start space-x-3">
+                  <div className="flex items-center">
+                    <Checkbox
+                      checked={formData.include_audio_pre_post}
+                      onCheckedChange={(checked) => {
+                        console.log('Audio checkbox changed:', checked);
+                        setFormData({...formData, include_audio_pre_post: checked});
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Label className="cursor-pointer block leading-tight" style={{ color: 'var(--color-text-primary)' }}>
                       <div className="font-medium">Include Audio Pre- and Post-Production</div>
                       <div className="text-sm mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
                         Flat fee: ${dayRates.find(r => r.role === "Audio Pre & Post")?.full_day_rate || 0}
