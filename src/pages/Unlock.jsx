@@ -245,6 +245,53 @@ export default function Unlock() {
             </p>
           </div>
 
+          {/* Cancellation Information */}
+          <div className="p-4 rounded-lg" style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+            <h3 className="font-semibold text-lg mb-3" style={{ color: 'var(--color-text-primary)' }}>
+              Need to Cancel?
+            </h3>
+            <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+              You can cancel your subscription anytime:
+            </p>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--color-primary)' }}></div>
+                <div className="flex-1">
+                  <p className="font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    For PayPal:
+                  </p>
+                  <ol className="list-decimal list-inside text-sm space-y-1.5 ml-2" style={{ color: 'var(--color-text-secondary)' }}>
+                    <li>Log in to your PayPal account</li>
+                    <li>Go to Settings → Payments → Manage automatic payments</li>
+                    <li>Find "Turnkey Videographer" and click "Cancel"</li>
+                  </ol>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: 'var(--color-primary)' }}></div>
+                <div className="flex-1">
+                  <p className="font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    For Stripe:
+                  </p>
+                  <p className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>
+                    Email{' '}
+                    <a 
+                      href="mailto:support@nvisionfilms.com?subject=Cancel%20Subscription" 
+                      className="font-medium hover:underline"
+                      style={{ color: 'var(--color-primary)' }}
+                    >
+                      support@nvisionfilms.com
+                    </a>
+                    {' '}with "Cancel Subscription" in the subject line
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs mt-4 pt-3 border-t" style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}>
+              <strong>Note:</strong> Cancellations take effect at the end of your current billing period. You'll retain access until then. No partial refunds are provided.
+            </p>
+          </div>
+
           {/* What You Get */}
           <div>
             <h3 className="font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
