@@ -276,11 +276,11 @@ export default function Unlock() {
                   <p className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>
                     Email{' '}
                     <a 
-                      href="mailto:support@nvisionfilms.com?subject=Cancel%20Subscription" 
+                      href="mailto:contact@nvisionfilms.com?subject=Cancel%20Subscription" 
                       className="font-medium hover:underline"
                       style={{ color: 'var(--color-primary)' }}
                     >
-                      support@nvisionfilms.com
+                      contact@nvisionfilms.com
                     </a>
                     {' '}with "Cancel Subscription" in the subject line
                   </p>
