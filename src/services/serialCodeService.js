@@ -87,21 +87,10 @@ export function verifyCodeChecksum(code) {
 }
 
 /**
- * List of valid pre-generated codes for demo/testing
- * In production, these would be stored in a database and marked as used/unused
+ * Demo codes removed from client-side for security
+ * All code validation should be done server-side in production
+ * For testing, use the trial code "TRIAL3DAY" or generate codes server-side
  */
-const VALID_DEMO_CODES = [
-  'NV-DEMO-TEST-CODE-A1B2',
-  'NV-PROD-FULL-YEAR-C3D4',
-  'NV-LIFE-TIME-UNLK-E5F6'
-];
-
-/**
- * Check if a code is in the valid demo codes list
- */
-function isValidDemoCode(code) {
-  return VALID_DEMO_CODES.includes(code.trim().toUpperCase());
-}
 
 /**
  * Activate a subscription code
@@ -133,8 +122,9 @@ export function activateSubscriptionCode(code, email = '') {
     };
   }
   
-  // Check if it's a valid demo code or verify checksum
-  const isValid = isValidDemoCode(normalizedCode) || verifyCodeChecksum(normalizedCode);
+  // Verify checksum (demo codes removed for security)
+  // In production, validate against server-side database
+  const isValid = verifyCodeChecksum(normalizedCode);
   
   if (!isValid) {
     return {
