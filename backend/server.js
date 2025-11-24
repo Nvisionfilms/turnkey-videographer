@@ -254,6 +254,73 @@ app.post('/api/affiliates/login', async (req, res) => {
   }
 });
 
+// Request password reset
+app.post('/api/affiliates/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const result = await pool.query(
+      'SELECT * FROM affiliates WHERE email = $1',
+      [email.toLowerCase()]
+    );
+    
+    if (result.rows.length === 0) {
+      // Don't reveal if email exists
+      return res.json({ success: true, message: 'If that email exists, a reset link has been sent' });
+    }
+    
+    const affiliate = result.rows[0];
+    
+    // Generate reset token (valid for 1 hour)
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+    
+    await pool.query(
+      'UPDATE affiliates SET reset_token = $1, reset_expires = $2 WHERE email = $3',
+      [resetToken, resetExpires, email.toLowerCase()]
+    );
+    
+    // TODO: Send email with reset link
+    // For now, return token (in production, this would be emailed)
+    res.json({ 
+      success: true, 
+      message: 'Password reset link sent to email',
+      resetToken // Remove this in production
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+});
+
+// Reset password with token
+app.post('/api/affiliates/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    const result = await pool.query(
+      'SELECT * FROM affiliates WHERE reset_token = $1 AND reset_expires > NOW()',
+      [token]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    await pool.query(
+      'UPDATE affiliates SET password = $1, reset_token = NULL, reset_expires = NULL WHERE reset_token = $2',
+      [hashedPassword, token]
+    );
+    
+    res.json({ success: true, message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
 // Get affiliate by code
 app.get('/api/affiliates/:code', async (req, res) => {
   try {
@@ -594,8 +661,6 @@ app.post('/api/admin/login', async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 });
-
-// ==================== ADMIN ROUTES ====================
 
 // Get all affiliates (admin)
 app.get('/api/admin/affiliates', async (req, res) => {
