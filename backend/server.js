@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import pool from './db.js';
+import { generateUniqueUnlockCode, generateAndInsertBatch } from './utils/unlockCodeGenerator.js';
 
 dotenv.config();
 
@@ -660,6 +661,171 @@ app.delete('/api/admin/affiliates/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete affiliate error:', error);
     res.status(500).json({ error: 'Failed to delete affiliate' });
+  }
+});
+
+// ==================== AFFILIATE DISCOUNT CODES ====================
+
+// Create custom discount code (affiliate)
+app.post('/api/affiliates/:code/create-discount', async (req, res) => {
+  try {
+    const { code: affiliateCode } = req.params;
+    const { customCode, maxUses = 1 } = req.body;
+    
+    // Validate custom code (4-8 alphanumeric characters)
+    if (!customCode || !/^[A-Z0-9]{4,8}$/i.test(customCode)) {
+      return res.status(400).json({ error: 'Code must be 4-8 letters/numbers' });
+    }
+    
+    const upperCode = customCode.toUpperCase();
+    
+    // Check if affiliate exists
+    const affiliateResult = await pool.query(
+      'SELECT * FROM affiliates WHERE code = $1',
+      [affiliateCode]
+    );
+    
+    if (affiliateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Affiliate not found' });
+    }
+    
+    // Check if code already exists
+    const existingCode = await pool.query(
+      'SELECT * FROM discount_codes WHERE code = $1',
+      [upperCode]
+    );
+    
+    if (existingCode.rows.length > 0) {
+      return res.status(400).json({ error: 'This code is already taken' });
+    }
+    
+    // Create discount code
+    const result = await pool.query(
+      `INSERT INTO discount_codes (code, affiliate_code, max_uses)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [upperCode, affiliateCode, maxUses]
+    );
+    
+    res.json({ success: true, discountCode: result.rows[0] });
+  } catch (error) {
+    console.error('Create discount code error:', error);
+    res.status(500).json({ error: 'Failed to create discount code' });
+  }
+});
+
+// Get affiliate's discount codes
+app.get('/api/affiliates/:code/discount-codes', async (req, res) => {
+  try {
+    const { code } = req.params;
+    
+    const result = await pool.query(
+      'SELECT * FROM discount_codes WHERE affiliate_code = $1 ORDER BY created_at DESC',
+      [code]
+    );
+    
+    res.json({ discountCodes: result.rows });
+  } catch (error) {
+    console.error('Get discount codes error:', error);
+    res.status(500).json({ error: 'Failed to get discount codes' });
+  }
+});
+
+// Validate and apply discount code
+app.post('/api/discount/validate', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    const result = await pool.query(
+      `SELECT dc.*, a.name as affiliate_name 
+       FROM discount_codes dc
+       JOIN affiliates a ON dc.affiliate_code = a.code
+       WHERE dc.code = $1 AND dc.status = 'active'`,
+      [code.toUpperCase()]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Invalid discount code' });
+    }
+    
+    const discountCode = result.rows[0];
+    
+    // Check if code has reached max uses
+    if (discountCode.uses_count >= discountCode.max_uses) {
+      return res.status(400).json({ error: 'This code has reached its usage limit' });
+    }
+    
+    // Check if expired
+    if (discountCode.expires_at && new Date(discountCode.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'This code has expired' });
+    }
+    
+    res.json({ 
+      valid: true, 
+      discount: discountCode.discount_percent,
+      affiliateName: discountCode.affiliate_name
+    });
+  } catch (error) {
+    console.error('Validate discount error:', error);
+    res.status(500).json({ error: 'Failed to validate discount code' });
+  }
+});
+
+// Apply discount code (increment usage)
+app.post('/api/discount/apply', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    await pool.query(
+      'UPDATE discount_codes SET uses_count = uses_count + 1 WHERE code = $1',
+      [code.toUpperCase()]
+    );
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Apply discount error:', error);
+    res.status(500).json({ error: 'Failed to apply discount code' });
+  }
+});
+
+// ==================== UNLOCK CODE GENERATION ====================
+
+// Generate single unlock code (admin)
+app.post('/api/admin/generate-code', async (req, res) => {
+  try {
+    const code = await generateUniqueUnlockCode(pool);
+    
+    await pool.query(
+      'INSERT INTO unlock_codes (code, status) VALUES ($1, $2)',
+      [code, 'available']
+    );
+    
+    res.json({ success: true, code });
+  } catch (error) {
+    console.error('Generate code error:', error);
+    res.status(500).json({ error: 'Failed to generate code' });
+  }
+});
+
+// Generate batch of unlock codes (admin)
+app.post('/api/admin/generate-codes-batch', async (req, res) => {
+  try {
+    const { count = 100 } = req.body;
+    
+    if (count < 1 || count > 1000) {
+      return res.status(400).json({ error: 'Count must be between 1 and 1000' });
+    }
+    
+    const codes = await generateAndInsertBatch(pool, count);
+    
+    res.json({ 
+      success: true, 
+      count: codes.length,
+      codes 
+    });
+  } catch (error) {
+    console.error('Generate batch error:', error);
+    res.status(500).json({ error: 'Failed to generate codes' });
   }
 });
 
