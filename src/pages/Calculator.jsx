@@ -76,6 +76,9 @@ export default function Calculator() {
   const [formData, setFormData] = useState({
     client_name: "",
     project_title: "",
+    project_manager: "",
+    production_company: "",
+    crew_members: "",
     shoot_dates: [],
     day_type: "full",
     custom_hours: 10,
@@ -1100,6 +1103,42 @@ export default function Calculator() {
                     />
                   </div>
                 </div>
+                
+                {/* Crew & Production Info */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="project_manager" style={{ color: 'var(--color-text-secondary)' }}>Project Manager</Label>
+                    <Input
+                      id="project_manager"
+                      value={formData.project_manager}
+                      onChange={(e) => setFormData({...formData, project_manager: e.target.value})}
+                      placeholder="e.g., John Smith"
+                      style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="production_company" style={{ color: 'var(--color-text-secondary)' }}>Production Company</Label>
+                    <Input
+                      id="production_company"
+                      value={formData.production_company}
+                      onChange={(e) => setFormData({...formData, production_company: e.target.value})}
+                      placeholder="e.g., ABC Productions"
+                      style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="crew_members" style={{ color: 'var(--color-text-secondary)' }}>Crew Members</Label>
+                  <Input
+                    id="crew_members"
+                    value={formData.crew_members}
+                    onChange={(e) => setFormData({...formData, crew_members: e.target.value})}
+                    placeholder="e.g., Camera Op: Jane Doe, Gaffer: Mike Johnson"
+                    style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                  />
+                </div>
+                
                 <div>
                   <Label style={{ color: 'var(--color-text-secondary)' }}>Shoot Date(s)</Label>
                   <Popover>
