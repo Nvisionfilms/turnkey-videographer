@@ -11,6 +11,7 @@ import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useUnlockStatus } from "@/components/hooks/useUnlockStatus";
 import { getDeviceId } from "@/utils/deviceFingerprint";
+import { getReferralCookie } from "../utils/affiliateUtils";
 import { trackConversion } from "../utils/affiliateUtils";
 import { apiCall, API_ENDPOINTS } from "../config/api";
 
@@ -254,8 +255,9 @@ export default function Unlock() {
                   const deviceId = await getDeviceId();
                   const currentUrl = window.location.origin;
                   
-                  // Get affiliate code from localStorage or URL
-                  const affiliateCode = localStorage.getItem('affiliateCode') || new URLSearchParams(window.location.search).get('ref');
+                  // Get affiliate code from cookie or URL
+                  const refCookie = getReferralCookie();
+                  const affiliateCode = refCookie?.code || searchParams.get('ref');
                   
                   const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
                   const cancelUrl = `${currentUrl}/#/unlock`;

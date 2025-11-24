@@ -796,9 +796,22 @@ export default function Calculator() {
                       >
                         Activate Code
                       </Button>
-                      <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
-                        Don't have a code? <a href={createPageUrl("Unlock")} className="underline" style={{ color: 'var(--color-accent-primary)' }}>Get unlimited access</a>
-                      </p>
+                      <div className="mt-4 p-4 rounded-lg text-center" style={{ background: 'rgba(255, 193, 7, 0.1)', border: '2px solid var(--color-accent-primary)' }}>
+                        <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                          Don't have a code?
+                        </p>
+                        <a 
+                          href={createPageUrl("Unlock") + (searchParams.get('ref') ? `?ref=${searchParams.get('ref')}` : '')} 
+                          className="inline-block px-6 py-3 rounded-lg font-bold text-lg transition-all hover:scale-105"
+                          style={{ 
+                            background: 'var(--color-accent-primary)', 
+                            color: '#000',
+                            boxShadow: '0 4px 12px rgba(255, 193, 7, 0.4)'
+                          }}
+                        >
+                          🎉 Get Unlimited Access Now!
+                        </a>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
