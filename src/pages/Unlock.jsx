@@ -253,11 +253,18 @@ export default function Unlock() {
                 onClick={async () => {
                   const deviceId = await getDeviceId();
                   const currentUrl = window.location.origin;
+                  
+                  // Get affiliate code from localStorage or URL
+                  const affiliateCode = localStorage.getItem('affiliateCode') || new URLSearchParams(window.location.search).get('ref');
+                  
                   const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
                   const cancelUrl = `${currentUrl}/#/unlock`;
                   
-                  // Redirect to Stripe with success/cancel URLs
-                  window.location.href = `https://buy.stripe.com/fZu7sLh1l3YsanfaNIcIE03?client_reference_id=${deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+                  // Build Stripe URL with affiliate code in metadata
+                  let stripeUrl = `https://buy.stripe.com/fZu7sLh1l3YsanfaNIcIE03?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+                  
+                  // Redirect to Stripe
+                  window.location.href = stripeUrl;
                 }}
                 className="w-full px-6 py-4 rounded-lg font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2"
                 style={{ 

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import pool from './db.js';
 import { generateUniqueUnlockCode, generateAndInsertBatch } from './utils/unlockCodeGenerator.js';
+import stripeWebhook from './routes/stripe-webhook.js';
 
 dotenv.config();
 
@@ -12,6 +13,11 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
+
+// Stripe webhook must come BEFORE express.json() (needs raw body)
+app.use('/api/stripe', stripeWebhook);
+
+// JSON parsing for all other routes
 app.use(express.json());
 
 // Health check
