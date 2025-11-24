@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, Check, Clock, Zap } from "lucide-react";
+import { Lock, Check, Clock, Zap, AlertCircle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { useUnlockStatus } from "@/components/hooks/useUnlockStatus";
 import { getDeviceId } from "@/utils/deviceFingerprint";
+import { trackConversion } from "../utils/affiliateUtils";
+import { apiCall, API_ENDPOINTS } from "../config/api";
 
 export default function Unlock() {
   const navigate = useNavigate();
@@ -43,6 +45,12 @@ export default function Unlock() {
         const result = await activateDirectUnlock(email || 'customer@email.com');
         
         if (result.success) {
+          // Track affiliate conversion
+          const conversion = trackConversion(result.unlockKey || 'payment-unlock');
+          if (conversion) {
+            console.log('Affiliate conversion tracked:', conversion);
+          }
+          
           toast({
             title: "Payment Successful!",
             description: "Your calculator is now unlocked. Redirecting...",
@@ -85,12 +93,12 @@ export default function Unlock() {
     setUnlockCode(formatted);
   };
 
-  const handleUnlock = () => {
+  const handleUnlock = async () => {
     const code = unlockCode.trim().toUpperCase();
     
-    // Check for trial code
+    // Check for trial code (keep local for now)
     if (code === "TRIAL3DAY" || code === "NVISION3DAY") {
-      const result = activateTrial(); // Call the hook's activateTrial method
+      const result = activateTrial();
       
       if (result.success) {
         toast({
@@ -108,20 +116,44 @@ export default function Unlock() {
       return;
     }
     
-    // Check for permanent unlock code (subscription confirmation)
-    // Call the hook's activateSubscription method with email
-    const result = activateSubscription(code, email); 
-    
-    if (result.success) {
+    // Validate email is provided
+    if (!email.trim()) {
       toast({
-        title: "Unlocked!",
-        description: result.message,
+        title: "Email Required",
+        description: "Please enter your email address to activate the code",
+        variant: "destructive"
       });
-      navigate(createPageUrl("Calculator"));
-    } else {
+      return;
+    }
+    
+    // Activate permanent unlock code via Railway API
+    try {
+      // Get affiliate code from URL if present
+      const affiliateCode = searchParams.get('ref') || localStorage.getItem('affiliateCode');
+      
+      const response = await apiCall(API_ENDPOINTS.activateCode, {
+        method: 'POST',
+        body: JSON.stringify({
+          code,
+          email: email.trim().toLowerCase(),
+          affiliateCode
+        })
+      });
+      
+      // Store user info for future access
+      localStorage.setItem('userEmail', email.trim().toLowerCase());
+      localStorage.setItem('unlockCode', code);
+      
       toast({
-        title: "Invalid Code",
-        description: result.message,
+        title: "Unlocked! 🎉",
+        description: `Your calculator is now unlocked for 1 year. Welcome!`,
+      });
+      
+      navigate(createPageUrl("Calculator"));
+    } catch (error) {
+      toast({
+        title: "Activation Failed",
+        description: error.message || "Invalid code or code already used",
         variant: "destructive"
       });
     }
@@ -355,6 +387,27 @@ export default function Unlock() {
                 Format: NV-XXXX-XXXX-XXXX-XXXX (dashes added automatically)
               </p>
             </div>
+
+            {/* Important Warning */}
+            <Alert className="border-2" style={{ 
+              background: 'rgba(245, 158, 11, 0.15)', 
+              borderColor: 'var(--color-warning)'
+            }}>
+              <AlertCircle className="h-5 w-5" style={{ color: 'var(--color-warning)' }} />
+              <AlertDescription>
+                <p className="font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                  ⚠️ IMPORTANT: Save Your Code!
+                </p>
+                <ul className="text-sm space-y-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  <li>• <strong>Store your unlock code in a safe place</strong></li>
+                  <li>• Codes cannot be replaced or recovered</li>
+                  <li>• Your purchase confirmation email is your only backup</li>
+                  <li>• There is no user portal or account system</li>
+                  <li>• Keep the email from your purchase for future reference</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+
             <Button
               onClick={handleUnlock}
               className="w-full py-6 text-lg font-semibold"

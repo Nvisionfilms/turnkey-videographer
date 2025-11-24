@@ -6,11 +6,25 @@ import Calculator from "./Calculator";
 
 import Welcome from "./Welcome";
 
+import LandingPage from "./LandingPage";
+
 import Unlock from "./Unlock";
+
+import AffiliateSignup from "./AffiliateSignup";
+
+import AffiliateDashboard from "./AffiliateDashboard";
+
+import AffiliateLogin from "./AffiliateLogin";
+
+import AdminAffiliates from "./AdminAffiliates";
+
+import AdminAnalytics from "./AdminAnalytics";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
+    
+    LandingPage: LandingPage,
     
     Admin: Admin,
     
@@ -44,8 +58,10 @@ function PagesContent() {
         <Layout currentPageName={currentPage}>
             <Routes>            
                 
-                    <Route path="/" element={<Admin />} />
+                    <Route path="/" element={<Calculator />} />
                 
+                
+                <Route path="/LandingPage" element={<LandingPage />} />
                 
                 <Route path="/Admin" element={<Admin />} />
                 
@@ -54,6 +70,16 @@ function PagesContent() {
                 <Route path="/Welcome" element={<Welcome />} />
                 
                 <Route path="/Unlock" element={<Unlock />} />
+                
+                <Route path="/affiliate/signup" element={<AffiliateSignup />} />
+                
+                <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+                
+                <Route path="/affiliate/login" element={<AffiliateLogin />} />
+                
+                <Route path="/admin/affiliates" element={<AdminAffiliates />} />
+                
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 
             </Routes>
         </Layout>

@@ -50,9 +50,23 @@ export default function LiveTotalsPanel({ calculations, settings }) {
             ))}
             <div className="pt-2" style={{ borderTop: '1px solid var(--color-border-dark)' }}>
               <div className="flex justify-between text-sm font-semibold">
-                <span style={{ color: 'var(--color-text-secondary)' }}>Labor & Services Total</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Labor Costs</span>
                 <span style={{ color: 'var(--color-text-primary)' }}>${calc.laborSubtotal.toFixed(2)}</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Operations Fee (Overhead & Profit Combined) */}
+        {(calc.overhead > 0 || calc.profitMargin > 0) && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span style={{ color: 'var(--color-text-secondary)' }}>
+                Operations Fee ({((settings?.overhead_percent || 0) + (settings?.profit_margin_percent || 0))}%)
+              </span>
+              <span className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                ${((calc.overhead || 0) + (calc.profitMargin || 0)).toFixed(2)}
+              </span>
             </div>
           </div>
         )}
@@ -108,7 +122,7 @@ export default function LiveTotalsPanel({ calculations, settings }) {
             
             {calc.nonprofitDiscount > 0 && (
               <div className="flex justify-between text-sm">
-                <span style={{ color: 'var(--color-success)' }}>Nonprofit Discount ({settings?.nonprofit_discount_percent || 0}%)</span>
+                <span style={{ color: 'var(--color-success)' }}>Discount ({settings?.nonprofit_discount_percent || 0}%)</span>
                 <span className="font-medium" style={{ color: 'var(--color-success)' }}>
                   -${calc.nonprofitDiscount.toFixed(2)}
                 </span>
@@ -134,23 +148,25 @@ export default function LiveTotalsPanel({ calculations, settings }) {
           </div>
         </div>
 
-        {/* Deposit Info */}
-        <div className="p-4 rounded-lg space-y-2" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--color-text-secondary)' }}>
-              Deposit Due ({settings?.deposit_percent || 50}%)
-            </span>
-            <span className="font-bold" style={{ color: 'var(--color-accent-primary)' }}>
-              ${calc.depositDue.toFixed(2)}
-            </span>
+        {/* Deposit Info - Only show if enabled and deposit > 0 */}
+        {settings?.deposit_enabled !== false && calc.depositDue > 0 && (
+          <div className="p-4 rounded-lg space-y-2" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: 'var(--color-text-secondary)' }}>
+                Deposit Due ({settings?.deposit_percent || 50}%)
+              </span>
+              <span className="font-bold" style={{ color: 'var(--color-accent-primary)' }}>
+                ${calc.depositDue.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: 'var(--color-text-secondary)' }}>Balance Due</span>
+              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                ${calc.balanceDue.toFixed(2)}
+              </span>
+            </div>
           </div>
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--color-text-secondary)' }}>Balance Due</span>
-            <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-              ${calc.balanceDue.toFixed(2)}
-            </span>
-          </div>
-        </div>
+        )}
 
         {/* Applied Multipliers Info */}
         {calc.appliedMultipliers && (

@@ -1,4 +1,4 @@
-
+// Calculator v2.1 - Updated with unlock dialog and negotiation ticker
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,25 +8,43 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RotateCcw, AlertCircle, Download, Mail, Shield, Calendar as CalendarIcon, Lock, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { RotateCcw, AlertCircle, Download, Mail, Shield, Calendar as CalendarIcon, Lock, Clock, Sparkles, Heart, Coffee, ArrowRight, ChevronLeft, ChevronRight, DollarSign, FileText, Settings as SettingsIcon, Key, Copy as CopyIcon, User, Briefcase, Users, Package, Video as VideoIcon, Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { setReferralCookie } from "../utils/affiliateUtils";
 
-import LiveTotalsPanel from "../components/calculator/LiveTotalsPanel";
+import LiveTotalsPanel from "../components/calculator/LiveTotalsPanelNew";
 import RoleSelector from "../components/calculator/RoleSelector";
 import GearSelector from "../components/calculator/GearSelector";
+import CameraSelector from "../components/calculator/CameraSelector";
 import ExperienceLevelSelector from "../components/calculator/ExperienceLevelSelector";
+import NegotiationTicker from "../components/calculator/NegotiationTicker";
+import PresetTemplates from "../components/calculator/PresetTemplates";
+import CollapsibleSection from "../components/calculator/CollapsibleSection";
+import QuoteHistory, { saveToQuoteHistory } from "../components/calculator/QuoteHistory";
+import MobileFloatingTotal from "../components/calculator/MobileFloatingTotal";
 import { calculateQuote } from "../components/calculator/calculations";
 import { ExportService } from "../components/services/ExportService";
-import { STORAGE_KEYS, DEFAULT_DAY_RATES, DEFAULT_GEAR_COSTS, DEFAULT_SETTINGS } from "../components/data/defaults";
+import { STORAGE_KEYS, DEFAULT_DAY_RATES, DEFAULT_GEAR_COSTS, DEFAULT_CAMERAS, DEFAULT_SETTINGS } from "../components/data/defaults";
 import { useUnlockStatus } from "../components/hooks/useUnlockStatus";
 
 export default function Calculator() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Track affiliate referrals
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCookie(refCode);
+      console.log('Affiliate referral tracked:', refCode);
+    }
+  }, [searchParams]);
   
   // Use centralized unlock status
   const { 
@@ -34,14 +52,22 @@ export default function Calculator() {
     hasUsedFreeQuote, 
     trialDaysLeft, 
     isTrialActive,
-    markFreeQuoteUsed 
+    markFreeQuoteUsed,
+    activateSubscription,
+    activateTrial
   } = useUnlockStatus();
   
   // State for data - initialize with defaults immediately
   const [dayRates, setDayRates] = useState(DEFAULT_DAY_RATES);
   const [gearCosts, setGearCosts] = useState(DEFAULT_GEAR_COSTS);
+  const [cameras, setCameras] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Unlock dialog state
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [unlockCode, setUnlockCode] = useState('');
+  const [unlockEmail, setUnlockEmail] = useState('');
   
   // Ref for debounced save timeout
   const saveTimeoutRef = React.useRef(null);
@@ -54,12 +80,17 @@ export default function Calculator() {
     day_type: "full",
     custom_hours: 10,
     custom_hourly_rate: 250,
+    single_price: 0,
+    single_price_enabled: false,
+    custom_price_override: null, // For round/discount buttons
+    custom_discount_percent: 0, // Track cumulative discount percentage
     experience_level: "Standard",
     custom_multiplier: 1.0,
     selected_roles: [],
     include_audio_pre_post: false,
     gear_enabled: true,
     selected_gear_items: [],
+    selected_camera: "",
     apply_nonprofit_discount: false,
     apply_rush_fee: false,
     travel_miles: 0,
@@ -96,10 +127,30 @@ export default function Calculator() {
         setGearCosts(DEFAULT_GEAR_COSTS);
       }
 
+      // Load cameras
+      const camerasStr = localStorage.getItem(STORAGE_KEYS.CAMERAS);
+      if (camerasStr) {
+        const loadedCameras = JSON.parse(camerasStr);
+        console.log('Loaded cameras:', loadedCameras);
+        setCameras(loadedCameras);
+      } else {
+        console.log('No cameras in localStorage, using defaults');
+        localStorage.setItem(STORAGE_KEYS.CAMERAS, JSON.stringify(DEFAULT_CAMERAS));
+        setCameras(DEFAULT_CAMERAS);
+      }
+
       // Load settings
       const settingsStr = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (settingsStr) {
         const loadedSettings = JSON.parse(settingsStr);
+        
+        // Migrate: Add desired_profit_margin_percent if it doesn't exist
+        if (loadedSettings.desired_profit_margin_percent === undefined) {
+          loadedSettings.desired_profit_margin_percent = DEFAULT_SETTINGS.desired_profit_margin_percent;
+          localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(loadedSettings));
+          console.log('✨ Migrated settings to include desired_profit_margin_percent:', loadedSettings.desired_profit_margin_percent);
+        }
+        
         console.log('Loaded settings:', loadedSettings);
         setSettings(loadedSettings);
       } else {
@@ -119,6 +170,19 @@ export default function Calculator() {
       }
     } catch (error) {
       console.error('Error loading from localStorage:', error);
+      console.warn('Clearing corrupted localStorage and using defaults');
+      // Clear all calculator-related localStorage on error
+      try {
+        Object.values(STORAGE_KEYS).forEach(key => {
+          localStorage.removeItem(key);
+        });
+      } catch (e) {
+        console.error('Could not clear localStorage:', e);
+      }
+      // Use defaults
+      setDayRates(DEFAULT_DAY_RATES);
+      setGearCosts(DEFAULT_GEAR_COSTS);
+      setSettings(DEFAULT_SETTINGS);
     }
   }, []);
 
@@ -174,6 +238,22 @@ export default function Calculator() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Listen for settings updates from Admin page
+  useEffect(() => {
+    const handleSettingsUpdate = (event) => {
+      console.log('✅ Calculator received settingsUpdated event:', event.detail);
+      console.log('📊 New desired_profit_margin_percent:', event.detail.desired_profit_margin_percent);
+      setSettings(event.detail);
+    };
+
+    console.log('🎧 Calculator is now listening for settingsUpdated events');
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+    };
   }, []);
 
   // Reload data when page becomes visible (e.g., navigating back from Setup)
@@ -237,6 +317,17 @@ export default function Calculator() {
     }
     
     const result = calculateQuote(formData, dayRates, gearCosts, settings);
+    
+    // Store original total before any overrides
+    result.originalTotal = result.total;
+    
+    // Apply custom price override if set (from round/discount buttons)
+    if (formData.custom_price_override !== null && formData.custom_price_override > 0) {
+      result.total = formData.custom_price_override;
+      result.depositDue = result.total * ((settings?.deposit_percent || 50) / 100);
+      result.balanceDue = result.total - result.depositDue;
+    }
+    
     console.log('Calculation result:', result);
     return result;
   }, [formData, dayRates, gearCosts, settings]);
@@ -344,6 +435,93 @@ export default function Calculator() {
     });
   };
 
+  const handleSmartFill = () => {
+    // Analyze current form data and intelligently fill missing fields
+    const updates = { ...formData };
+    let changesMade = [];
+
+    // 1. If no roles selected, suggest standard production roles
+    if (updates.selected_roles.length === 0) {
+      const cameraOpRole = dayRates.find(r => r.role === "Camera op (with camera)" && r.active);
+      if (cameraOpRole) {
+        updates.selected_roles = [{ role_id: cameraOpRole.id, quantity: 1 }];
+        changesMade.push("Added Camera Operator role");
+      }
+    }
+
+    // 2. If roles include camera op, enable gear if not already
+    const hasCameraRole = updates.selected_roles.some(r => {
+      const role = dayRates.find(dr => dr.id === r.role_id);
+      return role && role.role.toLowerCase().includes('camera');
+    });
+    
+    if (hasCameraRole && !updates.gear_enabled) {
+      updates.gear_enabled = true;
+      changesMade.push("Enabled gear costs");
+    }
+
+    // 3. If gear enabled but nothing selected, add default gear
+    if (updates.gear_enabled && updates.selected_gear_items.length === 0) {
+      const defaultGear = gearCosts
+        .filter(g => g.include_by_default && !g.item.toLowerCase().includes('studio') && !g.item.toLowerCase().includes('rent'))
+        .map(g => g.id);
+      if (defaultGear.length > 0) {
+        updates.selected_gear_items = defaultGear;
+        changesMade.push("Added default gear items");
+      }
+    }
+
+    // 4. If no day type selected or custom, default to full day
+    if (!updates.day_type || updates.day_type === 'custom') {
+      updates.day_type = 'full';
+      changesMade.push("Set to Full Day pricing");
+    }
+
+    // 5. If no experience level, set to Standard
+    if (!updates.experience_level || updates.experience_level === '') {
+      updates.experience_level = 'Standard';
+      updates.custom_multiplier = settings?.experience_levels?.['Standard'] || 1.0;
+      changesMade.push("Set experience level to Standard");
+    }
+
+    // 6. If shoot dates selected and multiple days, suggest appropriate setup
+    if (updates.shoot_dates.length > 1) {
+      // For multi-day shoots, consider adding editor roles if not present
+      const hasEditor = updates.selected_roles.some(r => {
+        const role = dayRates.find(dr => dr.id === r.role_id);
+        return role && role.role.toLowerCase().includes('editor');
+      });
+      
+      if (!hasEditor) {
+        const editorRole = dayRates.find(r => r.role === "Line Editor (per 5 min)" && r.active);
+        if (editorRole) {
+          updates.selected_roles = [...updates.selected_roles, { role_id: editorRole.id, quantity: 1 }];
+          changesMade.push("Added Editor role for multi-day project");
+        }
+      }
+    }
+
+    // 7. Suggest travel if not set (assume local project needs some travel)
+    if (updates.travel_miles === 0) {
+      updates.travel_miles = 25; // Standard local travel
+      changesMade.push("Added 25 miles for local travel");
+    }
+
+    // Apply updates
+    if (changesMade.length > 0) {
+      setFormData(updates);
+      toast({
+        title: "Smart Fill Complete",
+        description: `${changesMade.length} suggestion${changesMade.length !== 1 ? 's' : ''} applied: ${changesMade.slice(0, 3).join(', ')}${changesMade.length > 3 ? '...' : ''}`
+      });
+    } else {
+      toast({
+        title: "Form Already Complete",
+        description: "All key fields are already filled in.",
+      });
+    }
+  };
+
   const hasSavedSettings = () => {
     return localStorage.getItem(STORAGE_KEYS.SAVED_SETTINGS) !== null;
   };
@@ -364,6 +542,51 @@ export default function Calculator() {
     return `${format(new Date(sortedDates[0]), "MMM d")} - ${format(new Date(sortedDates[sortedDates.length - 1]), "MMM d, yyyy")} (${sortedDates.length} days)`;
   };
 
+  const handleUnlockSubmit = () => {
+    const code = unlockCode.trim().toUpperCase();
+    
+    // Check for trial code
+    if (code === "TRIAL3DAY" || code === "NVISION3DAY") {
+      const result = activateTrial();
+      
+      if (result.success) {
+        toast({
+          title: "3-Day Trial Activated!",
+          description: result.message,
+        });
+        setUnlockDialogOpen(false);
+        setUnlockCode('');
+        setUnlockEmail('');
+      } else {
+        toast({
+          title: "Trial Already Used",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+    
+    // Check for permanent unlock code
+    const result = activateSubscription(code, unlockEmail);
+    
+    if (result.success) {
+      toast({
+        title: "Unlocked!",
+        description: result.message,
+      });
+      setUnlockDialogOpen(false);
+      setUnlockCode('');
+      setUnlockEmail('');
+    } else {
+      toast({
+        title: "Invalid Code",
+        description: result.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleCopyEmail = () => {
     checkAccessAndProceed(() => {
       if (!calculations) return;
@@ -379,6 +602,9 @@ export default function Calculator() {
       const emailText = exportService.generateEmailText();
       navigator.clipboard.writeText(emailText);
       
+      // Save to history
+      saveToQuoteHistory(formData, calculations.total);
+      
       toast({
         title: "Quote copied",
         description: "Quote text has been copied to clipboard.",
@@ -389,6 +615,9 @@ export default function Calculator() {
   const handlePrintReceipt = () => {
     checkAccessAndProceed(() => {
       if (!calculations) return;
+      
+      // Save to history
+      saveToQuoteHistory(formData, calculations.total);
       
       const exportService = new ExportService(
         formData,
@@ -407,6 +636,9 @@ export default function Calculator() {
   const handlePrint = () => {
     checkAccessAndProceed(() => {
       if (!calculations) return;
+      
+      // Save to history
+      saveToQuoteHistory(formData, calculations.total);
       
       const exportService = new ExportService(
         formData,
@@ -442,26 +674,155 @@ export default function Calculator() {
   console.log('calculations:', calculations);
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'var(--color-bg-primary)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
+      {/* Landing Hero Section */}
+      <section className="py-16 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+                You already have the talent —
+                <span style={{ color: 'var(--color-accent-primary)' }}> now get the clarity to match.</span>
+              </h1>
+              
+              <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                Charge what you're worth. Send quotes with confidence. Run your creative business like a pro.
+              </p>
+              
+              <div className="flex gap-4">
+                <a href="#calculator" className="inline-block">
+                  <Button 
+                    size="lg"
+                    className="px-8 py-4 text-lg font-semibold hover:scale-105 transition-transform"
+                    style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+                  >
+                    Start Calculating
+                  </Button>
+                </a>
+              </div>
+            </div>
+            
+            <div>
+              <CalculatorCarousel />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem Section */}
+      <section className="py-16 px-6" style={{ background: 'var(--color-bg-card)' }}>
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-8 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+            The struggle isn't your talent.
+          </h2>
+          
+          <div className="space-y-4 text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+            <p>
+              It's the <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>anxiety before you hit send</span> on a quote.
+            </p>
+            
+            <p>
+              It's wondering if you're <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>charging too much</span> or <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>leaving money on the table</span>.
+            </p>
+            
+            <p>
+              It's being <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>busy but not profitable</span>.
+            </p>
+            
+            <p className="text-xl font-bold pt-6" style={{ color: 'var(--color-accent-primary)' }}>
+              Confidence doesn't come from talent — it comes from clarity.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Calculator Section */}
+      <div id="calculator" className="p-6 scroll-mt-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Quote Calculator</h1>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Quote Calculator</h2>
               <p style={{ color: 'var(--color-text-secondary)' }}>Create professional quotes with industry-standard pricing</p>
             </div>
             <div className="flex flex-wrap gap-2 w-full justify-between md:justify-end">
+              {!isUnlocked && (
+                <Dialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)', borderColor: 'var(--color-accent-primary)', boxShadow: '0 0 10px rgba(212, 175, 55, 0.4)' }}
+                    >
+                      <Key className="w-4 h-4 mr-2" />
+                      Enter Unlock Code
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)' }}>
+                    <DialogHeader>
+                      <DialogTitle style={{ color: 'var(--color-text-primary)' }}>Enter Your Unlock Code</DialogTitle>
+                      <DialogDescription style={{ color: 'var(--color-text-secondary)' }}>
+                        Enter your unlock code or trial code to activate unlimited access
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div>
+                        <Label htmlFor="unlock-code" style={{ color: 'var(--color-text-secondary)' }}>Unlock Code</Label>
+                        <Input
+                          id="unlock-code"
+                          placeholder="NV-XXXX-XXXX-XXXX-XXXX or TRIAL3DAY"
+                          value={unlockCode}
+                          onChange={(e) => setUnlockCode(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleUnlockSubmit()}
+                          style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="unlock-email" style={{ color: 'var(--color-text-secondary)' }}>Email (Optional)</Label>
+                        <Input
+                          id="unlock-email"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={unlockEmail}
+                          onChange={(e) => setUnlockEmail(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleUnlockSubmit()}
+                          style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                        />
+                      </div>
+                      <Button 
+                        onClick={handleUnlockSubmit}
+                        className="w-full"
+                        style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+                      >
+                        Activate Code
+                      </Button>
+                      <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
+                        Don't have a code? <a href={createPageUrl("Unlock")} className="underline" style={{ color: 'var(--color-accent-primary)' }}>Get unlimited access</a>
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
               {!isUnlocked && hasUsedFreeQuote && (
                 <Button
                   onClick={() => navigate(createPageUrl("Unlock"))}
                   variant="outline"
                   size="sm"
-                  style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)', borderColor: 'var(--color-accent-primary)', boxShadow: '0 0 10px rgba(212, 175, 55, 0.4)' }}
+                  style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
                 >
                   <Lock className="w-4 h-4 mr-2" />
-                  Unlock Unlimited
+                  Buy Unlimited
                 </Button>
               )}
+              <Button
+                onClick={handleSmartFill}
+                variant="outline"
+                size="sm"
+                style={{ background: 'var(--color-success)', color: 'white', borderColor: 'var(--color-success)' }}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Smart Fill
+              </Button>
               {hasSavedSettings() && (
                 <Button
                   onClick={handleLoadSavedSettings}
@@ -520,6 +881,19 @@ export default function Calculator() {
                 <Download className="w-4 h-4 mr-2" />
                 Business Print
               </Button>
+              <QuoteHistory 
+                onLoadQuote={(savedFormData) => {
+                  setFormData({
+                    ...savedFormData,
+                    custom_price_override: null, // Clear custom price when loading from history
+                    custom_discount_percent: 0 // Clear discount percentage
+                  });
+                  toast({
+                    title: "Quote Loaded!",
+                    description: "Previous quote has been restored",
+                  });
+                }}
+              />
               <Button
                 onClick={handleReset}
                 variant="outline"
@@ -529,8 +903,96 @@ export default function Calculator() {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset Form
               </Button>
+              <Button
+                onClick={() => {
+                  const timestamp = new Date().toLocaleString();
+                  setFormData({
+                    ...formData,
+                    client_name: `${formData.client_name} (Copy)`,
+                    project_title: `${formData.project_title} (Copy)`,
+                    custom_price_override: null, // Clear custom price on duplicate
+                    custom_discount_percent: 0 // Clear discount percentage
+                  });
+                  toast({
+                    title: "Quote Duplicated!",
+                    description: "You can now modify this copy independently",
+                  });
+                }}
+                variant="outline"
+                size="sm"
+                disabled={!formData.client_name && !formData.project_title}
+                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
+              >
+                <CopyIcon className="w-4 h-4 mr-2" />
+                Duplicate
+              </Button>
             </div>
           </div>
+
+          {/* Affiliate Banner */}
+          <Card className="mb-6 border-2 overflow-hidden" style={{ 
+            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%)',
+            borderColor: 'var(--color-accent-primary)'
+          }}>
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <DollarSign className="w-6 h-6" style={{ color: 'var(--color-accent-primary)' }} />
+                    <h3 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                      Earn $6 Per Referral!
+                    </h3>
+                  </div>
+                  <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+                    Join our affiliate program and earn 15% commission on every sale you refer. 
+                    Get your unique link, share it, and start earning today!
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    <span className="flex items-center gap-1">
+                      <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                      30-day cookie tracking
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                      $25 minimum payout
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                      PayPal payments
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => navigate('/affiliate/signup')}
+                    size="lg"
+                    className="whitespace-nowrap font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                    style={{ 
+                      background: 'var(--color-accent-primary)', 
+                      color: '#000',
+                      border: 'none'
+                    }}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Join Affiliate Program
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/affiliate/login')}
+                    variant="outline"
+                    size="lg"
+                    className="whitespace-nowrap"
+                    style={{ 
+                      borderColor: 'var(--color-accent-primary)',
+                      color: 'var(--color-accent-primary)',
+                      background: 'transparent'
+                    }}
+                  >
+                    Affiliate Login
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {!isUnlocked && (
             <Alert className="mb-4 border" style={{
@@ -546,6 +1008,13 @@ export default function Calculator() {
                 )}
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* Negotiation Ticker - Only show when calculations exist */}
+          {calculations && calculations.total > 0 && (
+            <div className="mb-6">
+              <NegotiationTicker calculations={calculations} settings={settings} />
+            </div>
           )}
 
           {trialDaysLeft !== null && isTrialActive && (
@@ -566,17 +1035,36 @@ export default function Calculator() {
               <strong>Privacy First:</strong> All data is stored locally in your browser. Your quotes and settings are automatically saved and will persist even after closing the browser.
             </AlertDescription>
           </Alert>
+
+          {/* Preset Templates */}
+          <PresetTemplates 
+            onApplyPreset={(presetConfig) => {
+              setFormData({
+                ...formData,
+                ...presetConfig,
+                shoot_dates: formData.shoot_dates, // Keep existing dates
+                custom_price_override: null, // Clear any custom price when applying template
+                custom_discount_percent: 0 // Clear discount percentage
+              });
+              toast({
+                title: "Template Applied!",
+                description: "You can now customize this quote",
+              });
+            }}
+          />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 lg:gap-6 pb-20 lg:pb-0">
           {/* Left Column - Inputs */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 lg:space-y-6">
             {/* Client Info */}
-            <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}>
-              <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border-dark)' }}>
-                <CardTitle style={{ color: 'var(--color-text-primary)' }}>Client & Project Details</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
+            <CollapsibleSection 
+              title="Client & Project Details" 
+              icon={User}
+              defaultOpen={true}
+              cardClassName="border-[var(--color-border-dark)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
+            >
+              <div className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="client_name" style={{ color: 'var(--color-text-secondary)' }}>Client Name</Label>
@@ -649,8 +1137,8 @@ export default function Calculator() {
                     </PopoverContent>
                   </Popover>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CollapsibleSection>
 
             {/* Experience Level */}
             <ExperienceLevelSelector
@@ -672,39 +1160,40 @@ export default function Calculator() {
             />
 
             {/* Pricing Model */}
-            <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}>
-              <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border-dark)' }}>
-                <CardTitle style={{ color: 'var(--color-text-primary)' }}>Pricing Model</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
+            <CollapsibleSection 
+              title="Pricing Model" 
+              icon={DollarSign}
+              defaultOpen={true}
+              cardClassName="border-[var(--color-border-dark)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
+            >
                 <div className="space-y-3">
                   <div
                     className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.day_type === "half" ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                      formData.day_type === "half" && !formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
                     }`}
-                    style={formData.day_type === "half" ? { borderColor: 'var(--color-accent-primary)' } : {}}
-                    onClick={() => setFormData({...formData, day_type: "half"})}
+                    style={formData.day_type === "half" && !formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
+                    onClick={() => setFormData({...formData, day_type: "half", single_price_enabled: false})}
                   >
                     <Checkbox
-                      checked={formData.day_type === "half"}
-                      onCheckedChange={() => setFormData({...formData, day_type: "half"})}
+                      checked={formData.day_type === "half" && !formData.single_price_enabled}
+                      onCheckedChange={() => setFormData({...formData, day_type: "half", single_price_enabled: false})}
                     />
                     <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
                       <span>Half Day Rates</span>
-                      <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>(≤6 hours)</span>
+                      <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>(up to 6 hours)</span>
                     </Label>
                   </div>
 
                   <div
                     className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.day_type === "full" ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                      formData.day_type === "full" && !formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
                     }`}
-                    style={formData.day_type === "full" ? { borderColor: 'var(--color-accent-primary)' } : {}}
-                    onClick={() => setFormData({...formData, day_type: "full"})}
+                    style={formData.day_type === "full" && !formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
+                    onClick={() => setFormData({...formData, day_type: "full", single_price_enabled: false})}
                   >
                     <Checkbox
-                      checked={formData.day_type === "full"}
-                      onCheckedChange={() => setFormData({...formData, day_type: "full"})}
+                      checked={formData.day_type === "full" && !formData.single_price_enabled}
+                      onCheckedChange={() => setFormData({...formData, day_type: "full", single_price_enabled: false})}
                     />
                     <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
                       <span>Full Day Rates</span>
@@ -714,20 +1203,58 @@ export default function Calculator() {
 
                   <div
                     className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.day_type === "custom" ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                      formData.day_type === "custom" && !formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
                     }`}
-                    style={formData.day_type === "custom" ? { borderColor: 'var(--color-accent-primary)' } : {}}
-                    onClick={() => setFormData({...formData, day_type: "custom"})}
+                    style={formData.day_type === "custom" && !formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
+                    onClick={() => setFormData({...formData, day_type: "custom", single_price_enabled: false})}
                   >
                     <Checkbox
-                      checked={formData.day_type === "custom"}
-                      onCheckedChange={() => setFormData({...formData, day_type: "custom"})}
+                      checked={formData.day_type === "custom" && !formData.single_price_enabled}
+                      onCheckedChange={() => setFormData({...formData, day_type: "custom", single_price_enabled: false})}
                     />
                     <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
                       <span>Custom Hourly Rate</span>
                     </Label>
                   </div>
+
+                  <div
+                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                    }`}
+                    style={formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
+                    onClick={() => setFormData({...formData, single_price_enabled: true, day_type: null})}
+                  >
+                    <Checkbox
+                      checked={formData.single_price_enabled}
+                      onCheckedChange={(checked) => setFormData({...formData, single_price_enabled: checked, day_type: checked ? null : formData.day_type})}
+                    />
+                    <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
+                      <span>Single Fixed Price</span>
+                      <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>(overhead/admin added)</span>
+                    </Label>
+                  </div>
                 </div>
+
+                {formData.single_price_enabled && (
+                  <div className="mt-4 space-y-3 pt-4" style={{ borderTop: '1px solid var(--color-border-dark)' }}>
+                    <div>
+                      <Label htmlFor="single_price" style={{ color: 'var(--color-text-secondary)' }}>Base Price ($)</Label>
+                      <Input
+                        id="single_price"
+                        type="number"
+                        min="0"
+                        step="50"
+                        value={formData.single_price}
+                        onChange={(e) => setFormData({...formData, single_price: parseFloat(e.target.value) || 0})}
+                        style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                        placeholder="Enter your fixed price"
+                      />
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        This base price will have overhead, profit margin, gear, travel, and taxes added automatically
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {formData.day_type === "custom" && (
                   <div className="mt-4 space-y-3 pt-4" style={{ borderTop: '1px solid var(--color-border-dark)' }}>
@@ -768,8 +1295,7 @@ export default function Calculator() {
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </CollapsibleSection>
 
             {/* Roles */}
             <RoleSelector
@@ -849,6 +1375,20 @@ export default function Calculator() {
               textMutedClassName="text-[var(--color-text-secondary)]"
               checkboxHoverBgClassName="hover:bg-[var(--color-bg-tertiary)]"
             />
+
+            {/* Camera */}
+            <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}>
+              <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border-dark)' }}>
+                <CardTitle style={{ color: 'var(--color-text-primary)' }}>Camera</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <CameraSelector
+                  cameras={cameras}
+                  selectedCamera={formData.selected_camera}
+                  onCameraChange={(cameraId) => setFormData({...formData, selected_camera: cameraId})}
+                />
+              </CardContent>
+            </Card>
 
             {/* Travel & Rentals */}
             <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}>
@@ -939,10 +1479,148 @@ export default function Calculator() {
 
           {/* Right Column - Live Totals */}
           <div className="lg:col-span-1">
-            <LiveTotalsPanel calculations={calculations} settings={settings} />
+            <LiveTotalsPanel 
+              calculations={calculations} 
+              settings={settings} 
+              formData={{...formData, cameras}}
+              onUpdateCustomPrice={(price) => {
+                setFormData(prev => ({...prev, custom_price_override: price}));
+              }}
+              onUpdateDiscount={(discountPercent) => {
+                setFormData(prev => ({...prev, custom_discount_percent: discountPercent}));
+              }}
+            />
           </div>
         </div>
       </div>
+      
+      {/* Mobile Floating Total */}
+      <MobileFloatingTotal 
+        total={calculations?.total}
+        onExpand={(expanded) => {
+          // Could scroll to quote card when expanded
+          if (expanded) {
+            document.getElementById('quote-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }}
+      />
+      </div>
+
+      {/* Final CTA */}
+      <section className="py-20 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <Heart className="w-12 h-12 mx-auto mb-6" style={{ color: 'var(--color-accent-primary)' }} />
+          
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+            You deserve to be paid what you're worth.
+          </h2>
+          
+          <p className="text-lg mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+            This tool just makes it easier to figure out what that is.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CalculatorCarousel() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const slides = [
+    {
+      icon: DollarSign,
+      title: "Set Your Rates",
+      description: "Choose your experience level and the calculator suggests industry-standard day rates",
+      color: "rgba(212, 175, 55, 0.1)"
+    },
+    {
+      icon: SettingsIcon,
+      title: "Select Your Gear",
+      description: "Add cameras, lenses, audio equipment - the tool calculates amortization automatically",
+      color: "rgba(212, 175, 55, 0.1)"
+    },
+    {
+      icon: FileText,
+      title: "Generate Quote",
+      description: "Professional PDF quotes ready to send with all line items, taxes, and terms included",
+      color: "rgba(212, 175, 55, 0.1)"
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  return (
+    <div className="relative">
+      <Card className="shadow-2xl border-2" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-accent-primary)' }}>
+        <CardContent className="p-8 md:p-12">
+          <div className="min-h-[280px] flex flex-col items-center justify-center text-center">
+            <div 
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-all duration-500"
+              style={{ background: slides[currentSlide].color }}
+            >
+              {React.createElement(slides[currentSlide].icon, {
+                className: "w-10 h-10",
+                style: { color: 'var(--color-accent-primary)' }
+              })}
+            </div>
+            
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 transition-all duration-500" style={{ color: 'var(--color-text-primary)' }}>
+              {slides[currentSlide].title}
+            </h3>
+            
+            <p className="text-base md:text-lg leading-relaxed transition-all duration-500" style={{ color: 'var(--color-text-secondary)' }}>
+              {slides[currentSlide].description}
+            </p>
+          </div>
+          
+          {/* Navigation */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <button
+              onClick={prevSlide}
+              className="p-2 rounded-full hover:scale-110 transition-transform"
+              style={{ background: 'rgba(212, 175, 55, 0.1)' }}
+            >
+              <ChevronLeft className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+            </button>
+            
+            <div className="flex gap-2">
+              {slides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlide(idx)}
+                  className="w-2 h-2 rounded-full transition-all duration-300"
+                  style={{
+                    background: idx === currentSlide ? 'var(--color-accent-primary)' : 'rgba(212, 175, 55, 0.3)',
+                    width: idx === currentSlide ? '24px' : '8px'
+                  }}
+                />
+              ))}
+            </div>
+            
+            <button
+              onClick={nextSlide}
+              className="p-2 rounded-full hover:scale-110 transition-transform"
+              style={{ background: 'rgba(212, 175, 55, 0.1)' }}
+            >
+              <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

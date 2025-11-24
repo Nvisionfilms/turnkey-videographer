@@ -7,7 +7,9 @@ const { Pool } = pg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('railway.internal') ? false : { rejectUnauthorized: false }
+  ssl: false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000
 });
 
 export default pool;

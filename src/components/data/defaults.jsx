@@ -5,6 +5,7 @@
 export const STORAGE_KEYS = {
   DAY_RATES: 'nvision_day_rates',
   GEAR_COSTS: 'nvision_gear_costs',
+  CAMERAS: 'nvision_cameras',
   SETTINGS: 'nvision_settings',
   CALCULATOR_SESSION: 'nvision_calculator_session',
   SAVED_SETTINGS: 'nvision_saved_settings',
@@ -141,16 +142,45 @@ export const DEFAULT_GEAR_COSTS = [
   }
 ];
 
+export const DEFAULT_CAMERAS = [
+  {
+    id: "camera_1",
+    make: "Sony",
+    model: "FX3",
+    is_default: true
+  },
+  {
+    id: "camera_2",
+    make: "Sony",
+    model: "FX6",
+    is_default: false
+  },
+  {
+    id: "camera_3",
+    make: "Canon",
+    model: "C70",
+    is_default: false
+  },
+  {
+    id: "camera_4",
+    make: "RED",
+    model: "Komodo",
+    is_default: false
+  }
+];
+
 export const DEFAULT_SETTINGS = {
   id: "settings_1",
   company_name: "NVision Video Production",
   company_tagline: "Professional Videography Services",
+  company_logo: "",
   company_address: "",
   company_phone: "",
   company_email: "",
   company_website: "",
   default_currency: "USD",
   tax_rate_percent: 8.25,
+  deposit_enabled: true,
   deposit_percent: 50,
   region: "Austin, TX",
   industry_index: 1.0,
@@ -161,6 +191,9 @@ export const DEFAULT_SETTINGS = {
   gear_amortization_days: 180,
   mileage_rate: 0.67,
   tax_travel: false,
+  overhead_percent: 20,
+  profit_margin_percent: 25,
+  desired_profit_margin_percent: 60,
   experience_levels: {
     Junior: 0.65,
     Standard: 1.0,

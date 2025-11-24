@@ -26,8 +26,8 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-slate-200 bg-white text-slate-900",
-        destructive: "destructive group border-red-200 bg-red-50 text-red-900",
+        default: "border-[var(--color-border)] text-[var(--color-text-primary)]",
+        destructive: "destructive group border-red-500 bg-red-900/20 text-red-200",
       },
     },
     defaultVariants: {
@@ -42,7 +42,8 @@ const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
       ref={ref}
       className={cn(toastVariants({ variant }), className)}
       style={{
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 80px rgba(255, 255, 255, 0.8)',
+        background: 'var(--color-bg-secondary)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 80px rgba(212, 175, 55, 0.3)',
         minWidth: '420px',
         maxWidth: '500px'
       }}

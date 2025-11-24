@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Video, Settings, Calculator, Lock } from "lucide-react";
+import { Video, Settings, Calculator, Lock, BarChart3 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import {
   Sidebar,
@@ -34,6 +34,11 @@ const navigationItems = [
     url: createPageUrl("Admin"),
     icon: Settings,
   },
+  {
+    title: "Analytics",
+    url: "/admin/analytics",
+    icon: BarChart3,
+  },
 ];
 
 export default function Layout({ children }) {
@@ -45,24 +50,25 @@ export default function Layout({ children }) {
     <SidebarProvider>
       <style>{`
         :root {
-          --color-bg-primary: #0a0a0a;
-          --color-bg-secondary: #1a1a1a;
-          --color-bg-tertiary: #252525;
-          --color-bg-card: #1e1e1e;
-          --color-accent-primary: #d4af37;
-          --color-accent-secondary: #f4d03f;
-          --color-accent-hover: #c19b2e;
-          --color-text-primary: #ffffff;
-          --color-text-secondary: #e5e5e5;
-          --color-text-muted: #9ca3af;
-          --color-border: #2a2a2a;
-          --color-border-light: #3a3a3a;
-          --color-success: #10b981;
-          --color-warning: #f59e0b;
-          --color-error: #ef4444;
-          --color-input-bg: #1a1a1a;
-          --color-input-border: #2a2a2a;
-          --color-button-text: #0a0a0a;
+          --color-bg-primary: #0E1320;
+          --color-bg-secondary: #1A1D24;
+          --color-bg-tertiary: #252830;
+          --color-bg-card: #1A1D24;
+          --color-accent-primary: #D4AF37;
+          --color-accent-secondary: #E8C547;
+          --color-accent-hover: #C19B2E;
+          --color-text-primary: #FFFFFF;
+          --color-text-secondary: #E5E5E5;
+          --color-text-muted: #9CA3AF;
+          --color-border: #2C3440;
+          --color-border-light: #3A4150;
+          --color-border-dark: #1A1D24;
+          --color-success: #10D581;
+          --color-warning: #F59E0B;
+          --color-error: #E35946;
+          --color-input-bg: #1A1D24;
+          --color-input-border: #2C3440;
+          --color-button-text: #0E1320;
         }
         
         body {
@@ -81,6 +87,75 @@ export default function Layout({ children }) {
 
         [data-radix-popper-content-wrapper] {
           background: var(--color-bg-secondary) !important;
+        }
+
+        /* Modern card styling */
+        [class*="Card"] {
+          border-radius: 12px !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Input styling */
+        input, select, textarea {
+          border-radius: 8px !important;
+          transition: all 0.2s ease !important;
+          color: var(--color-text-primary) !important;
+        }
+
+        input::placeholder, textarea::placeholder {
+          color: var(--color-text-muted) !important;
+          opacity: 0.6;
+        }
+
+        input:focus, select:focus, textarea:focus {
+          border-color: var(--color-accent-primary) !important;
+          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1) !important;
+        }
+
+        /* Dropdown/Select styling */
+        [role="option"]:hover,
+        [data-state="checked"] {
+          background: rgba(212, 175, 55, 0.2) !important;
+        }
+
+        [role="option"][data-highlighted] {
+          background: rgba(212, 175, 55, 0.2) !important;
+        }
+
+        /* Button styling */
+        button {
+          border-radius: 8px !important;
+          font-weight: 500 !important;
+          transition: all 0.2s ease !important;
+        }
+
+        button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Primary button (gold) */
+        button[style*="background: var(--color-accent-primary)"],
+        button[style*="background-color: var(--color-accent-primary)"] {
+          background: var(--color-accent-primary) !important;
+          color: var(--color-button-text) !important;
+          border: none !important;
+        }
+
+        button[style*="background: var(--color-accent-primary)"]:hover,
+        button[style*="background-color: var(--color-accent-primary)"]:hover {
+          background: var(--color-accent-hover) !important;
+        }
+
+        /* Typography improvements */
+        h1, h2, h3, h4, h5, h6 {
+          font-weight: 600 !important;
+          letter-spacing: -0.02em !important;
+        }
+
+        /* Smooth scrolling */
+        * {
+          scroll-behavior: smooth;
         }
       `}</style>
       <div className="min-h-screen flex w-full" style={{ background: 'var(--color-bg-primary)' }}>

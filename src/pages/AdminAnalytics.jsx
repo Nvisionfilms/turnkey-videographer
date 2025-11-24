@@ -1,0 +1,403 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  getAllAffiliates, 
+  getAllConversions,
+  AFFILIATE_CONFIG 
+} from "../utils/affiliateUtils";
+import { 
+  TrendingUp, 
+  Users, 
+  DollarSign, 
+  MousePointerClick,
+  Eye,
+  FileText,
+  Unlock,
+  UserPlus,
+  Activity,
+  Calendar,
+  BarChart3
+} from "lucide-react";
+
+export default function AdminAnalytics() {
+  const [affiliates, setAffiliates] = useState([]);
+  const [conversions, setConversions] = useState([]);
+  const [stats, setStats] = useState({
+    totalAffiliates: 0,
+    totalClicks: 0,
+    totalConversions: 0,
+    totalRevenue: 0,
+    totalCommissionsPaid: 0,
+    totalCommissionsPending: 0,
+    conversionRate: 0,
+    avgRevenuePerAffiliate: 0,
+    topAffiliates: []
+  });
+
+  useEffect(() => {
+    loadAnalytics();
+  }, []);
+
+  const loadAnalytics = () => {
+    const affiliateData = getAllAffiliates();
+    const conversionData = getAllConversions();
+    
+    setAffiliates(affiliateData);
+    setConversions(conversionData);
+
+    // Calculate stats
+    const totalClicks = affiliateData.reduce((sum, a) => sum + a.totalClicks, 0);
+    const totalConversions = conversionData.length;
+    const totalRevenue = totalConversions * AFFILIATE_CONFIG.unlockPrice;
+    const totalCommissionsPaid = affiliateData.reduce((sum, a) => sum + a.paidOut, 0);
+    const totalCommissionsPending = affiliateData.reduce((sum, a) => sum + a.pendingPayout, 0);
+    const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : 0;
+    const avgRevenuePerAffiliate = affiliateData.length > 0 ? (totalRevenue / affiliateData.length).toFixed(2) : 0;
+
+    // Top affiliates by conversions
+    const topAffiliates = [...affiliateData]
+      .sort((a, b) => b.totalConversions - a.totalConversions)
+      .slice(0, 5);
+
+    setStats({
+      totalAffiliates: affiliateData.length,
+      totalClicks,
+      totalConversions,
+      totalRevenue,
+      totalCommissionsPaid,
+      totalCommissionsPending,
+      conversionRate,
+      avgRevenuePerAffiliate,
+      topAffiliates
+    });
+  };
+
+  // Get user activity stats from localStorage
+  const getUserStats = () => {
+    const unlocked = localStorage.getItem('nvision_unlocked') === 'true';
+    const freeQuoteUsed = localStorage.getItem('nvision_free_quote_used') === 'true';
+    const trialUsed = localStorage.getItem('nvision_trial_used') === 'true';
+    const quoteHistory = JSON.parse(localStorage.getItem('nvision_quote_history') || '[]');
+    
+    return {
+      unlocked,
+      freeQuoteUsed,
+      trialUsed,
+      totalQuotesSaved: quoteHistory.length
+    };
+  };
+
+  const userStats = getUserStats();
+
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+            📊 Admin Analytics Dashboard
+          </h1>
+          <p style={{ color: 'var(--color-text-secondary)' }}>
+            Complete overview of affiliate program, revenue, and user activity
+          </p>
+        </div>
+
+        {/* Revenue Overview */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+            💰 Revenue Overview
+          </h2>
+          <div className="grid md:grid-cols-4 gap-6">
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <DollarSign className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>
+                    ${stats.totalRevenue.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Total Revenue</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {stats.totalConversions} sales × ${AFFILIATE_CONFIG.unlockPrice}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    ${stats.totalCommissionsPending.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Pending Commissions</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  Owed to affiliates
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <DollarSign className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    ${stats.totalCommissionsPaid.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Commissions Paid</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  Total paid out
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <BarChart3 className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>
+                    ${(stats.totalRevenue - stats.totalCommissionsPaid - stats.totalCommissionsPending).toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Net Profit</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  After commissions
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Affiliate Performance */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+            👥 Affiliate Performance
+          </h2>
+          <div className="grid md:grid-cols-4 gap-6">
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Users className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {stats.totalAffiliates}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Total Affiliates</p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <MousePointerClick className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {stats.totalClicks}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Total Clicks</p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <UserPlus className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {stats.totalConversions}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Total Conversions</p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {stats.conversionRate}%
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Conversion Rate</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* User Activity */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+            📈 User Activity (This Browser)
+          </h2>
+          <div className="grid md:grid-cols-4 gap-6">
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Unlock className="w-5 h-5" style={{ color: userStats.unlocked ? 'var(--color-success)' : 'var(--color-text-muted)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {userStats.unlocked ? 'Yes' : 'No'}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Calculator Unlocked</p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <FileText className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {userStats.freeQuoteUsed ? 'Used' : 'Available'}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Free Quote Status</p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Calendar className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {userStats.trialUsed ? 'Used' : 'Available'}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Trial Status</p>
+              </CardContent>
+            </Card>
+
+            <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Activity className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  <span className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {userStats.totalQuotesSaved}
+                  </span>
+                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Quotes Saved</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Top Performing Affiliates */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+            🏆 Top Performing Affiliates
+          </h2>
+          <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+            <CardContent className="p-6">
+              {stats.topAffiliates.length === 0 ? (
+                <p className="text-center py-8" style={{ color: 'var(--color-text-muted)' }}>
+                  No affiliate data yet
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {stats.topAffiliates.map((affiliate, index) => (
+                    <div 
+                      key={affiliate.id}
+                      className="flex items-center justify-between p-4 rounded-lg"
+                      style={{ background: 'var(--color-bg-primary)' }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+                          style={{ 
+                            background: index === 0 ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
+                            color: index === 0 ? '#000' : 'var(--color-text-primary)'
+                          }}
+                        >
+                          #{index + 1}
+                        </div>
+                        <div>
+                          <p className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                            {affiliate.name}
+                          </p>
+                          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                            {affiliate.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold" style={{ color: 'var(--color-success)' }}>
+                          {affiliate.totalConversions} sales
+                        </p>
+                        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                          ${(affiliate.pendingPayout + affiliate.paidOut).toFixed(2)} earned
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Conversions */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+            🎯 Recent Conversions
+          </h2>
+          <Card style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+            <CardContent className="p-6">
+              {conversions.length === 0 ? (
+                <p className="text-center py-8" style={{ color: 'var(--color-text-muted)' }}>
+                  No conversions yet
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: 'var(--color-border)' }}>
+                        <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                          Date
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                          Affiliate
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                          Revenue
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                          Commission
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {conversions.slice(0, 10).map((conversion) => {
+                        const affiliate = affiliates.find(a => a.code === conversion.affiliateCode);
+                        return (
+                          <tr 
+                            key={conversion.id}
+                            className="border-b"
+                            style={{ borderColor: 'var(--color-border)' }}
+                          >
+                            <td className="py-3 px-4 text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                              {new Date(conversion.timestamp).toLocaleDateString()}
+                            </td>
+                            <td className="py-3 px-4 text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                              {affiliate?.name || 'Unknown'}
+                            </td>
+                            <td className="py-3 px-4 text-right text-sm font-semibold" style={{ color: 'var(--color-success)' }}>
+                              ${AFFILIATE_CONFIG.unlockPrice.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-right text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                              ${conversion.commission.toFixed(2)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

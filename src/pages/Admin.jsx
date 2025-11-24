@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, DollarSign, Camera, RotateCcw, Plus, Trash2, Save, Award } from "lucide-react";
+import { Settings as SettingsIcon, DollarSign, Camera, RotateCcw, Plus, Trash2, Save, Award, Upload, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { STORAGE_KEYS, DEFAULT_DAY_RATES, DEFAULT_GEAR_COSTS, DEFAULT_SETTINGS } from "../components/data/defaults";
+import { STORAGE_KEYS, DEFAULT_DAY_RATES, DEFAULT_GEAR_COSTS, DEFAULT_CAMERAS, DEFAULT_SETTINGS } from "../components/data/defaults";
 
 export default function Admin() {
   const { toast } = useToast();
@@ -37,6 +37,7 @@ export default function Admin() {
   
   const [dayRates, setDayRates] = useState([]);
   const [gearCosts, setGearCosts] = useState([]);
+  const [cameras, setCameras] = useState([]);
   const [settings, setSettings] = useState(null);
   const [localSettings, setLocalSettings] = useState(null);
   const saveTimeoutRef = useRef(null);
@@ -53,6 +54,13 @@ export default function Admin() {
     total_investment: 0,
     include_by_default: true
   });
+  const [newCamera, setNewCamera] = useState({
+    make: "",
+    model: "",
+    is_default: false
+  });
+  const [showAddCamera, setShowAddCamera] = useState(false);
+  const [editingCamera, setEditingCamera] = useState(null);
 
   useEffect(() => {
     loadDataFromStorage();
@@ -74,12 +82,27 @@ export default function Admin() {
       }
       setGearCosts(JSON.parse(gear));
 
+      let cams = localStorage.getItem(STORAGE_KEYS.CAMERAS);
+      if (!cams) {
+        localStorage.setItem(STORAGE_KEYS.CAMERAS, JSON.stringify(DEFAULT_CAMERAS));
+        cams = JSON.stringify(DEFAULT_CAMERAS);
+      }
+      setCameras(JSON.parse(cams));
+
       let sett = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (!sett) {
         localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
         sett = JSON.stringify(DEFAULT_SETTINGS);
       }
       const loadedSettings = JSON.parse(sett);
+      
+      // Migrate: Add desired_profit_margin_percent if it doesn't exist
+      if (loadedSettings.desired_profit_margin_percent === undefined) {
+        loadedSettings.desired_profit_margin_percent = DEFAULT_SETTINGS.desired_profit_margin_percent;
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(loadedSettings));
+        console.log('✨ Migrated settings to include desired_profit_margin_percent:', loadedSettings.desired_profit_margin_percent);
+      }
+      
       setSettings(loadedSettings);
       setLocalSettings(loadedSettings);
     } catch (error) {
@@ -175,17 +198,88 @@ export default function Admin() {
     });
   };
 
+  const handleLogoUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload a valid image file (PNG, JPG, SVG, or WebP)');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size must be less than 2MB');
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      handleSettingsUpdate('company_logo', reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    handleSettingsUpdate('company_logo', '');
+  };
+
   const deleteGear = (id) => {
     const updated = gearCosts.filter(g => g.id !== id);
     setGearCosts(updated);
     saveDataToStorage(STORAGE_KEYS.GEAR_COSTS, updated);
   };
 
+  // Camera CRUD
+  const createCamera = (data) => {
+    const newId = `camera_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const newCameraObj = { ...data, id: newId };
+    const updated = [...cameras, newCameraObj];
+    setCameras(updated);
+    saveDataToStorage(STORAGE_KEYS.CAMERAS, updated);
+    setShowAddCamera(false);
+    setNewCamera({
+      make: "",
+      model: "",
+      is_default: false
+    });
+  };
+
+  const updateCamera = (id, data) => {
+    const updated = cameras.map(c => c.id === id ? { ...c, ...data } : c);
+    setCameras(updated);
+    saveDataToStorage(STORAGE_KEYS.CAMERAS, updated);
+    setEditingCamera(null);
+  };
+
+  const deleteCamera = (id) => {
+    const updated = cameras.filter(c => c.id !== id);
+    setCameras(updated);
+    saveDataToStorage(STORAGE_KEYS.CAMERAS, updated);
+  };
+
+  const toggleCameraDefault = (id) => {
+    const updated = cameras.map(c => ({
+      ...c,
+      is_default: c.id === id
+    }));
+    setCameras(updated);
+    saveDataToStorage(STORAGE_KEYS.CAMERAS, updated);
+  };
+
   const updateSettings = (data) => {
     const updated = { ...data, last_updated: new Date().toISOString() };
+    console.log('💾 Saving settings to localStorage:', updated);
     setSettings(updated);
     setLocalSettings(updated);
     saveDataToStorage(STORAGE_KEYS.SETTINGS, updated);
+    
+    // Dispatch custom event to notify other components (like Calculator) that settings changed
+    console.log('📢 Dispatching settingsUpdated event with desired_profit_margin_percent:', updated.desired_profit_margin_percent);
+    window.dispatchEvent(new CustomEvent('settingsUpdated', { detail: updated }));
   };
 
   const resetToDefaults = () => {
@@ -520,9 +614,10 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
         </div>
 
         <Tabs defaultValue="rates" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
+          <TabsList className="grid w-full grid-cols-4" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
             <TabsTrigger value="rates" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Day Rates</TabsTrigger>
             <TabsTrigger value="gear" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Gear Costs</TabsTrigger>
+            <TabsTrigger value="cameras" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Cameras</TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Business Info</TabsTrigger>
           </TabsList>
 
@@ -919,6 +1014,150 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
             </Card>
           </TabsContent>
 
+          <TabsContent value="cameras">
+            <Card className="shadow-lg" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)' }}>
+              <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border)' }}>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex-1">
+                    <CardTitle className="flex items-center gap-2 mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                      <Camera className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                      Camera Inventory
+                    </CardTitle>
+                    <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      Manage your camera equipment. Set one as default for quick selection.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowAddCamera(true)}
+                    className="gap-2"
+                    style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Camera
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                {showAddCamera && (
+                  <div className="mb-6 p-4 rounded-lg" style={{ background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)' }}>
+                    <h4 className="font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>Add New Camera</h4>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <Label style={{ color: 'var(--color-text-secondary)' }}>Make</Label>
+                        <Input
+                          value={newCamera.make}
+                          onChange={(e) => setNewCamera({...newCamera, make: e.target.value})}
+                          placeholder="Sony, Canon, RED..."
+                          style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                        />
+                      </div>
+                      <div>
+                        <Label style={{ color: 'var(--color-text-secondary)' }}>Model</Label>
+                        <Input
+                          value={newCamera.model}
+                          onChange={(e) => setNewCamera({...newCamera, model: e.target.value})}
+                          placeholder="FX3, C70, Komodo..."
+                          style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Checkbox
+                        checked={newCamera.is_default}
+                        onCheckedChange={(checked) => setNewCamera({...newCamera, is_default: checked})}
+                      />
+                      <Label style={{ color: 'var(--color-text-secondary)' }}>Set as default camera</Label>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => createCamera(newCamera)}
+                        disabled={!newCamera.make || !newCamera.model}
+                        style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Camera
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowAddCamera(false);
+                          setNewCamera({ make: "", model: "", is_default: false });
+                        }}
+                        variant="outline"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <Table>
+                  <TableHeader>
+                    <TableRow style={{ borderColor: 'var(--color-border)' }}>
+                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Make</TableHead>
+                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Model</TableHead>
+                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Default</TableHead>
+                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cameras.map((camera) => (
+                      <TableRow key={camera.id} style={{ borderColor: 'var(--color-border)' }}>
+                        <TableCell style={{ color: 'var(--color-text-primary)' }}>
+                          {editingCamera === camera.id ? (
+                            <Input
+                              defaultValue={camera.make}
+                              onBlur={(e) => updateCamera(camera.id, { make: e.target.value })}
+                              style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                            />
+                          ) : (
+                            camera.make
+                          )}
+                        </TableCell>
+                        <TableCell style={{ color: 'var(--color-text-primary)' }}>
+                          {editingCamera === camera.id ? (
+                            <Input
+                              defaultValue={camera.model}
+                              onBlur={(e) => updateCamera(camera.id, { model: e.target.value })}
+                              style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                            />
+                          ) : (
+                            camera.model
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={camera.is_default}
+                            onCheckedChange={() => toggleCameraDefault(camera.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => setEditingCamera(editingCamera === camera.id ? null : camera.id)}
+                              variant="outline"
+                              size="sm"
+                              style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+                            >
+                              {editingCamera === camera.id ? 'Done' : 'Edit'}
+                            </Button>
+                            <Button
+                              onClick={() => deleteCamera(camera.id)}
+                              variant="destructive"
+                              size="sm"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="settings">
             <Card className="shadow-lg" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)' }}>
               <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border)' }}>
@@ -962,6 +1201,82 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                         style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                      Company Logo
+                    </Label>
+                    
+                    {localSettings?.company_logo ? (
+                      <div className="space-y-3">
+                        <div className="relative inline-block">
+                          <img 
+                            src={localSettings.company_logo} 
+                            alt="Company Logo" 
+                            className="max-w-[200px] max-h-[80px] border rounded"
+                            style={{ borderColor: 'var(--color-border-dark)' }}
+                          />
+                          <Button
+                            onClick={handleRemoveLogo}
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div>
+                          <label htmlFor="logo-upload-replace">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => document.getElementById('logo-upload-replace').click()}
+                              type="button"
+                              style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
+                            >
+                              <Upload className="w-4 h-4 mr-2" />
+                              Replace Logo
+                            </Button>
+                          </label>
+                          <input
+                            id="logo-upload-replace"
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label htmlFor="logo-upload">
+                          <div 
+                            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-opacity-50 transition-colors"
+                            style={{ borderColor: 'var(--color-border-dark)', background: 'var(--color-bg-tertiary)' }}
+                          >
+                            <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--color-text-muted)' }} />
+                            <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                              Click to upload logo
+                            </p>
+                            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                              PNG, JPG, SVG or WebP (max 2MB)
+                            </p>
+                          </div>
+                        </label>
+                        <input
+                          id="logo-upload"
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-muted-foreground mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                      Logo will appear on quotes and invoices. Recommended size: 400x160px
+                    </p>
                   </div>
                   
                   <div>
@@ -1025,41 +1340,62 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                   </h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <Label htmlFor="profitMargin" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Desired Profit Margin (%)
+                      <Label htmlFor="overhead_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                        Overhead (%)
                       </Label>
                       <Input
-                        id="profitMargin"
+                        id="overhead_percent"
                         type="number"
                         min="0"
                         max="100"
                         step="1"
-                        value={localSettings?.profit_margin || 0}
-                        onChange={(e) => handleSettingsUpdate('profit_margin', parseFloat(e.target.value) || 0)}
+                        value={localSettings?.overhead_percent || 0}
+                        onChange={(e) => handleSettingsUpdate('overhead_percent', parseFloat(e.target.value) || 0)}
+                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        Percentage added to labor for business operating costs (shown in Business Print only)
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="profit_margin_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                        Profit Margin (%)
+                      </Label>
+                      <Input
+                        id="profit_margin_percent"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={localSettings?.profit_margin_percent || 0}
+                        onChange={(e) => handleSettingsUpdate('profit_margin_percent', parseFloat(e.target.value) || 0)}
+                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        Percentage added to labor for profit (shown in Business Print only)
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="desired_profit_margin_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                        Desired Profit Margin (%)
+                      </Label>
+                      <Input
+                        id="desired_profit_margin_percent"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={localSettings?.desired_profit_margin_percent || 0}
+                        onChange={(e) => handleSettingsUpdate('desired_profit_margin_percent', parseFloat(e.target.value) || 0)}
                         style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
                       />
                       <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
                         The percentage of profit you aim for on top of your total costs.
                       </p>
                     </div>
-                    <div>
-                      <Label htmlFor="overheadRatio" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Overhead Ratio (%)
-                      </Label>
-                      <Input
-                        id="overheadRatio"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={localSettings?.overhead_ratio || 0}
-                        onChange={(e) => handleSettingsUpdate('overhead_ratio', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        The percentage of project cost allocated to cover general business expenses.
-                      </p>
-                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <Label htmlFor="tax_rate_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
                         Tax Rate (%)
@@ -1079,6 +1415,16 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                       </p>
                     </div>
                     <div>
+                      <div className="flex items-center gap-3 mb-3">
+                        <Checkbox
+                          id="deposit_enabled"
+                          checked={localSettings?.deposit_enabled !== false}
+                          onCheckedChange={(checked) => handleSettingsUpdate('deposit_enabled', checked)}
+                        />
+                        <Label htmlFor="deposit_enabled" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
+                          Enable Deposit/Balance Split
+                        </Label>
+                      </div>
                       <Label htmlFor="deposit_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
                         Deposit (%)
                       </Label>
@@ -1090,10 +1436,11 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                         step="1"
                         value={localSettings?.deposit_percent || 0}
                         onChange={(e) => handleSettingsUpdate('deposit_percent', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                        disabled={localSettings?.deposit_enabled === false}
+                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)', opacity: localSettings?.deposit_enabled === false ? 0.5 : 1 }}
                       />
                       <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Percentage of total due as deposit
+                        {localSettings?.deposit_enabled === false ? 'Deposit disabled - full payment only' : 'Percentage of total due as deposit'}
                       </p>
                     </div>
                   </div>

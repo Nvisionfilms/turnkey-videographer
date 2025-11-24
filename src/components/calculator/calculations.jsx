@@ -73,6 +73,32 @@ function calculateRoleCost(role, rateRow, dayType, customHours, settings) {
 }
 
 /**
+ * Calculate gear amortization cost
+ */
+function calculateGearCost(formData, gearCosts, settings) {
+  let gearAmortized = 0;
+  if (formData.gear_enabled && Array.isArray(formData.selected_gear_items) && formData.selected_gear_items.length > 0) {
+    const totalInvestment = gearCosts
+      .filter(g => formData.selected_gear_items.includes(g.id))
+      .reduce((sum, g) => sum + (g.total_investment || 0), 0);
+
+    const amortizationDays = settings?.gear_amortization_days || 180;
+    const hours = formData.custom_hours || FULL_DAY_HOURS;
+    gearAmortized = (totalInvestment / amortizationDays) * (hours / FULL_DAY_HOURS);
+  }
+  return round2(gearAmortized);
+}
+
+/**
+ * Calculate travel cost
+ */
+function calculateTravelCost(formData, settings) {
+  const travelMiles = formData.travel_miles || 0;
+  const mileageRate = settings?.mileage_rate || 0.67;
+  return round2(travelMiles * mileageRate);
+}
+
+/**
  * Main calculation engine
  */
 export function calculateQuote(formData, dayRates, gearCosts, settings) {
@@ -83,18 +109,80 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
 
   const dayType = formData.day_type || "full";
   const customHours = formData.custom_hours || FULL_DAY_HOURS;
-
-  const hours = dayType === "half" ? HALF_DAY_HOURS :
-                dayType === "full" ? FULL_DAY_HOURS :
-                customHours;
-
-  const experienceMultiplier = formData.custom_multiplier || 1.0;
+  const experienceLevel = formData.experience_level || "Standard";
+  const experienceMultiplier = settings?.experience_levels?.[experienceLevel] || 1.0;
   const industryIndex = settings?.industry_index || 1.0;
   const regionMultiplier = settings?.region_multiplier || 1.0;
 
-  // === CALCULATE LABOR COSTS ===
-  let laborRaw = 0;
+  // === SINGLE FIXED PRICE MODE ===
+  if (formData.single_price_enabled && formData.single_price > 0) {
+    const basePrice = formData.single_price || 0;
+    
+    // Add overhead and profit to base price
+    const overheadPercent = settings?.overhead_percent || 0;
+    const profitMarginPercent = settings?.profit_margin_percent || 0;
+    const overhead = round2(basePrice * (overheadPercent / 100));
+    const profitMargin = round2(basePrice * (profitMarginPercent / 100));
+    const laborWithOverheadProfit = round2(basePrice + overhead + profitMargin);
+    
+    // Calculate gear, travel, rentals
+    const gearAmortized = calculateGearCost(formData, gearCosts, settings);
+    const travelCost = calculateTravelCost(formData, settings);
+    const rentalCosts = formData.rental_costs || 0;
+    
+    const subtotal = round2(laborWithOverheadProfit + gearAmortized + travelCost + rentalCosts);
+    
+    // Apply rush fee and discount
+    const rushFeePercent = settings?.rush_fee_percent || 0;
+    const rushFee = formData.apply_rush_fee ? round2(subtotal * (rushFeePercent / 100)) : 0;
+    
+    const nonprofitDiscountPercent = settings?.nonprofit_discount_percent || 0;
+    const nonprofitDiscount = formData.apply_nonprofit_discount ? round2(subtotal * (nonprofitDiscountPercent / 100)) : 0;
+    
+    const subtotal2 = round2(subtotal + rushFee - nonprofitDiscount);
+    
+    // Calculate tax
+    const taxRatePercent = settings?.tax_rate_percent || 0;
+    const taxTravel = settings?.tax_travel || false;
+    const taxableAmount = taxTravel ? subtotal2 : (subtotal2 - travelCost);
+    const tax = round2(taxableAmount * (taxRatePercent / 100));
+    
+    const total = round2(subtotal2 + tax);
+    const depositPercent = settings?.deposit_percent || 50;
+    const depositDue = round2(total * (depositPercent / 100));
+    const balanceDue = round2(total - depositDue);
+    
+    return {
+      lineItems: [{ description: "Fixed Price Quote", amount: basePrice }],
+      laborSubtotal: basePrice,
+      overhead,
+      profitMargin,
+      laborWithOverheadProfit,
+      gearAmortized,
+      travelCost,
+      rentalCosts,
+      subtotal,
+      rushFee,
+      nonprofitDiscount,
+      taxableAmount,
+      tax,
+      total,
+      depositDue,
+      balanceDue,
+      dayType: "single_price",
+      hours: 0,
+      experienceMultiplier: 1.0,
+      appliedMultipliers: {
+        experience: 1.0,
+        industry: 1.0,
+        region: 1.0
+      }
+    };
+  }
+
+  // === LABOR COSTS ===
   const lineItems = [];
+  let laborRaw = 0;
 
   if (Array.isArray(formData.selected_roles)) {
     formData.selected_roles.forEach(selectedRole => {
@@ -151,7 +239,7 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
       .reduce((sum, g) => sum + (g.total_investment || 0), 0);
 
     const amortizationDays = settings?.gear_amortization_days || 180;
-    gearAmortized = (totalInvestment / amortizationDays) * (hours / FULL_DAY_HOURS);
+    gearAmortized = (totalInvestment / amortizationDays) * (customHours / FULL_DAY_HOURS);
   }
 
   // === TRAVEL COSTS ===
@@ -162,8 +250,18 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
   // === RENTAL COSTS ===
   const rentalCosts = formData.rental_costs || 0;
 
+  // === OVERHEAD & PROFIT (applied to labor only) ===
+  const overheadPercent = settings?.overhead_percent || 0;
+  const profitMarginPercent = settings?.profit_margin_percent || 0;
+  
+  const overhead = laborRaw * (overheadPercent / 100);
+  const profitMargin = laborRaw * (profitMarginPercent / 100);
+  
+  // Add overhead and profit to labor
+  const laborWithOverheadProfit = laborRaw + overhead + profitMargin;
+
   // === SUBTOTAL ===
-  const subtotal = laborRaw + gearAmortized + travelCost + rentalCosts;
+  const subtotal = laborWithOverheadProfit + gearAmortized + travelCost + rentalCosts;
 
   // === RUSH FEE ===
   const rushFeePercent = settings?.rush_fee_percent || 0;
@@ -193,6 +291,9 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
   return {
     lineItems,
     laborSubtotal: round2(laborRaw),
+    overhead: round2(overhead),
+    profitMargin: round2(profitMargin),
+    laborWithOverheadProfit: round2(laborWithOverheadProfit),
     gearAmortized: round2(gearAmortized),
     travelCost: round2(travelCost),
     rentalCosts: round2(rentalCosts),
@@ -205,7 +306,7 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
     depositDue,
     balanceDue,
     dayType,
-    hours,
+    hours: customHours,
     experienceMultiplier,
     appliedMultipliers: {
       experience: experienceMultiplier,
