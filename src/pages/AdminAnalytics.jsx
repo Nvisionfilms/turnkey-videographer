@@ -62,18 +62,18 @@ export default function AdminAnalytics() {
       const conversionData = [];
       setConversions(conversionData);
 
-      // Calculate stats
-      const totalClicks = affiliateData.reduce((sum, a) => sum + (a.total_clicks || 0), 0);
-      const totalConversions = affiliateData.reduce((sum, a) => sum + (a.total_conversions || 0), 0);
+      // Calculate stats (backend returns camelCase)
+      const totalClicks = affiliateData.reduce((sum, a) => sum + (a.totalClicks || 0), 0);
+      const totalConversions = affiliateData.reduce((sum, a) => sum + (a.totalConversions || 0), 0);
       const totalRevenue = totalConversions * AFFILIATE_CONFIG.unlockPrice;
-      const totalCommissionsPaid = affiliateData.reduce((sum, a) => sum + (a.paid_out || 0), 0);
-      const totalCommissionsPending = affiliateData.reduce((sum, a) => sum + (a.pending_payout || 0), 0);
+      const totalCommissionsPaid = affiliateData.reduce((sum, a) => sum + (a.paidOut || 0), 0);
+      const totalCommissionsPending = affiliateData.reduce((sum, a) => sum + (a.pendingPayout || 0), 0);
       const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : 0;
       const avgRevenuePerAffiliate = affiliateData.length > 0 ? (totalRevenue / affiliateData.length).toFixed(2) : 0;
 
       // Top affiliates by conversions
       const topAffiliates = [...affiliateData]
-        .sort((a, b) => (b.total_conversions || 0) - (a.total_conversions || 0))
+        .sort((a, b) => (b.totalConversions || 0) - (a.totalConversions || 0))
         .slice(0, 5);
 
       setStats({
@@ -375,10 +375,10 @@ export default function AdminAnalytics() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold" style={{ color: 'var(--color-success)' }}>
-                          {affiliate.total_conversions || 0} sales
+                          {affiliate.totalConversions || 0} sales
                         </p>
                         <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                          ${((affiliate.pending_payout || 0) + (affiliate.paid_out || 0)).toFixed(2)} earned
+                          ${((affiliate.pendingPayout || 0) + (affiliate.paidOut || 0)).toFixed(2)} earned
                         </p>
                       </div>
                     </div>
