@@ -671,7 +671,7 @@ app.post('/api/admin/login', async (req, res) => {
     const admin = result.rows[0];
 
     // Verify password
-    const validPassword = await bcrypt.compare(password, admin.password);
+    const validPassword = await bcrypt.compare(password, admin.password_hash);
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
