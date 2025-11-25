@@ -33,11 +33,15 @@ export default function AffiliateLogin() {
         // Try admin login
         try {
           console.log('Attempting admin login...');
-          const adminResponse = await apiCall(API_ENDPOINTS.adminLogin, {
+          
+          // Use direct fetch like the test page
+          const response = await fetch('https://backend-backend-c520.up.railway.app/api/admin/login', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
           });
-
+          
+          const adminResponse = await response.json();
           console.log('Admin response:', adminResponse);
 
           // Store admin token
@@ -48,9 +52,7 @@ export default function AffiliateLogin() {
             
             console.log('Redirecting to /admin/dashboard...');
             // Force navigation with window.location for clean state
-            setTimeout(() => {
-              window.location.href = '/admin/dashboard';
-            }, 100);
+            window.location.href = '/admin/dashboard';
             return;
           }
           
