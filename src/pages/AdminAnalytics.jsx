@@ -95,7 +95,7 @@ export default function AdminAnalytics() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            📊 Admin Analytics Dashboard
+            👥 Admin Affiliates Dashboard
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
             Complete overview of affiliate program, revenue, and user activity
