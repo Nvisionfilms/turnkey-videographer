@@ -37,6 +37,29 @@ app.get('/api/db-test', async (req, res) => {
   }
 });
 
+// Fix admin endpoint (ONE TIME USE)
+app.post('/api/fix-admin', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    // Rename column
+    await client.query('ALTER TABLE admins RENAME COLUMN password TO password_hash');
+    
+    // Update admin password
+    await client.query(
+      `UPDATE admins 
+       SET password_hash = $1, name = $2
+       WHERE email = $3`,
+      ['$2b$10$I/4VOuyhX68hVwP07.ap1usoRzxiysMfWoz8aUdmLMCgOGQSFHRFa', 'Admin', 'nvisionmg@gmail.com']
+    );
+    
+    res.json({ success: true, message: 'Admin fixed!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // Setup endpoint - run migrations and import codes (ONE TIME ONLY)
 app.post('/api/setup', async (req, res) => {
   try {
