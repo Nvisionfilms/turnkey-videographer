@@ -22,6 +22,8 @@ import AdminAnalytics from "./AdminAnalytics";
 
 import AdminLogin from "./AdminLogin";
 
+import AdminLoginDirect from "./AdminLoginDirect";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -88,6 +90,8 @@ function PagesContent() {
                 <Route path="/admin/dashboard" element={<AdminAnalytics />} />
                 
                 <Route path="/admin/login" element={<AdminLogin />} />
+                
+                <Route path="/admin/test-login" element={<AdminLoginDirect />} />
                 
             </Routes>
         </Layout>
