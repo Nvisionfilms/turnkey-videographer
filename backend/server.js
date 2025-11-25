@@ -70,6 +70,19 @@ app.get('/api/check-admin', async (req, res) => {
   }
 });
 
+// Update admin password (ONE TIME USE)
+app.post('/api/update-admin-password', async (req, res) => {
+  try {
+    await pool.query(
+      'UPDATE admins SET password_hash = $1 WHERE email = $2',
+      ['$2b$10$gzzDsUYg8VZaa0fTmSYWfONzApa69oLZMElo2dfILJULu8VyrzWbi', 'nvisionmg@gmail.com']
+    );
+    res.json({ success: true, message: 'Password updated!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Setup endpoint - run migrations and import codes (ONE TIME ONLY)
 app.post('/api/setup', async (req, res) => {
   try {
