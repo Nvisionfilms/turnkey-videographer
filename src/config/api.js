@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
   getConversions: (code) => `/api/conversions/affiliate/${code}`,
   
   // Admin
+  adminLogin: '/api/admin/login',
   getAllAffiliates: '/api/admin/affiliates',
   markPayout: (id) => `/api/admin/affiliates/${id}/payout`,
   deleteAffiliate: (id) => `/api/admin/affiliates/${id}`,
