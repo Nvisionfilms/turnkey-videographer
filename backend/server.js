@@ -669,9 +669,12 @@ app.post('/api/admin/login', async (req, res) => {
     }
 
     const admin = result.rows[0];
+    console.log('Admin found:', admin.email);
+    console.log('Has password_hash:', !!admin.password_hash);
 
     // Verify password
     const validPassword = await bcrypt.compare(password, admin.password_hash);
+    console.log('Password valid:', validPassword);
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -687,7 +690,7 @@ app.post('/api/admin/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Admin login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: 'Login failed', details: error.message });
   }
 });
 
