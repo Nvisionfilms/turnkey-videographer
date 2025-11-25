@@ -227,7 +227,7 @@ export default function Layout({ children }) {
                 onClick={() => {
                   localStorage.removeItem('adminToken');
                   localStorage.removeItem('adminEmail');
-                  navigate('/');
+                  window.location.href = '/';
                 }}
                 variant="outline"
                 className="w-full justify-start"

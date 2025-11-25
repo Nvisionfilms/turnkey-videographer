@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
-  getAllAffiliates, 
-  getAllConversions,
   AFFILIATE_CONFIG 
 } from "../utils/affiliateUtils";
+import { apiCall, API_ENDPOINTS } from "../config/api";
 import { 
   TrendingUp, 
   Users, 
@@ -16,10 +17,13 @@ import {
   UserPlus,
   Activity,
   Calendar,
-  BarChart3
+  BarChart3,
+  LogIn
 } from "lucide-react";
 
 export default function AdminAnalytics() {
+  const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
   const [affiliates, setAffiliates] = useState([]);
   const [conversions, setConversions] = useState([]);
   const [stats, setStats] = useState({
@@ -35,41 +39,59 @@ export default function AdminAnalytics() {
   });
 
   useEffect(() => {
-    loadAnalytics();
+    // Check if admin is logged in
+    const adminToken = localStorage.getItem('adminToken');
+    const adminEmail = localStorage.getItem('adminEmail');
+    
+    if (adminToken && adminEmail === 'nvisionmg@gmail.com') {
+      setIsAdmin(true);
+      loadAnalytics();
+    } else {
+      setIsAdmin(false);
+    }
   }, []);
 
-  const loadAnalytics = () => {
-    const affiliateData = getAllAffiliates();
-    const conversionData = getAllConversions();
-    
-    setAffiliates(affiliateData);
-    setConversions(conversionData);
+  const loadAnalytics = async () => {
+    try {
+      // Fetch from Railway API instead of localStorage
+      const affiliateData = await apiCall(API_ENDPOINTS.getAllAffiliates);
+      setAffiliates(affiliateData);
+      
+      // For now, conversions will be empty until we have data
+      // TODO: Add getAllConversions API endpoint
+      const conversionData = [];
+      setConversions(conversionData);
 
-    // Calculate stats
-    const totalClicks = affiliateData.reduce((sum, a) => sum + a.totalClicks, 0);
-    const totalConversions = conversionData.length;
-    const totalRevenue = totalConversions * AFFILIATE_CONFIG.unlockPrice;
-    const totalCommissionsPaid = affiliateData.reduce((sum, a) => sum + a.paidOut, 0);
-    const totalCommissionsPending = affiliateData.reduce((sum, a) => sum + a.pendingPayout, 0);
-    const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : 0;
-    const avgRevenuePerAffiliate = affiliateData.length > 0 ? (totalRevenue / affiliateData.length).toFixed(2) : 0;
+      // Calculate stats
+      const totalClicks = affiliateData.reduce((sum, a) => sum + (a.total_clicks || 0), 0);
+      const totalConversions = affiliateData.reduce((sum, a) => sum + (a.total_conversions || 0), 0);
+      const totalRevenue = totalConversions * AFFILIATE_CONFIG.unlockPrice;
+      const totalCommissionsPaid = affiliateData.reduce((sum, a) => sum + (a.paid_out || 0), 0);
+      const totalCommissionsPending = affiliateData.reduce((sum, a) => sum + (a.pending_payout || 0), 0);
+      const conversionRate = totalClicks > 0 ? ((totalConversions / totalClicks) * 100).toFixed(2) : 0;
+      const avgRevenuePerAffiliate = affiliateData.length > 0 ? (totalRevenue / affiliateData.length).toFixed(2) : 0;
 
-    // Top affiliates by conversions
-    const topAffiliates = [...affiliateData]
-      .sort((a, b) => b.totalConversions - a.totalConversions)
-      .slice(0, 5);
+      // Top affiliates by conversions
+      const topAffiliates = [...affiliateData]
+        .sort((a, b) => (b.total_conversions || 0) - (a.total_conversions || 0))
+        .slice(0, 5);
 
-    setStats({
-      totalAffiliates: affiliateData.length,
-      totalClicks,
-      totalConversions,
-      totalRevenue,
-      totalCommissionsPaid,
-      totalCommissionsPending,
-      conversionRate,
-      avgRevenuePerAffiliate,
-      topAffiliates
-    });
+      setStats({
+        totalAffiliates: affiliateData.length,
+        totalClicks,
+        totalConversions,
+        totalRevenue,
+        totalCommissionsPaid,
+        totalCommissionsPending,
+        conversionRate,
+        avgRevenuePerAffiliate,
+        topAffiliates
+      });
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+      setAffiliates([]);
+      setConversions([]);
+    }
   };
 
   // Get user activity stats from localStorage
@@ -88,6 +110,37 @@ export default function AdminAnalytics() {
   };
 
   const userStats = getUserStats();
+
+  // Show login prompt if not admin
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg-primary)' }}>
+        <Card className="max-w-md w-full" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Users className="w-16 h-16" style={{ color: 'var(--color-accent-primary)' }} />
+            </div>
+            <CardTitle className="text-2xl" style={{ color: 'var(--color-text-primary)' }}>
+              Affiliates Dashboard
+            </CardTitle>
+            <p className="text-sm mt-2" style={{ color: 'var(--color-text-secondary)' }}>
+              Please sign in to view affiliate analytics
+            </p>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button
+              onClick={() => navigate('/affiliate/login')}
+              className="w-full"
+              style={{ background: 'var(--color-accent-primary)', color: '#000' }}
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
@@ -322,10 +375,10 @@ export default function AdminAnalytics() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold" style={{ color: 'var(--color-success)' }}>
-                          {affiliate.totalConversions} sales
+                          {affiliate.total_conversions || 0} sales
                         </p>
                         <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                          ${(affiliate.pendingPayout + affiliate.paidOut).toFixed(2)} earned
+                          ${((affiliate.pending_payout || 0) + (affiliate.paid_out || 0)).toFixed(2)} earned
                         </p>
                       </div>
                     </div>
