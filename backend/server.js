@@ -60,6 +60,16 @@ app.post('/api/fix-admin', async (req, res) => {
   }
 });
 
+// Check admin endpoint (DEBUG)
+app.get('/api/check-admin', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT email, name, password_hash FROM admins WHERE email = $1', ['nvisionmg@gmail.com']);
+    res.json({ admin: result.rows[0], hasPasswordHash: !!result.rows[0]?.password_hash });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Setup endpoint - run migrations and import codes (ONE TIME ONLY)
 app.post('/api/setup', async (req, res) => {
   try {
