@@ -29,28 +29,35 @@ export default function AffiliateLogin() {
       if (email.toLowerCase() === 'nvisionmg@gmail.com') {
         // Try admin login
         try {
+          console.log('Attempting admin login...');
           const adminResponse = await apiCall(API_ENDPOINTS.adminLogin, {
             method: 'POST',
             body: JSON.stringify({ email, password })
           });
 
+          console.log('Admin response:', adminResponse);
+
           // Store admin token
-          if (adminResponse.success) {
+          if (adminResponse && adminResponse.success) {
+            console.log('Setting admin tokens...');
             localStorage.setItem('adminToken', 'admin-logged-in');
             localStorage.setItem('adminEmail', email);
-            console.log('Admin logged in successfully');
             
+            console.log('Redirecting to /admin/dashboard...');
             // Force navigation with window.location for clean state
-            window.location.href = '/admin/dashboard';
+            setTimeout(() => {
+              window.location.href = '/admin/dashboard';
+            }, 100);
             return;
           }
           
+          console.error('Login failed - no success flag');
           setError('Login failed');
           return;
         } catch (adminError) {
           // If admin login fails, show error
           console.error('Admin login error:', adminError);
-          setError('Invalid admin credentials');
+          setError('Invalid admin credentials: ' + adminError.message);
           return;
         }
       }
