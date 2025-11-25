@@ -38,23 +38,19 @@ export default function AffiliateLogin() {
           if (adminResponse.success) {
             localStorage.setItem('adminToken', 'admin-logged-in');
             localStorage.setItem('adminEmail', email);
-
-            toast({
-              title: "Welcome back, Admin!",
-              description: "Successfully logged in",
-            });
-
-            navigate('/admin/dashboard');
+            console.log('Admin logged in successfully');
+            
+            // Force navigation with window.location for clean state
+            window.location.href = '/admin/dashboard';
+            return;
           }
+          
+          setError('Login failed');
           return;
         } catch (adminError) {
           // If admin login fails, show error
+          console.error('Admin login error:', adminError);
           setError('Invalid admin credentials');
-          toast({
-            title: "Login Failed",
-            description: 'Invalid admin credentials',
-            variant: "destructive"
-          });
           return;
         }
       }
