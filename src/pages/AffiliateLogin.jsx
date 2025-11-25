@@ -14,13 +14,16 @@ export default function AffiliateLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!email.trim() || !password.trim()) {
       setError('Email and password are required');
+      setLoading(false);
       return;
     }
 
@@ -100,6 +103,7 @@ export default function AffiliateLogin() {
             <p className="text-sm mt-2" style={{ color: 'var(--color-text-secondary)' }}>
               Enter your credentials to access your dashboard
             </p>
+            {/* v2.0 - Fixed admin login */}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -147,10 +151,11 @@ export default function AffiliateLogin() {
               <Button
                 type="submit"
                 className="w-full"
+                disabled={loading}
                 style={{ background: 'var(--color-accent-primary)', color: '#000' }}
               >
                 <LogIn className="w-4 h-4 mr-2" />
-                Login
+                {loading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
 
