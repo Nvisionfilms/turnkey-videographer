@@ -73,6 +73,8 @@ function PagesContent() {
                 
                 <Route path="/Unlock" element={<Unlock />} />
                 
+                <Route path="/affiliate" element={<AffiliateLogin />} />
+                
                 <Route path="/affiliate/signup" element={<AffiliateSignup />} />
                 
                 <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
