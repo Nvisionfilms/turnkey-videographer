@@ -20,6 +20,8 @@ import AdminAffiliates from "./AdminAffiliates";
 
 import AdminAnalytics from "./AdminAnalytics";
 
+import AdminLogin from "./AdminLogin";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -80,6 +82,8 @@ function PagesContent() {
                 <Route path="/admin/affiliates" element={<AdminAffiliates />} />
                 
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                
+                <Route path="/admin/login" element={<AdminLogin />} />
                 
             </Routes>
         </Layout>

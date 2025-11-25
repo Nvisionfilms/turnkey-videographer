@@ -25,6 +25,39 @@ export default function AffiliateLogin() {
     }
 
     try {
+      // Check if this is admin login
+      if (email.toLowerCase() === 'nvisionmg@gmail.com') {
+        // Try admin login
+        try {
+          const adminResponse = await apiCall(API_ENDPOINTS.adminLogin, {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+          });
+
+          // Store admin token
+          localStorage.setItem('adminToken', adminResponse.token || 'admin-logged-in');
+          localStorage.setItem('adminEmail', email);
+
+          toast({
+            title: "Welcome back, Admin!",
+            description: "Successfully logged in",
+          });
+
+          navigate('/admin/analytics');
+          return;
+        } catch (adminError) {
+          // If admin login fails, show error
+          setError('Invalid admin credentials');
+          toast({
+            title: "Login Failed",
+            description: 'Invalid admin credentials',
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      // Regular affiliate login
       const response = await apiCall(API_ENDPOINTS.affiliateLogin, {
         method: 'POST',
         body: JSON.stringify({

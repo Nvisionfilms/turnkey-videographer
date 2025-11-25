@@ -208,41 +208,38 @@ export default function Layout({ children }) {
           </SidebarContent>
 
           <SidebarFooter className="border-t p-4" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-primary)' }}>
-            {/* Admin Sign In/Out Buttons */}
+            {/* Sign In/Out Buttons */}
             <div className="space-y-2 mb-4">
-              {location.pathname.startsWith('/admin') && (
-                <>
-                  <Button
-                    onClick={() => navigate('/admin/login')}
-                    variant="outline"
-                    className="w-full justify-start"
-                    style={{ 
-                      background: 'var(--color-bg-secondary)', 
-                      borderColor: 'var(--color-border)',
-                      color: 'var(--color-text-primary)'
-                    }}
-                  >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Admin Sign In
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      localStorage.removeItem('adminToken');
-                      navigate('/');
-                    }}
-                    variant="outline"
-                    className="w-full justify-start"
-                    style={{ 
-                      background: 'var(--color-bg-secondary)', 
-                      borderColor: 'var(--color-border)',
-                      color: 'var(--color-text-primary)'
-                    }}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </>
-              )}
+              <Button
+                onClick={() => navigate('/affiliate/login')}
+                variant="outline"
+                className="w-full justify-start"
+                style={{ 
+                  background: 'var(--color-bg-secondary)', 
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text-primary)'
+                }}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+              <Button
+                onClick={() => {
+                  localStorage.removeItem('adminToken');
+                  localStorage.removeItem('adminEmail');
+                  navigate('/');
+                }}
+                variant="outline"
+                className="w-full justify-start"
+                style={{ 
+                  background: 'var(--color-bg-secondary)', 
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text-primary)'
+                }}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
             
             <Alert className="border" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
