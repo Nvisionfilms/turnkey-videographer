@@ -35,15 +35,17 @@ export default function AffiliateLogin() {
           });
 
           // Store admin token
-          localStorage.setItem('adminToken', adminResponse.token || 'admin-logged-in');
-          localStorage.setItem('adminEmail', email);
+          if (adminResponse.success) {
+            localStorage.setItem('adminToken', 'admin-logged-in');
+            localStorage.setItem('adminEmail', email);
 
-          toast({
-            title: "Welcome back, Admin!",
-            description: "Successfully logged in",
-          });
+            toast({
+              title: "Welcome back, Admin!",
+              description: "Successfully logged in",
+            });
 
-          navigate('/admin/analytics');
+            navigate('/admin/dashboard');
+          }
           return;
         } catch (adminError) {
           // If admin login fails, show error
