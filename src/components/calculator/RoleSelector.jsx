@@ -3,7 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, AlertCircle } from "lucide-react";
+import { 
+  Users, 
+  AlertCircle, 
+  Camera, 
+  Video, 
+  Mic, 
+  Lightbulb, 
+  Clapperboard, 
+  Film, 
+  UserCircle,
+  Headphones,
+  Palette,
+  Briefcase
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function RoleSelector({ 
@@ -20,6 +33,21 @@ export default function RoleSelector({
   inputClassName, 
   checkboxHoverBgClassName 
 }) {
+  // Get icon for role type
+  const getRoleIcon = (roleName) => {
+    const name = roleName.toLowerCase();
+    if (name.includes('director') || name.includes('dp') || name.includes('cinematographer')) return Camera;
+    if (name.includes('camera') || name.includes('operator')) return Video;
+    if (name.includes('audio') || name.includes('sound')) return Mic;
+    if (name.includes('gaffer') || name.includes('lighting') || name.includes('electric')) return Lightbulb;
+    if (name.includes('producer')) return Clapperboard;
+    if (name.includes('editor')) return Film;
+    if (name.includes('ac') || name.includes('assistant')) return UserCircle;
+    if (name.includes('grip')) return Briefcase;
+    if (name.includes('color')) return Palette;
+    return Video; // Default icon
+  };
+
   const handleRoleToggle = (rate, checked) => {
     if (checked) {
       onRoleChange([...selectedRoles, {
@@ -105,32 +133,83 @@ export default function RoleSelector({
           </Alert>
         )}
         
-        <div className={`space-y-4 ${hasNoPricingModel ? 'opacity-50 pointer-events-none' : ''}`}>
+        {/* Grid of role cards */}
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${hasNoPricingModel ? 'opacity-50 pointer-events-none' : ''}`}>
           {dayRates.filter(r => r.active && r.unit_type !== 'flat').map((rate) => {
             const selected = isRoleSelected(rate.id);
             const selectedRole = getSelectedRole(rate.id);
+            const RoleIcon = getRoleIcon(rate.role);
             
             return (
-              <div key={rate.id} className={`flex items-start gap-4 p-3 rounded-lg transition-colors ${checkboxHoverBgClassName || "hover:bg-slate-50"}`}>
-                <Checkbox
-                  checked={selected}
-                  onCheckedChange={(checked) => handleRoleToggle(rate, checked)}
-                  className="mt-1"
+              <div key={rate.id} className="relative">
+                {/* Role Card Button */}
+                <button
+                  onClick={() => handleRoleToggle(rate, !selected)}
                   disabled={hasNoPricingModel}
-                />
-                <div className="flex-1 space-y-2">
-                  <div>
-                    <Label className={`font-medium ${labelClassName || "text-slate-900"}`}>{rate.role}</Label>
-                    <p className={`text-xs mt-0.5 ${textMutedClassName || "text-slate-500"}`}>
-                      {getRateDisplay(rate)}
-                    </p>
+                  className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 text-center ${
+                    selected 
+                      ? 'border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-lg' 
+                      : 'border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-md'
+                  }`}
+                  style={{
+                    cursor: hasNoPricingModel ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {/* Icon */}
+                  <div className="flex justify-center mb-4">
+                    <div 
+                      className="w-24 h-24 rounded-full flex items-center justify-center"
+                      style={{ 
+                        background: selected ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <RoleIcon 
+                        className="w-12 h-12" 
+                        style={{ 
+                          color: selected ? 'white' : 'var(--color-accent-primary)',
+                          strokeWidth: 2
+                        }} 
+                      />
+                    </div>
                   </div>
                   
+                  {/* Role Name */}
+                  <h3 
+                    className="text-lg font-bold mb-2" 
+                    style={{ color: 'var(--color-text-primary)' }}
+                  >
+                    {rate.role}
+                  </h3>
+                  
+                  {/* Rate Description */}
+                  <p 
+                    className="text-sm" 
+                    style={{ color: 'var(--color-text-secondary)' }}
+                  >
+                    {getRateDisplay(rate)}
+                  </p>
+                  
+                  {/* Selected Checkmark */}
                   {selected && (
+                    <div 
+                      className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: 'var(--color-success)' }}
+                    >
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+                
+                {/* Quantity Input (appears below when selected) */}
+                {selected && (
+                  <div className="mt-3 p-4 rounded-lg" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
                     <div className="flex gap-3">
                       {rate.unit_type === 'day' && (
-                        <div className="w-24">
-                          <Label className={`text-xs ${labelClassName || "text-slate-600"}`}>
+                        <div className="flex-1">
+                          <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
                             {getQuantityLabel()}
                           </Label>
                           <Input
@@ -139,37 +218,56 @@ export default function RoleSelector({
                             step="0.5"
                             value={selectedRole?.quantity || 0}
                             onChange={(e) => handleQuantityChange(rate.id, 'quantity', e.target.value)}
-                            className={`h-8 ${inputClassName || ""}`}
+                            className="h-10"
+                            style={{ 
+                              background: 'white',
+                              borderColor: 'var(--color-border)',
+                              color: 'var(--color-text-primary)'
+                            }}
                           />
                         </div>
                       )}
                       {rate.unit_type === 'per_5_min' && (
-                        <div className="w-32">
-                          <Label className={`text-xs ${labelClassName || "text-slate-600"}`}>Minutes Output</Label>
+                        <div className="flex-1">
+                          <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                            Minutes Output
+                          </Label>
                           <Input
                             type="number"
                             min="0"
                             value={selectedRole?.minutes_output || 0}
                             onChange={(e) => handleQuantityChange(rate.id, 'minutes_output', e.target.value)}
-                            className={`h-8 ${inputClassName || ""}`}
+                            className="h-10"
+                            style={{ 
+                              background: 'white',
+                              borderColor: 'var(--color-border)',
+                              color: 'var(--color-text-primary)'
+                            }}
                           />
                         </div>
                       )}
                       {rate.unit_type === 'per_request' && (
-                        <div className="w-24">
-                          <Label className={`text-xs ${labelClassName || "text-slate-600"}`}>Requests</Label>
+                        <div className="flex-1">
+                          <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                            Requests
+                          </Label>
                           <Input
                             type="number"
                             min="0"
                             value={selectedRole?.requests || 0}
                             onChange={(e) => handleQuantityChange(rate.id, 'requests', e.target.value)}
-                            className={`h-8 ${inputClassName || ""}`}
+                            className="h-10"
+                            style={{ 
+                              background: 'white',
+                              borderColor: 'var(--color-border)',
+                              color: 'var(--color-text-primary)'
+                            }}
                           />
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             );
           })}

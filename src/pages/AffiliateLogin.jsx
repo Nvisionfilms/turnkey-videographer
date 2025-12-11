@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { apiCall, API_ENDPOINTS } from "../config/api";
+import { useUnlockStatus } from "../components/hooks/useUnlockStatus";
 
 export default function AffiliateLogin() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { activateDirectUnlock } = useUnlockStatus();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -50,9 +52,13 @@ export default function AffiliateLogin() {
             localStorage.setItem('adminToken', 'admin-logged-in');
             localStorage.setItem('adminEmail', email);
             
-            console.log('Redirecting to /admin/dashboard...');
+            // Activate premium access for admin
+            activateDirectUnlock(email);
+            console.log('Admin premium access activated');
+            
+            console.log('Redirecting to /admin/affiliates...');
             // Force navigation with window.location for clean state
-            window.location.href = '/admin/dashboard';
+            window.location.href = '/admin/affiliates';
             return;
           }
           

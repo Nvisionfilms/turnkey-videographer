@@ -50,8 +50,19 @@ export function useUnlockStatus() {
       }
     }
     
-    // Check free quote usage
-    const usedFree = localStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
+    // Check free quote usage (check both localStorage and sessionStorage)
+    const usedFreeLocal = localStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
+    const usedFreeSession = sessionStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
+    const usedFree = usedFreeLocal || usedFreeSession;
+    
+    // If found in sessionStorage but not localStorage, sync it
+    if (usedFreeSession && !usedFreeLocal) {
+      localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+      const sessionTimestamp = sessionStorage.getItem('nvision_free_quote_timestamp');
+      if (sessionTimestamp) {
+        localStorage.setItem('nvision_free_quote_timestamp', sessionTimestamp);
+      }
+    }
     
     setIsUnlocked(legacyUnlocked || directUnlock || hasActiveSubscription || trialActive);
     setIsTrialActive(trialActive);
@@ -82,7 +93,18 @@ export function useUnlockStatus() {
   }, []);
 
   const markFreeQuoteUsed = () => {
+    const timestamp = Date.now().toString();
     localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+    localStorage.setItem('nvision_free_quote_timestamp', timestamp);
+    
+    // Also try to persist in sessionStorage as backup
+    try {
+      sessionStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+      sessionStorage.setItem('nvision_free_quote_timestamp', timestamp);
+    } catch (e) {
+      console.warn('SessionStorage not available');
+    }
+    
     setHasUsedFreeQuote(true);
   };
 
@@ -163,9 +185,13 @@ export function useUnlockStatus() {
     }
   };
 
+  // User can use calculator if: unlocked OR hasn't used free quote yet
+  const canUseCalculator = isUnlocked || !hasUsedFreeQuote;
+
   return {
     isUnlocked,
     hasUsedFreeQuote,
+    canUseCalculator,
     trialDaysLeft,
     isTrialActive,
     subscriptionDetails,

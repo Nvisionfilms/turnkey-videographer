@@ -9,13 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RotateCcw, AlertCircle, Download, Mail, Shield, Calendar as CalendarIcon, Lock, Clock, Sparkles, Heart, Coffee, ArrowRight, ChevronLeft, ChevronRight, DollarSign, FileText, Settings as SettingsIcon, Key, Copy as CopyIcon, User, Briefcase, Users, Package, Video as VideoIcon, Check } from "lucide-react";
+import { RotateCcw, AlertCircle, Download, Mail, Shield, Calendar as CalendarIcon, Lock, Clock, Sparkles, Heart, Coffee, ArrowRight, ChevronLeft, ChevronRight, DollarSign, FileText, Settings as SettingsIcon, Key as KeyIcon, Copy as CopyIcon, User, Briefcase, Users, Package, Video as VideoIcon, Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { setReferralCookie } from "../utils/affiliateUtils";
+import { setReferralCookie, getReferralCookie } from "../utils/affiliateUtils";
+import { getDeviceId } from "@/utils/deviceFingerprint";
 
 import LiveTotalsPanel from "../components/calculator/LiveTotalsPanelNew";
 import RoleSelector from "../components/calculator/RoleSelector";
@@ -27,8 +28,10 @@ import PresetTemplates from "../components/calculator/PresetTemplates";
 import CollapsibleSection from "../components/calculator/CollapsibleSection";
 import QuoteHistory, { saveToQuoteHistory } from "../components/calculator/QuoteHistory";
 import MobileFloatingTotal from "../components/calculator/MobileFloatingTotal";
+// import OnboardingWizard from "../components/onboarding/OnboardingWizard";
 import { calculateQuote } from "../components/calculator/calculations";
 import { ExportService } from "../components/services/ExportService";
+import { EnhancedExportService } from "../components/services/EnhancedExportService";
 import { STORAGE_KEYS, DEFAULT_DAY_RATES, DEFAULT_GEAR_COSTS, DEFAULT_CAMERAS, DEFAULT_SETTINGS } from "../components/data/defaults";
 import { useUnlockStatus } from "../components/hooks/useUnlockStatus";
 
@@ -49,7 +52,8 @@ export default function Calculator() {
   // Use centralized unlock status
   const { 
     isUnlocked, 
-    hasUsedFreeQuote, 
+    hasUsedFreeQuote,
+    canUseCalculator,
     trialDaysLeft, 
     isTrialActive,
     markFreeQuoteUsed,
@@ -98,6 +102,15 @@ export default function Calculator() {
     apply_rush_fee: false,
     travel_miles: 0,
     rental_costs: 0,
+    usage_rights_enabled: false,
+    usage_rights_type: "1_year",
+    usage_rights_cost: 0,
+    usage_rights_duration: "1 year",
+    talent_fees_enabled: false,
+    talent_primary_count: 0,
+    talent_primary_rate: 500,
+    talent_extra_count: 0,
+    talent_extra_rate: 150,
     notes_for_quote: ""
   });
 
@@ -335,6 +348,97 @@ export default function Calculator() {
     return result;
   }, [formData, dayRates, gearCosts, settings]);
 
+  // Keyboard shortcuts for power users
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Only trigger if not typing in an input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key.toLowerCase()) {
+          case 's':
+            e.preventDefault();
+            // Save quote to history
+            if (calculations) {
+              saveToQuoteHistory(formData, calculations.total);
+              toast({
+                title: "Quote Saved",
+                description: "Added to quote history",
+              });
+            }
+            break;
+          case 'e':
+            e.preventDefault();
+            // Export PDF (client version)
+            if (calculations) {
+              checkAccessAndProceed(() => {
+                const exportService = new ExportService(formData, calculations, dayRates, gearCosts, settings);
+                const printWindow = window.open('', '', 'width=800,height=600');
+                printWindow.document.write(exportService.generateClientHTML());
+                printWindow.document.close();
+              });
+            }
+            break;
+          case 'n':
+            e.preventDefault();
+            // New quote (reset)
+            handleReset();
+            toast({
+              title: "New Quote",
+              description: "Form reset to defaults",
+            });
+            break;
+          case 'd':
+            e.preventDefault();
+            // Duplicate current quote (save and keep data)
+            if (calculations) {
+              saveToQuoteHistory(formData, calculations.total);
+              toast({
+                title: "Quote Duplicated",
+                description: "Saved to history. Continue editing.",
+              });
+            }
+            break;
+          case 'r':
+            e.preventDefault();
+            // Round price
+            if (calculations) {
+              const currentTotal = calculations.total;
+              const rounded = Math.ceil(currentTotal / 100) * 100;
+              setFormData(prev => ({
+                ...prev,
+                custom_price_override: rounded,
+                custom_discount_percent: 0
+              }));
+              toast({
+                title: "Price Rounded",
+                description: `$${currentTotal.toLocaleString()} → $${rounded.toLocaleString()}`,
+              });
+            }
+            break;
+        }
+      } else if (e.key === 'Escape') {
+        // Clear custom price on Escape
+        if (formData.custom_price_override) {
+          setFormData(prev => ({
+            ...prev,
+            custom_price_override: null,
+            custom_discount_percent: 0
+          }));
+          toast({
+            title: "Custom Price Cleared",
+            description: "Reverted to calculated total",
+          });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [calculations, formData, toast]);
+
   const checkAccessAndProceed = (action) => {
     if (isUnlocked) {
       action();
@@ -380,6 +484,15 @@ export default function Calculator() {
       apply_rush_fee: false,
       travel_miles: 0,
       rental_costs: 0,
+      usage_rights_enabled: false,
+      usage_rights_type: "1_year",
+      usage_rights_cost: 0,
+      usage_rights_duration: "1 year",
+      talent_fees_enabled: false,
+      talent_primary_count: 0,
+      talent_primary_rate: 500,
+      talent_extra_count: 0,
+      talent_extra_rate: 150,
       notes_for_quote: ""
     };
     setFormData(defaultData);
@@ -657,6 +770,69 @@ export default function Calculator() {
     });
   };
 
+  // Enhanced export handlers
+  const handleExportQuote = () => {
+    checkAccessAndProceed(() => {
+      if (!calculations) return;
+      
+      // Mark free quote as used IMMEDIATELY (before generating PDF)
+      if (!isUnlocked) {
+        markFreeQuoteUsed();
+      }
+      
+      saveToQuoteHistory(formData, calculations.total);
+      
+      const enhancedExport = new EnhancedExportService(
+        formData,
+        calculations,
+        dayRates,
+        gearCosts,
+        settings,
+        isUnlocked
+      );
+      
+      const printWindow = window.open('', '', 'width=900,height=700');
+      printWindow.document.write(enhancedExport.generateHTML('quote'));
+      printWindow.document.close();
+      
+      toast({
+        title: "Quote Generated!",
+        description: isUnlocked ? "Professional quote ready to print or save as PDF" : "Free quote generated! Upgrade for unlimited quotes.",
+      });
+    });
+  };
+
+  const handleExportInvoice = () => {
+    checkAccessAndProceed(() => {
+      if (!calculations) return;
+      
+      // Mark free quote as used IMMEDIATELY (before generating PDF)
+      if (!isUnlocked) {
+        markFreeQuoteUsed();
+      }
+      
+      saveToQuoteHistory(formData, calculations.total);
+      
+      const enhancedExport = new EnhancedExportService(
+        formData,
+        calculations,
+        dayRates,
+        gearCosts,
+        settings,
+        isUnlocked
+      );
+      
+      const printWindow = window.open('', '', 'width=900,height=700');
+      printWindow.document.write(enhancedExport.generateHTML('invoice'));
+      printWindow.document.close();
+      
+      toast({
+        title: "Invoice Generated!",
+        description: isUnlocked ? "Professional invoice ready to print or save as PDF" : "Free invoice generated! Upgrade for unlimited invoices.",
+      });
+    });
+  };
+
   // Show loading screen while initializing
   if (isLoading) {
     return (
@@ -678,6 +854,76 @@ export default function Calculator() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
+      {/* Locked Screen Overlay - Shows after free quote is used */}
+      {!canUseCalculator && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
+          <div className="max-w-2xl w-full rounded-2xl p-12 text-center" style={{ background: 'var(--color-bg-card)' }}>
+            <div className="mb-6">
+              <Lock className="w-20 h-20 mx-auto mb-4" style={{ color: 'var(--color-accent-primary)' }} />
+              <h2 className="text-4xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+                Free Quote Used
+              </h2>
+              <p className="text-xl mb-8" style={{ color: 'var(--color-text-secondary)' }}>
+                You've created your free quote! Upgrade to Pro for unlimited access to all features.
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-3 justify-center" style={{ color: 'var(--color-text-secondary)' }}>
+                <Check className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                <span>Unlimited quotes & invoices</span>
+              </div>
+              <div className="flex items-center gap-3 justify-center" style={{ color: 'var(--color-text-secondary)' }}>
+                <Check className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                <span>No watermark on PDFs</span>
+              </div>
+              <div className="flex items-center gap-3 justify-center" style={{ color: 'var(--color-text-secondary)' }}>
+                <Check className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
+                <span>Custom branding & templates</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                onClick={async () => {
+                  const deviceId = await getDeviceId();
+                  const currentUrl = window.location.origin;
+                  const refCookie = getReferralCookie();
+                  const affiliateCode = refCookie?.code || searchParams.get('ref');
+                  const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
+                  const cancelUrl = `${currentUrl}/#/calculator`;
+                  let stripeUrl = `https://buy.stripe.com/prod_TIClNwXomLEhtB?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+                  window.location.href = stripeUrl;
+                }}
+                className="px-8 py-4 text-lg font-semibold"
+                style={{ background: 'var(--color-accent-primary)', color: 'white' }}
+              >
+                Upgrade to Pro - $9.99/mo
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={async () => {
+                  const deviceId = await getDeviceId();
+                  const currentUrl = window.location.origin;
+                  const refCookie = getReferralCookie();
+                  const affiliateCode = refCookie?.code || searchParams.get('ref');
+                  const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
+                  const cancelUrl = `${currentUrl}/#/calculator`;
+                  let stripeUrl = `https://buy.stripe.com/prod_TXroVmftASHoID?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+                  window.location.href = stripeUrl;
+                }}
+                className="px-8 py-4 text-lg font-semibold"
+                style={{ borderColor: 'var(--color-accent-primary)', color: 'var(--color-accent-primary)' }}
+              >
+                Get Lifetime - $199
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Landing Hero Section */}
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
@@ -757,7 +1003,7 @@ export default function Calculator() {
                       size="sm"
                       style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)', borderColor: 'var(--color-accent-primary)', boxShadow: '0 0 10px rgba(212, 175, 55, 0.4)' }}
                     >
-                      <Key className="w-4 h-4 mr-2" />
+                      <KeyIcon className="w-4 h-4 mr-2" />
                       Enter Unlock Code
                     </Button>
                   </DialogTrigger>
@@ -878,24 +1124,34 @@ export default function Calculator() {
                 Copy Text
               </Button>
               <Button
+                onClick={handleExportQuote}
+                variant="outline"
+                size="sm"
+                disabled={!calculations}
+                style={{ background: 'var(--color-accent-primary)', color: '#000', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Quote
+              </Button>
+              <Button
+                onClick={handleExportInvoice}
+                variant="outline"
+                size="sm"
+                disabled={!calculations}
+                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Invoice
+              </Button>
+              <Button
                 onClick={handlePrintReceipt}
                 variant="outline"
                 size="sm"
                 disabled={!calculations}
                 style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
               >
-                <Download className="w-4 h-4 mr-2" />
-                Client Quote
-              </Button>
-              <Button
-                onClick={handlePrint}
-                variant="outline"
-                size="sm"
-                disabled={!calculations}
-                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Business Print
+                <FileText className="w-4 h-4 mr-2" />
+                Old Quote
               </Button>
               <QuoteHistory 
                 onLoadQuote={(savedFormData) => {
@@ -919,6 +1175,69 @@ export default function Calculator() {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset Form
               </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
+                  >
+                    <KeyIcon className="w-4 h-4 mr-2" />
+                    Shortcuts
+                  </Button>
+                </DialogTrigger>
+                <DialogContent style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+                  <DialogHeader>
+                    <DialogTitle style={{ color: 'var(--color-text-primary)' }}>
+                      ⌨️ Keyboard Shortcuts
+                    </DialogTitle>
+                    <DialogDescription style={{ color: 'var(--color-text-secondary)' }}>
+                      Speed up your workflow with these shortcuts
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 py-4">
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>Save Quote</span>
+                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
+                        Ctrl+S
+                      </kbd>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>Export PDF</span>
+                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
+                        Ctrl+E
+                      </kbd>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>New Quote</span>
+                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
+                        Ctrl+N
+                      </kbd>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>Duplicate Quote</span>
+                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
+                        Ctrl+D
+                      </kbd>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>Round Price</span>
+                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
+                        Ctrl+R
+                      </kbd>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>Clear Custom Price</span>
+                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
+                        Esc
+                      </kbd>
+                    </div>
+                  </div>
+                  <div className="text-xs text-center pt-4" style={{ color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)' }}>
+                    💡 Tip: Use <kbd className="px-2 py-0.5 rounded font-mono text-xs" style={{ background: 'var(--color-bg-tertiary)' }}>Cmd</kbd> on Mac instead of Ctrl
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button
                 onClick={() => {
                   const timestamp = new Date().toLocaleString();
@@ -1219,72 +1538,109 @@ export default function Calculator() {
               cardClassName="border-[var(--color-border-dark)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
             >
                 <div className="space-y-3">
-                  <div
-                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.day_type === "half" && !formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                  {/* Half Day */}
+                  <button
+                    type="button"
+                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                      formData.day_type === "half" && !formData.single_price_enabled 
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
-                    style={formData.day_type === "half" && !formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
                     onClick={() => setFormData({...formData, day_type: "half", single_price_enabled: false})}
                   >
-                    <Checkbox
-                      checked={formData.day_type === "half" && !formData.single_price_enabled}
-                      onCheckedChange={() => setFormData({...formData, day_type: "half", single_price_enabled: false})}
-                    />
-                    <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
-                      <span>Half Day Rates</span>
-                      <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>(up to 6 hours)</span>
-                    </Label>
-                  </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      formData.day_type === "half" && !formData.single_price_enabled
+                        ? 'border-[var(--color-accent-primary)]'
+                        : 'border-[var(--color-border-dark)]'
+                    }`}>
+                      {formData.day_type === "half" && !formData.single_price_enabled && (
+                        <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                        Half Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to 6 hours)</span>
+                      </div>
+                    </div>
+                  </button>
 
-                  <div
-                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.day_type === "full" && !formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                  {/* Full Day */}
+                  <button
+                    type="button"
+                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                      formData.day_type === "full" && !formData.single_price_enabled 
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
-                    style={formData.day_type === "full" && !formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
                     onClick={() => setFormData({...formData, day_type: "full", single_price_enabled: false})}
                   >
-                    <Checkbox
-                      checked={formData.day_type === "full" && !formData.single_price_enabled}
-                      onCheckedChange={() => setFormData({...formData, day_type: "full", single_price_enabled: false})}
-                    />
-                    <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
-                      <span>Full Day Rates</span>
-                      <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>(up to 10 hours)</span>
-                    </Label>
-                  </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      formData.day_type === "full" && !formData.single_price_enabled
+                        ? 'border-[var(--color-accent-primary)]'
+                        : 'border-[var(--color-border-dark)]'
+                    }`}>
+                      {formData.day_type === "full" && !formData.single_price_enabled && (
+                        <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                        Full Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to 10 hours)</span>
+                      </div>
+                    </div>
+                  </button>
 
-                  <div
-                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.day_type === "custom" && !formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                  {/* Custom Hourly */}
+                  <button
+                    type="button"
+                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                      formData.day_type === "custom" && !formData.single_price_enabled 
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
-                    style={formData.day_type === "custom" && !formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
                     onClick={() => setFormData({...formData, day_type: "custom", single_price_enabled: false})}
                   >
-                    <Checkbox
-                      checked={formData.day_type === "custom" && !formData.single_price_enabled}
-                      onCheckedChange={() => setFormData({...formData, day_type: "custom", single_price_enabled: false})}
-                    />
-                    <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
-                      <span>Custom Hourly Rate</span>
-                    </Label>
-                  </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      formData.day_type === "custom" && !formData.single_price_enabled
+                        ? 'border-[var(--color-accent-primary)]'
+                        : 'border-[var(--color-border-dark)]'
+                    }`}>
+                      {formData.day_type === "custom" && !formData.single_price_enabled && (
+                        <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                        Custom Hourly Rate
+                      </div>
+                    </div>
+                  </button>
 
-                  <div
-                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                      formData.single_price_enabled ? 'bg-[var(--color-bg-tertiary)] border-2' : 'border-2 border-transparent hover:bg-[var(--color-bg-tertiary)]'
+                  {/* Single Fixed Price */}
+                  <button
+                    type="button"
+                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                      formData.single_price_enabled 
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
-                    style={formData.single_price_enabled ? { borderColor: 'var(--color-accent-primary)' } : {}}
                     onClick={() => setFormData({...formData, single_price_enabled: true, day_type: null})}
                   >
-                    <Checkbox
-                      checked={formData.single_price_enabled}
-                      onCheckedChange={(checked) => setFormData({...formData, single_price_enabled: checked, day_type: checked ? null : formData.day_type})}
-                    />
-                    <Label className="flex-1 cursor-pointer" style={{ color: 'var(--color-text-primary)' }}>
-                      <span>Single Fixed Price</span>
-                      <span className="text-sm ml-2" style={{ color: 'var(--color-text-secondary)' }}>(overhead/admin added)</span>
-                    </Label>
-                  </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      formData.single_price_enabled
+                        ? 'border-[var(--color-accent-primary)]'
+                        : 'border-[var(--color-border-dark)]'
+                    }`}>
+                      {formData.single_price_enabled && (
+                        <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                        Single Fixed Price <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(overhead/admin added)</span>
+                      </div>
+                    </div>
+                  </button>
                 </div>
 
                 {formData.single_price_enabled && (
@@ -1474,6 +1830,307 @@ export default function Calculator() {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Usage Rights & Licensing */}
+            <Card className="shadow-md border-2 transition-all duration-200" style={{ 
+              background: 'var(--color-bg-secondary)', 
+              borderColor: formData.usage_rights_enabled ? 'var(--color-accent-primary)' : 'var(--color-border-dark)',
+              color: 'var(--color-text-primary)' 
+            }}>
+              <CardHeader className="pb-3" style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border-dark)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                      <Shield className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base" style={{ color: 'var(--color-text-primary)' }}>Usage Rights & Licensing</CardTitle>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Commercial usage and distribution rights</p>
+                    </div>
+                  </div>
+                  {formData.usage_rights_enabled && (
+                    <div className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(212, 175, 55, 0.15)', color: 'var(--color-accent-primary)' }}>
+                      Active
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                {/* Toggle Switch */}
+                <label className="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200" 
+                  style={{ 
+                    background: formData.usage_rights_enabled ? 'rgba(212, 175, 55, 0.05)' : 'var(--color-bg-primary)',
+                    border: '1px solid',
+                    borderColor: formData.usage_rights_enabled ? 'rgba(212, 175, 55, 0.3)' : 'var(--color-border)'
+                  }}
+                  onClick={() => setFormData({...formData, usage_rights_enabled: !formData.usage_rights_enabled})}
+                >
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={formData.usage_rights_enabled}
+                      onCheckedChange={(checked) => setFormData({...formData, usage_rights_enabled: checked})}
+                    />
+                    <div>
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>Include Usage Rights Fee</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Add licensing fees to this quote</div>
+                    </div>
+                  </div>
+                </label>
+                
+                {formData.usage_rights_enabled && (
+                  <div className="space-y-4 p-5 rounded-xl" style={{ background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)' }}>
+                    {/* Duration Selector */}
+                    <div>
+                      <Label htmlFor="usage_rights_type" className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+                        <Clock className="w-4 h-4" />
+                        License Duration
+                      </Label>
+                      <select
+                        id="usage_rights_type"
+                        value={formData.usage_rights_type}
+                        onChange={(e) => {
+                          const type = e.target.value;
+                          let duration = "1 year";
+                          if (type === "6_months") duration = "6 months";
+                          else if (type === "1_year") duration = "1 year";
+                          else if (type === "2_years") duration = "2 years";
+                          else if (type === "perpetual") duration = "Perpetual";
+                          else if (type === "custom") duration = "Custom";
+                          setFormData({...formData, usage_rights_type: type, usage_rights_duration: duration});
+                        }}
+                        className="w-full p-3 rounded-lg font-medium transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:outline-none"
+                        style={{ 
+                          background: 'var(--color-bg-secondary)', 
+                          borderColor: 'var(--color-border-dark)', 
+                          color: 'var(--color-text-primary)', 
+                          border: '1px solid' 
+                        }}
+                      >
+                        <option value="6_months">📅 6 Months</option>
+                        <option value="1_year">📅 1 Year (Standard)</option>
+                        <option value="2_years">📅 2 Years</option>
+                        <option value="perpetual">♾️ Perpetual (Unlimited)</option>
+                        <option value="custom">✏️ Custom Duration</option>
+                      </select>
+                    </div>
+                    
+                    {formData.usage_rights_type === "custom" && (
+                      <div className="animate-in slide-in-from-top-2 duration-200">
+                        <Label htmlFor="usage_rights_duration" className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>Custom Duration</Label>
+                        <Input
+                          id="usage_rights_duration"
+                          type="text"
+                          value={formData.usage_rights_duration}
+                          onChange={(e) => setFormData({...formData, usage_rights_duration: e.target.value})}
+                          placeholder="e.g., 18 months, 3 years, 5 years"
+                          className="p-3 rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                          style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Cost Input */}
+                    <div>
+                      <Label htmlFor="usage_rights_cost" className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+                        <DollarSign className="w-4 h-4" />
+                        License Fee
+                      </Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                        <Input
+                          id="usage_rights_cost"
+                          type="number"
+                          min="0"
+                          step="100"
+                          value={formData.usage_rights_cost}
+                          onChange={(e) => setFormData({...formData, usage_rights_cost: parseFloat(e.target.value) || 0})}
+                          className="pl-8 p-3 text-lg font-semibold rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                          style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="mt-2 p-3 rounded-lg" style={{ background: 'rgba(212, 175, 55, 0.05)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                        <p className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                          💡 <strong>Industry Standard:</strong> 20-50% of production cost
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Talent Fees */}
+            <Card className="shadow-md border-2 transition-all duration-200" style={{ 
+              background: 'var(--color-bg-secondary)', 
+              borderColor: formData.talent_fees_enabled ? 'var(--color-accent-primary)' : 'var(--color-border-dark)',
+              color: 'var(--color-text-primary)' 
+            }}>
+              <CardHeader className="pb-3" style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border-dark)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                      <Users className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base" style={{ color: 'var(--color-text-primary)' }}>Talent & Actor Fees</CardTitle>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>On-screen talent and performers</p>
+                    </div>
+                  </div>
+                  {formData.talent_fees_enabled && (
+                    <div className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(212, 175, 55, 0.15)', color: 'var(--color-accent-primary)' }}>
+                      Active
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-5">
+                {/* Toggle Switch */}
+                <label className="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200" 
+                  style={{ 
+                    background: formData.talent_fees_enabled ? 'rgba(212, 175, 55, 0.05)' : 'var(--color-bg-primary)',
+                    border: '1px solid',
+                    borderColor: formData.talent_fees_enabled ? 'rgba(212, 175, 55, 0.3)' : 'var(--color-border)'
+                  }}
+                  onClick={() => setFormData({...formData, talent_fees_enabled: !formData.talent_fees_enabled})}
+                >
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={formData.talent_fees_enabled}
+                      onCheckedChange={(checked) => setFormData({...formData, talent_fees_enabled: checked})}
+                    />
+                    <div>
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>Include Talent Fees</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Add actor and performer costs</div>
+                    </div>
+                  </div>
+                </label>
+                
+                {formData.talent_fees_enabled && (
+                  <div className="space-y-5 p-5 rounded-xl" style={{ background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)' }}>
+                    {/* Primary Talent */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                          <User className="w-4 h-4" style={{ color: 'var(--color-accent-primary)' }} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Primary Actors</h4>
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Lead roles and speaking parts</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="talent_primary_count" className="text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Number of Actors</Label>
+                          <Input
+                            id="talent_primary_count"
+                            type="number"
+                            min="0"
+                            value={formData.talent_primary_count}
+                            onChange={(e) => setFormData({...formData, talent_primary_count: parseInt(e.target.value) || 0})}
+                            className="p-2.5 rounded-lg text-center font-semibold transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                            style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="talent_primary_rate" className="text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Rate per Actor</Label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                            <Input
+                              id="talent_primary_rate"
+                              type="number"
+                              min="0"
+                              step="50"
+                              value={formData.talent_primary_rate}
+                              onChange={(e) => setFormData({...formData, talent_primary_rate: parseFloat(e.target.value) || 0})}
+                              className="pl-7 p-2.5 rounded-lg text-center font-semibold transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                              style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                              placeholder="500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Divider */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t" style={{ borderColor: 'var(--color-border)' }}></div>
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="px-2" style={{ background: 'var(--color-bg-primary)', color: 'var(--color-text-muted)' }}>and</span>
+                      </div>
+                    </div>
+                    
+                    {/* Extras */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                          <Users className="w-4 h-4" style={{ color: 'var(--color-accent-primary)' }} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>Background Extras</h4>
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Non-speaking background talent</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="talent_extra_count" className="text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Number of Extras</Label>
+                          <Input
+                            id="talent_extra_count"
+                            type="number"
+                            min="0"
+                            value={formData.talent_extra_count}
+                            onChange={(e) => setFormData({...formData, talent_extra_count: parseInt(e.target.value) || 0})}
+                            className="p-2.5 rounded-lg text-center font-semibold transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                            style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="talent_extra_rate" className="text-xs font-medium mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>Rate per Extra</Label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                            <Input
+                              id="talent_extra_rate"
+                              type="number"
+                              min="0"
+                              step="25"
+                              value={formData.talent_extra_rate}
+                              onChange={(e) => setFormData({...formData, talent_extra_rate: parseFloat(e.target.value) || 0})}
+                              className="pl-7 p-2.5 rounded-lg text-center font-semibold transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                              style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                              placeholder="150"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Total Display */}
+                    <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)', border: '2px solid rgba(212, 175, 55, 0.3)' }}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                          <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>Total Talent Cost</span>
+                        </div>
+                        <span className="text-2xl font-bold" style={{ color: 'var(--color-accent-primary)' }}>
+                          ${((formData.talent_primary_count * formData.talent_primary_rate) + (formData.talent_extra_count * formData.talent_extra_rate)).toLocaleString()}
+                        </span>
+                      </div>
+                      {(formData.talent_primary_count > 0 || formData.talent_extra_count > 0) && (
+                        <div className="mt-2 pt-2 text-xs" style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)', color: 'var(--color-text-muted)' }}>
+                          {formData.talent_primary_count > 0 && `${formData.talent_primary_count} primary × $${formData.talent_primary_rate}`}
+                          {formData.talent_primary_count > 0 && formData.talent_extra_count > 0 && ' + '}
+                          {formData.talent_extra_count > 0 && `${formData.talent_extra_count} extras × $${formData.talent_extra_rate}`}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

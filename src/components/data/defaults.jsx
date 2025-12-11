@@ -199,6 +199,11 @@ export const DEFAULT_SETTINGS = {
     Standard: 1.0,
     Senior: 1.35
   },
+  terms_and_conditions: "Payment is due within 30 days of receiving this invoice. A 50% deposit is required to secure your booking. Late payments may incur a 10% interest charge per month. All footage remains property of the production company until full payment is received. Cancellations within 7 days of the shoot date are non-refundable.",
+  notes_to_customer: "",
+  pdf_theme: "modern",
+  show_signature_field: true,
+  show_payment_schedule: true,
   last_updated: new Date().toISOString()
 };
 

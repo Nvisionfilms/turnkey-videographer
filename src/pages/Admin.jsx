@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings as SettingsIcon, DollarSign, Camera, RotateCcw, Plus, Trash2, Save, Award, Upload, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -1603,6 +1604,70 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                       <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
                         Cost-of-living adjustment
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PDF & Quote Customization */}
+                <div className="space-y-4 mt-6">
+                  <h3 className="text-lg font-semibold pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                    PDF & Quote Customization
+                  </h3>
+                  
+                  <div>
+                    <Label htmlFor="terms_and_conditions" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                      Terms & Conditions
+                    </Label>
+                    <Textarea
+                      id="terms_and_conditions"
+                      value={localSettings?.terms_and_conditions || ""}
+                      onChange={(e) => handleSettingsUpdate('terms_and_conditions', e.target.value)}
+                      placeholder="Payment is due within 30 days of receiving this invoice..."
+                      rows={6}
+                      style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                    />
+                    <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                      These terms will appear at the bottom of your PDF quotes
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="notes_to_customer" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                      Notes to Customer (Optional)
+                    </Label>
+                    <Textarea
+                      id="notes_to_customer"
+                      value={localSettings?.notes_to_customer || ""}
+                      onChange={(e) => handleSettingsUpdate('notes_to_customer', e.target.value)}
+                      placeholder="Thank you for your business! We look forward to working with you..."
+                      rows={4}
+                      style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                    />
+                    <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                      Optional personalized message that appears on your quotes
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="show_signature_field"
+                        checked={localSettings?.show_signature_field !== false}
+                        onCheckedChange={(checked) => handleSettingsUpdate('show_signature_field', checked)}
+                      />
+                      <Label htmlFor="show_signature_field" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
+                        Show signature field on PDF
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="show_payment_schedule"
+                        checked={localSettings?.show_payment_schedule !== false}
+                        onCheckedChange={(checked) => handleSettingsUpdate('show_payment_schedule', checked)}
+                      />
+                      <Label htmlFor="show_payment_schedule" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
+                        Show payment schedule on PDF
+                      </Label>
                     </div>
                   </div>
                 </div>

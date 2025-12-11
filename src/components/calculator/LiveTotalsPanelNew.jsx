@@ -55,55 +55,55 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
     : 'None';
 
   return (
-    <Card className="shadow-lg lg:sticky lg:top-6" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
-      <CardContent className="p-4 lg:p-6">
-        {/* Project Type */}
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Project</span>
-          <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+    <Card className="shadow-lg lg:sticky lg:top-6" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
+      <CardContent className="p-6">
+        {/* Header */}
+        <div className="mb-6 pb-4" style={{ borderBottom: '2px solid var(--color-border)' }}>
+          <h3 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>Quote Summary</h3>
+          <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
             {formData?.project_title || 'Commercial Shoot'}
-          </span>
+          </p>
         </div>
 
         {/* 2x2 Grid - Key Info */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-6">
           {/* Crew */}
-          <div className="rounded-xl p-3 border" style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border)' }}>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Crew</div>
-            <div className="mt-1 font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>
+          <div className="rounded-lg p-3 border" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+            <div className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>CREW</div>
+            <div className="mt-2 font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
               {crewInfo}
             </div>
           </div>
 
           {/* Hours */}
-          <div className="rounded-xl p-3 border" style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border)' }}>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Hours</div>
+          <div className="rounded-lg p-3 border" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+            <div className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>HOURS</div>
             <div className="mt-1 font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>
               {hours}
             </div>
           </div>
 
           {/* Camera */}
-          <div className="rounded-xl p-3 border" style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border)' }}>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Camera</div>
-            <div className="mt-1 font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>
+          <div className="rounded-lg p-3 border" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+            <div className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>CAMERA</div>
+            <div className="mt-2 font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
               {cameraInfo}
             </div>
           </div>
 
           {/* Lighting */}
-          <div className="rounded-xl p-3 border" style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border)' }}>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Lighting</div>
-            <div className="mt-1 font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>
+          <div className="rounded-lg p-3 border" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+            <div className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>LIGHTING</div>
+            <div className="mt-2 font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
               {lightingInfo}
             </div>
           </div>
         </div>
 
-        {/* Subtotal */}
-        <div className="pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
-          <div className="flex items-center justify-between">
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Subtotal</div>
+        {/* Total */}
+        <div className="pt-6 pb-4" style={{ borderTop: '2px solid var(--color-border)', borderBottom: '2px solid var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>TOTAL</div>
             {formData?.custom_discount_percent > 0 && (
               <div className="text-[10px] px-2 py-0.5 rounded" style={{ background: 'rgba(212, 175, 55, 0.2)', color: 'var(--color-accent-primary)' }}>
                 {formData.custom_discount_percent}% Discount
@@ -115,7 +115,7 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
               </div>
             )}
           </div>
-          <div className="text-2xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+          <div className="text-4xl font-bold mt-2" style={{ color: 'var(--color-accent-primary)' }}>
             ${calc.total?.toLocaleString() || '0'}
           </div>
         </div>
@@ -145,15 +145,16 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
         )}
 
         {/* Quick Actions */}
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-6 grid grid-cols-2 gap-3">
           <Button
             variant="outline"
             size="default"
             className="w-full h-10"
             style={{ 
-              background: 'var(--color-bg-primary)', 
+              background: 'var(--color-bg-secondary)', 
               borderColor: 'var(--color-border)',
-              color: 'var(--color-text-primary)'
+              color: 'var(--color-text-primary)',
+              fontWeight: '600'
             }}
             onClick={() => {
               navigator.clipboard.writeText(calc.total?.toFixed(2) || '0');
@@ -174,9 +175,10 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
             size="default"
             className="w-full h-10"
             style={{ 
-              background: 'var(--color-bg-primary)', 
+              background: 'var(--color-bg-secondary)', 
               borderColor: 'var(--color-border)',
-              color: 'var(--color-text-primary)'
+              color: 'var(--color-text-primary)',
+              fontWeight: '600'
             }}
             onClick={() => {
               // Round the CURRENT displayed total (so you can round multiple times)

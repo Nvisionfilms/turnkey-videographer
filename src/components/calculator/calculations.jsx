@@ -110,7 +110,8 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
   const dayType = formData.day_type || "full";
   const customHours = formData.custom_hours || FULL_DAY_HOURS;
   const experienceLevel = formData.experience_level || "Standard";
-  const experienceMultiplier = settings?.experience_levels?.[experienceLevel] || 1.0;
+  // Use custom_multiplier if available, otherwise fall back to preset from experience_levels
+  const experienceMultiplier = formData.custom_multiplier || settings?.experience_levels?.[experienceLevel] || 1.0;
   const industryIndex = settings?.industry_index || 1.0;
   const regionMultiplier = settings?.region_multiplier || 1.0;
 
@@ -125,12 +126,19 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
     const profitMargin = round2(basePrice * (profitMarginPercent / 100));
     const laborWithOverheadProfit = round2(basePrice + overhead + profitMargin);
     
-    // Calculate gear, travel, rentals
+    // Calculate gear, travel, rentals, usage rights, talent
     const gearAmortized = calculateGearCost(formData, gearCosts, settings);
     const travelCost = calculateTravelCost(formData, settings);
     const rentalCosts = formData.rental_costs || 0;
+    const usageRightsCost = formData.usage_rights_enabled ? (formData.usage_rights_cost || 0) : 0;
+    let talentFees = 0;
+    if (formData.talent_fees_enabled) {
+      const primaryTalent = (formData.talent_primary_count || 0) * (formData.talent_primary_rate || 0);
+      const extraTalent = (formData.talent_extra_count || 0) * (formData.talent_extra_rate || 0);
+      talentFees = primaryTalent + extraTalent;
+    }
     
-    const subtotal = round2(laborWithOverheadProfit + gearAmortized + travelCost + rentalCosts);
+    const subtotal = round2(laborWithOverheadProfit + gearAmortized + travelCost + rentalCosts + usageRightsCost + talentFees);
     
     // Apply rush fee and discount
     const rushFeePercent = settings?.rush_fee_percent || 0;
@@ -161,6 +169,8 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
       gearAmortized,
       travelCost,
       rentalCosts,
+      usageRightsCost: round2(usageRightsCost),
+      talentFees: round2(talentFees),
       subtotal,
       rushFee,
       nonprofitDiscount,
@@ -250,6 +260,17 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
   // === RENTAL COSTS ===
   const rentalCosts = formData.rental_costs || 0;
 
+  // === USAGE RIGHTS ===
+  const usageRightsCost = formData.usage_rights_enabled ? (formData.usage_rights_cost || 0) : 0;
+
+  // === TALENT FEES ===
+  let talentFees = 0;
+  if (formData.talent_fees_enabled) {
+    const primaryTalent = (formData.talent_primary_count || 0) * (formData.talent_primary_rate || 0);
+    const extraTalent = (formData.talent_extra_count || 0) * (formData.talent_extra_rate || 0);
+    talentFees = primaryTalent + extraTalent;
+  }
+
   // === OVERHEAD & PROFIT (applied to labor only) ===
   const overheadPercent = settings?.overhead_percent || 0;
   const profitMarginPercent = settings?.profit_margin_percent || 0;
@@ -261,7 +282,7 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
   const laborWithOverheadProfit = laborRaw + overhead + profitMargin;
 
   // === SUBTOTAL ===
-  const subtotal = laborWithOverheadProfit + gearAmortized + travelCost + rentalCosts;
+  const subtotal = laborWithOverheadProfit + gearAmortized + travelCost + rentalCosts + usageRightsCost + talentFees;
 
   // === RUSH FEE ===
   const rushFeePercent = settings?.rush_fee_percent || 0;
@@ -297,6 +318,8 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
     gearAmortized: round2(gearAmortized),
     travelCost: round2(travelCost),
     rentalCosts: round2(rentalCosts),
+    usageRightsCost: round2(usageRightsCost),
+    talentFees: round2(talentFees),
     subtotal: round2(subtotal),
     rushFee: round2(rushFee),
     nonprofitDiscount: round2(nonprofitDiscount),

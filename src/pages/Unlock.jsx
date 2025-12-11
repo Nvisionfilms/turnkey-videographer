@@ -161,20 +161,250 @@ export default function Unlock() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'linear-gradient(135deg, #0f1117 0%, #1a1d29 100%)' }}>
-      <Card className="max-w-2xl w-full border-0 shadow-2xl" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
-        <CardHeader className="text-center pb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 mx-auto" style={{ background: 'rgba(212, 175, 55, 0.2)' }}>
-            <Lock className="w-8 h-8" style={{ color: 'var(--color-accent-primary)' }} />
+    <div className="min-h-screen p-6" style={{ background: 'var(--color-bg-primary)' }}>
+      {/* Hero Section */}
+      <div className="max-w-4xl mx-auto mb-8">
+        <div className="text-center mb-12 pt-8">
+          <div className="inline-block px-4 py-2 rounded-full mb-4" style={{ background: 'rgba(212, 175, 55, 0.1)', border: '1px solid var(--color-accent-primary)' }}>
+            <span className="text-sm font-semibold" style={{ color: 'var(--color-accent-primary)' }}>
+              The StudioBinder of Pricing
+            </span>
           </div>
-          <CardTitle className="text-3xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-            Unlock Unlimited Access
+          <h1 className="text-5xl md:text-6xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+            Stop Undercharging.<br/>Start Living.
+          </h1>
+          <p className="text-xl md:text-2xl mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+            The pricing calculator that helped 500+ videographers<br/>hit 6-figures without burning out.
+          </p>
+          
+          {/* ROI Calculator */}
+          <div className="max-w-2xl mx-auto p-6 rounded-xl mb-8" style={{ background: 'rgba(212, 175, 55, 0.05)', border: '1px solid var(--color-accent-primary)' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+              💰 Pay Once, Price Forever
+            </h3>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-3xl font-bold mb-1" style={{ color: 'var(--color-accent-primary)' }}>$199</div>
+                <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>One-Time</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold mb-1" style={{ color: 'var(--color-success)' }}>$6,000+</div>
+                <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>ROI/Year</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold mb-1" style={{ color: 'var(--color-accent-primary)' }}>3,000%</div>
+                <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Return</div>
+              </div>
+            </div>
+            <p className="text-sm mt-4" style={{ color: 'var(--color-text-secondary)' }}>
+              Book just 2 more gigs with better pricing = $6,000+ extra revenue
+            </p>
+          </div>
+
+          {/* Social Proof */}
+          <div className="flex items-center justify-center gap-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} style={{ color: 'var(--color-accent-primary)' }}>★</span>
+              ))}
+            </div>
+            <span>"Paid for itself in one booking" - Sarah M.</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing Tiers */}
+      <div className="max-w-5xl mx-auto mb-12">
+        <h2 className="text-3xl font-bold text-center mb-3" style={{ color: 'var(--color-text-primary)' }}>
+          Choose Your Plan
+        </h2>
+        <p className="text-center mb-8" style={{ color: 'var(--color-text-secondary)' }}>
+          Start free, upgrade when you're ready
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* FREE TIER */}
+          <div className="rounded-2xl border-2 p-8" style={{ borderColor: 'var(--color-border)', background: 'white' }}>
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Free</h3>
+              <div className="text-5xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>$0</div>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Forever free</p>
+            </div>
+
+            <ul className="space-y-3 mb-8">
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}><strong>1 free quote</strong> with full access</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>Try all features (roles, gear, everything)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>PDF export with watermark</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>Then upgrade to continue</span>
+              </li>
+            </ul>
+
+            <button
+              onClick={() => window.location.href = '/#/calculator'}
+              className="w-full py-3 rounded-lg font-semibold transition-all"
+              style={{ 
+                background: 'var(--color-bg-tertiary)',
+                color: 'var(--color-text-primary)',
+                border: '2px solid var(--color-border)'
+              }}
+            >
+              Start Free
+            </button>
+          </div>
+
+          {/* PRO TIER */}
+          <div className="rounded-2xl border-2 p-8 relative" style={{ borderColor: 'var(--color-accent-primary)', background: 'white', boxShadow: '0 8px 16px rgba(37, 99, 235, 0.1)' }}>
+            {/* Popular Badge */}
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold" style={{ background: 'var(--color-accent-primary)', color: 'white' }}>
+              MOST POPULAR
+            </div>
+
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Pro</h3>
+              <div className="text-5xl font-bold mb-2" style={{ color: 'var(--color-accent-primary)' }}>$9.99</div>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>per month</p>
+            </div>
+
+            <ul className="space-y-3 mb-8">
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}><strong>Unlimited quotes</strong></span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}><strong>No watermark</strong> on PDFs</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>Custom branding (logo, colors)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>Quote history & templates</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>Keyboard shortcuts</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>Priority support</span>
+              </li>
+            </ul>
+
+            <div className="space-y-4">
+              {/* Monthly Subscription */}
+              <div className="text-center mb-2">
+                <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Monthly Subscription</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* Stripe Button */}
+                <button
+                  onClick={async () => {
+                    const deviceId = await getDeviceId();
+                    const currentUrl = window.location.origin;
+                    const refCookie = getReferralCookie();
+                    const affiliateCode = refCookie?.code || searchParams.get('ref');
+                    const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
+                    const cancelUrl = `${currentUrl}/#/unlock`;
+                    let stripeUrl = `https://buy.stripe.com/prod_TIClNwXomLEhtB?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+                    window.location.href = stripeUrl;
+                  }}
+                  className="w-full py-3 rounded-lg font-semibold transition-all hover:shadow-lg text-sm"
+                  style={{ 
+                    background: 'var(--color-accent-primary)',
+                    color: 'white'
+                  }}
+                >
+                  Stripe
+                </button>
+
+                {/* PayPal Button */}
+                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" className="w-full">
+                  <input type="hidden" name="cmd" value="_s-xclick" />
+                  <input type="hidden" name="hosted_button_id" value="RCYH47CU7D4CC" />
+                  <input type="hidden" name="currency_code" value="USD" />
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-lg font-semibold transition-all hover:shadow-lg text-sm"
+                    style={{ 
+                      background: '#0070BA',
+                      color: 'white'
+                    }}
+                  >
+                    PayPal
+                  </button>
+                </form>
+              </div>
+
+              {/* Divider */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t" style={{ borderColor: 'var(--color-border)' }}></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2" style={{ background: 'white', color: 'var(--color-text-muted)' }}>OR</span>
+                </div>
+              </div>
+
+              {/* Lifetime Option */}
+              <div className="text-center mb-2">
+                <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Pay Once, Own Forever</p>
+              </div>
+              
+              <button
+                onClick={async () => {
+                  const deviceId = await getDeviceId();
+                  const currentUrl = window.location.origin;
+                  const refCookie = getReferralCookie();
+                  const affiliateCode = refCookie?.code || searchParams.get('ref');
+                  const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
+                  const cancelUrl = `${currentUrl}/#/unlock`;
+                  // Stripe checkout for $199 lifetime
+                  let stripeUrl = `https://buy.stripe.com/prod_TXroVmftASHoID?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+                  window.location.href = stripeUrl;
+                }}
+                className="w-full py-4 rounded-lg font-semibold transition-all hover:shadow-lg"
+                style={{ 
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%)',
+                  color: '#000',
+                  border: '2px solid #D4AF37'
+                }}
+              >
+                <div className="text-lg">Get Lifetime Access - $199</div>
+                <div className="text-xs opacity-75">Pay once, use forever</div>
+              </button>
+            </div>
+
+            <p className="text-xs text-center mt-4" style={{ color: 'var(--color-text-muted)' }}>
+              Monthly: Cancel anytime • Lifetime: Pay once, use forever
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <Card className="w-full max-w-2xl mx-auto" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+            Have an Unlock Code?
           </CardTitle>
-          <p className="text-lg mt-2" style={{ color: 'var(--color-text-secondary)' }}>
-            You've used your free quote. Subscribe for unlimited calculations or try a 3-day trial.
+          <p className="text-base" style={{ color: 'var(--color-text-secondary)' }}>
+            Enter your code or trial below
           </p>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="space-y-6">
           {/* Trial Option */}
           <div className={`p-6 rounded-lg border ${trialAlreadyUsed ? 'opacity-50' : ''}`} style={{ background: 'rgba(139, 92, 246, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
             <div className="flex items-center gap-3 mb-4">
@@ -205,86 +435,6 @@ export default function Unlock() {
             )}
           </div>
 
-          {/* Subscription Option */}
-          <div className="p-6 rounded-lg border" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
-            <div className="flex items-center gap-3 mb-4">
-              <Zap className="w-6 h-6" style={{ color: 'var(--color-accent-primary)' }} />
-              <div>
-                <h3 className="font-semibold text-lg" style={{ color: 'var(--color-text-primary)' }}>
-                  Monthly Subscription
-                </h3>
-                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                  $9.99/month - Cancel anytime
-                </p>
-              </div>
-            </div>
-            
-            <div className="text-center mb-4">
-              <div className="text-4xl font-bold mb-2" style={{ color: 'var(--color-accent-primary)' }}>
-                $9.99
-                <span className="text-lg font-normal" style={{ color: 'var(--color-text-secondary)' }}>/month</span>
-              </div>
-            </div>
-
-            {/* Payment Options */}
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* PayPal Option */}
-              <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" className="w-full">
-                <input type="hidden" name="cmd" value="_s-xclick" />
-                <input type="hidden" name="hosted_button_id" value="RCYH47CU7D4CC" />
-                <input type="hidden" name="currency_code" value="USD" />
-                <button
-                  type="submit"
-                  className="w-full px-6 py-4 rounded-lg font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2"
-                  style={{ 
-                    background: '#0070BA',
-                    color: 'white'
-                  }}
-                >
-                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.805.681l-.856 5.424a.634.634 0 0 1-.629.533H7.769a.38.38 0 0 1-.377-.443l1.234-7.828.002-.011.002-.011 1.053-6.666a.952.952 0 0 1 .944-.808h3.288c1.527 0 2.739.193 3.593.53.797.315 1.387.794 1.743 1.417z"/>
-                    <path d="M9.43 5.508a.895.895 0 0 1 .887-.758h5.762c.917 0 1.683.145 2.288.415.155.07.302.145.441.226.18.105.345.22.495.346a3.32 3.32 0 0 1 .305.29c.105.115.197.24.277.374.14.234.245.494.318.776.14.544.17 1.165.082 1.856-.745 3.748-3.232 5.03-6.388 5.03h-.506a.79.79 0 0 0-.79.67l-.855 5.424a.624.624 0 0 1-.617.523H7.775a.375.375 0 0 1-.372-.436L9.43 5.508z"/>
-                  </svg>
-                  PayPal
-                </button>
-              </form>
-
-              {/* Stripe Option */}
-              <button
-                onClick={async () => {
-                  const deviceId = await getDeviceId();
-                  const currentUrl = window.location.origin;
-                  
-                  // Get affiliate code from cookie or URL
-                  const refCookie = getReferralCookie();
-                  const affiliateCode = refCookie?.code || searchParams.get('ref');
-                  
-                  const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
-                  const cancelUrl = `${currentUrl}/#/unlock`;
-                  
-                  // Build Stripe URL with affiliate code in metadata
-                  let stripeUrl = `https://buy.stripe.com/fZu7sLh1l3YsanfaNIcIE03?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
-                  
-                  // Redirect to Stripe
-                  window.location.href = stripeUrl;
-                }}
-                className="w-full px-6 py-4 rounded-lg font-semibold transition-all hover:shadow-lg flex items-center justify-center gap-2"
-                style={{ 
-                  background: '#635BFF',
-                  color: 'white'
-                }}
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
-                </svg>
-                Stripe
-              </button>
-            </div>
-
-            <p className="text-xs text-center mt-4" style={{ color: 'var(--color-text-muted)' }}>
-              After payment, your calculator will be instantly unlocked on this device
-            </p>
-          </div>
 
           {/* Cancellation Information */}
           <div className="p-4 rounded-lg" style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
@@ -335,21 +485,26 @@ export default function Unlock() {
 
           {/* What You Get */}
           <div>
-            <h3 className="font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
-              What You Get:
+            <h3 className="font-semibold text-xl mb-4" style={{ color: 'var(--color-text-primary)' }}>
+              ✨ What You Get:
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {[
-                "Unlimited quote calculations",
-                "All premium features",
-                "Regular updates & improvements",
-                "Professional PDF exports",
-                "Custom branding options",
-                "Priority email support"
+                { title: "Unlimited Quotes", desc: "Create as many quotes as you need, forever" },
+                { title: "Professional PDF Exports", desc: "Quote & Invoice templates with signature fields" },
+                { title: "Custom Branding", desc: "Add your logo, colors, and terms & conditions" },
+                { title: "Keyboard Shortcuts", desc: "Power user features for 3x faster workflow" },
+                { title: "Quote History", desc: "Save and recall unlimited past quotes" },
+                { title: "Template Library", desc: "Quick-start templates for common projects" },
+                { title: "All Future Updates", desc: "New features added automatically, forever" },
+                { title: "Priority Support", desc: "Email support with faster response times" }
               ].map((item, index) => (
-                <li key={index} className="flex items-center gap-3" style={{ color: 'var(--color-text-secondary)' }}>
-                  <Check className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--color-success)' }} />
-                  <span>{item}</span>
+                <li key={index} className="flex items-start gap-3" style={{ color: 'var(--color-text-secondary)' }}>
+                  <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-success)' }} />
+                  <div>
+                    <div className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{item.title}</div>
+                    <div className="text-sm">{item.desc}</div>
+                  </div>
                 </li>
               ))}
             </ul>

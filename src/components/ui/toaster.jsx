@@ -57,16 +57,15 @@ export function Toaster() {
     <ToastViewport 
       style={{
         position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
+        bottom: '20px',
+        right: '20px',
         zIndex: 999999,
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
+        gap: '8px',
         width: 'auto',
-        minWidth: '420px',
-        maxWidth: '500px',
+        minWidth: '300px',
+        maxWidth: '380px',
         margin: 0,
         padding: 0
       }}

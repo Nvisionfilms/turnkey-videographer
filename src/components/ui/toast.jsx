@@ -22,7 +22,7 @@ const ToastViewport = React.forwardRef(({ className, ...props }, ref) => (
 ToastViewport.displayName = "ToastViewport"
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-xl border p-6 pr-8 shadow-2xl transition-all",
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-3 overflow-hidden rounded-lg border p-3 pr-8 shadow-lg transition-all",
   {
     variants: {
       variant: {
@@ -43,9 +43,9 @@ const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
       className={cn(toastVariants({ variant }), className)}
       style={{
         background: 'var(--color-bg-secondary)',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 80px rgba(212, 175, 55, 0.3)',
-        minWidth: '420px',
-        maxWidth: '500px'
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
+        minWidth: '300px',
+        maxWidth: '380px'
       }}
       {...props}
     />
@@ -83,7 +83,8 @@ ToastClose.displayName = "ToastClose"
 const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-lg font-bold text-slate-900", className)}
+    className={cn("text-sm font-semibold", className)}
+    style={{ color: 'var(--color-text-primary)' }}
     {...props}
   />
 ))
@@ -92,7 +93,8 @@ ToastTitle.displayName = "ToastTitle"
 const ToastDescription = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm text-slate-600", className)}
+    className={cn("text-xs", className)}
+    style={{ color: 'var(--color-text-secondary)' }}
     {...props}
   />
 ))

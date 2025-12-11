@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Shield, LogIn } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { apiCall, API_ENDPOINTS } from "../config/api";
+import { useUnlockStatus } from "../components/hooks/useUnlockStatus";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { activateDirectUnlock } = useUnlockStatus();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,12 +31,15 @@ export default function AdminLogin() {
       localStorage.setItem('adminToken', response.token || 'admin-logged-in');
       localStorage.setItem('adminEmail', email);
 
+      // Activate premium access for admin
+      activateDirectUnlock(email);
+
       toast({
         title: "Welcome back!",
-        description: "Successfully logged in as admin",
+        description: "Successfully logged in as admin with premium access",
       });
 
-      navigate('/admin/analytics');
+      navigate('/admin/affiliates');
     } catch (error) {
       toast({
         title: "Login Failed",
