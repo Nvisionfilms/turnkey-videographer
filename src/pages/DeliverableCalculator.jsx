@@ -23,9 +23,17 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { calculateDeliverableQuote } from "../lib/deliverable-pricing-engine";
 import catalogData from "../../catalog-v1.2.json";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { useUnlockStatus } from "../components/hooks/useUnlockStatus";
+import { EnhancedExportService } from "../components/services/EnhancedExportService";
+import { STORAGE_KEYS, DEFAULT_SETTINGS } from "../components/data/defaults";
 
 export default function DeliverableCalculator() {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isUnlocked, hasUsedFreeQuote, markFreeQuoteUsed } = useUnlockStatus();
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   
   // Form state matching the schema
   const [selections, setSelections] = useState({
@@ -45,11 +53,129 @@ export default function DeliverableCalculator() {
     projectName: "",
     notes: ""
   });
+
+  useEffect(() => {
+    try {
+      const settingsStr = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      if (settingsStr) {
+        setSettings(JSON.parse(settingsStr));
+      } else {
+        setSettings(DEFAULT_SETTINGS);
+      }
+    } catch {
+      setSettings(DEFAULT_SETTINGS);
+    }
+  }, []);
   
   // Calculate quote
   const quote = useMemo(() => {
     return calculateDeliverableQuote(selections, catalogData);
   }, [selections]);
+
+  const checkAccessAndProceed = (action) => {
+    if (isUnlocked) {
+      action();
+      return;
+    }
+
+    if (hasUsedFreeQuote) {
+      toast({
+        title: "Unlock Required",
+        description: "You've used your complimentary quote. Please unlock or start a 3-day trial.",
+        variant: "destructive",
+      });
+      navigate(createPageUrl("Unlock"));
+      return;
+    }
+
+    markFreeQuoteUsed();
+    action();
+    toast({
+      title: "Free Quote Used",
+      description: "This was your complimentary quote. Unlock or try 3-day trial for unlimited access.",
+    });
+    setTimeout(() => {
+      navigate(createPageUrl("Unlock"));
+    }, 3000);
+  };
+
+  const buildExportPayload = () => {
+    const computed = quote?.computed;
+    const pricing = computed?.pricing;
+
+    const total = pricing?.total || 0;
+    const depositPercent = settings?.deposit_percent || 50;
+    const depositDue = Math.round(total * (depositPercent / 100) * 100) / 100;
+    const balanceDue = Math.round((total - depositDue) * 100) / 100;
+
+    return {
+      formData: {
+        client_name: clientMeta.clientName,
+        project_title: clientMeta.projectName,
+        shoot_dates: [],
+        notes_for_quote: clientMeta.notes,
+      },
+      calculations: {
+        lineItems: (computed?.lineItems || []).map((li) => ({
+          description: li.label,
+          amount: li.amount,
+        })),
+        total,
+        depositDue,
+        balanceDue,
+      },
+    };
+  };
+
+  const handleExportQuote = () => {
+    checkAccessAndProceed(() => {
+      const { formData, calculations } = buildExportPayload();
+      if (!calculations || !calculations.total) return;
+
+      const enhancedExport = new EnhancedExportService(
+        formData,
+        calculations,
+        [],
+        [],
+        settings,
+        isUnlocked
+      );
+
+      const printWindow = window.open('', '', 'width=900,height=700');
+      printWindow.document.write(enhancedExport.generateHTML('quote'));
+      printWindow.document.close();
+
+      toast({
+        title: "Quote Exported",
+        description: "Your professional quote is ready to print or save as PDF.",
+      });
+    });
+  };
+
+  const handleExportInvoice = () => {
+    checkAccessAndProceed(() => {
+      const { formData, calculations } = buildExportPayload();
+      if (!calculations || !calculations.total) return;
+
+      const enhancedExport = new EnhancedExportService(
+        formData,
+        calculations,
+        [],
+        [],
+        settings,
+        isUnlocked
+      );
+
+      const printWindow = window.open('', '', 'width=900,height=700');
+      printWindow.document.write(enhancedExport.generateHTML('invoice'));
+      printWindow.document.close();
+
+      toast({
+        title: "Invoice Exported",
+        description: "Your professional invoice is ready to print or save as PDF.",
+      });
+    });
+  };
   
   // Get filtered deliverables for selected category
   const availableDeliverables = useMemo(() => {
@@ -560,11 +686,11 @@ export default function DeliverableCalculator() {
               {/* Export Actions */}
               <Card>
                 <CardContent className="pt-6 space-y-3">
-                  <Button className="w-full" disabled={selections.deliverables.length === 0}>
+                  <Button className="w-full" disabled={selections.deliverables.length === 0} onClick={handleExportQuote}>
                     <Download className="w-4 h-4 mr-2" />
                     Export Quote
                   </Button>
-                  <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0}>
+                  <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={handleExportInvoice}>
                     <Download className="w-4 h-4 mr-2" />
                     Export Invoice
                   </Button>
