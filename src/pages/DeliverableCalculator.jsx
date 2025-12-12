@@ -446,7 +446,7 @@ export default function DeliverableCalculator() {
                         <div className="flex-1">
                           <div className="font-medium">{deliv.labelEstimate}</div>
                           <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                            {isUnlocked ? `$${deliv.unitPrice} per ${deliv.unit}` : `Unlock to view pricing`}
+                            {isUnlocked ? `$${deliv.unitPrice} per ${deliv.unit}` : ''}
                           </div>
                         </div>
                       </div>
@@ -498,7 +498,7 @@ export default function DeliverableCalculator() {
                           {scope.responsibilityLevel === "client-led" && "Client-led production"}
                           {scope.responsibilityLevel === "shared" && "Shared responsibility"}
                           {scope.responsibilityLevel === "vendor-led" && "Full vendor responsibility"}
-                          {scope.perDayAdd > 0 && ` • +$${scope.perDayAdd}/day`}
+                          {isUnlocked && scope.perDayAdd > 0 && ` • +$${scope.perDayAdd}/day`}
                         </div>
                       </div>
                     </div>
@@ -569,8 +569,8 @@ export default function DeliverableCalculator() {
                         <div className="flex-1">
                           <div className="font-medium">{mod.labelEstimate}</div>
                           <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                            {mod.pricing.type === "fixed" && (isUnlocked ? `$${mod.pricing.value}` : `Unlock to view pricing`)}
-                            {mod.pricing.type === "multiplier" && `${((mod.pricing.value - 1) * 100).toFixed(0)}% increase`}
+                            {mod.pricing.type === "fixed" && (isUnlocked ? `$${mod.pricing.value}` : '')}
+                            {isUnlocked && mod.pricing.type === "multiplier" && `${((mod.pricing.value - 1) * 100).toFixed(0)}% increase`}
                             {isDisabled && " • Requires post-production"}
                           </div>
                         </div>
@@ -592,6 +592,22 @@ export default function DeliverableCalculator() {
           {/* Right Column - Live Totals */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
+              
+              {!isUnlocked && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Unlock to Continue</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                      Purchase/unlock to view deliverables pricing and export quotes.
+                    </div>
+                    <Button className="w-full" onClick={() => navigate(createPageUrl("Unlock"))}>
+                      Unlock / Purchase
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
               
               {/* Estimate Summary */}
               <Card>
@@ -662,61 +678,53 @@ export default function DeliverableCalculator() {
                 </CardContent>
               </Card>
               
-              {/* Pricing Breakdown */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pricing</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {!isUnlocked ? (
-                    <div className="space-y-3">
-                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                        Unlock to view pricing details for this deliverables package.
-                      </div>
-                      <Button className="w-full" onClick={() => navigate(createPageUrl("Unlock"))}>
-                        Unlock / Purchase
-                      </Button>
-                    </div>
-                  ) : (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span style={{ color: 'var(--color-text-secondary)' }}>Subtotal</span>
-                      <span className="font-medium">
-                        ${quote.computed.pricing.subtotalBeforeFloor.toLocaleString()}
-                      </span>
-                    </div>
-                    
-                    {quote.computed.pricing.priceFloorAdded > 0 && (
+              {isUnlocked && (
+                <>
+                  {/* Pricing Breakdown */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Pricing</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--color-text-secondary)' }}>Minimum Engagement</span>
-                        <span className="font-medium" style={{ color: 'var(--color-accent-primary)' }}>
-                          +${quote.computed.pricing.priceFloorAdded.toLocaleString()}
+                        <span style={{ color: 'var(--color-text-secondary)' }}>Subtotal</span>
+                        <span className="font-medium">
+                          ${quote.computed.pricing.subtotalBeforeFloor.toLocaleString()}
                         </span>
                       </div>
-                    )}
-                    
-                    {quote.computed.pricing.scopedMultiplier.multiplier > 1.0 && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--color-text-secondary)' }}>
-                          Risk Multiplier ({((quote.computed.pricing.scopedMultiplier.multiplier - 1) * 100).toFixed(0)}%)
-                        </span>
-                        <span className="font-medium" style={{ color: 'var(--color-accent-primary)' }}>
-                          +${quote.computed.pricing.scopedMultiplier.multiplierAmount.toLocaleString()}
+                      
+                      {quote.computed.pricing.priceFloorAdded > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span style={{ color: 'var(--color-text-secondary)' }}>Minimum Engagement</span>
+                          <span className="font-medium" style={{ color: 'var(--color-accent-primary)' }}>
+                            +${quote.computed.pricing.priceFloorAdded.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {quote.computed.pricing.scopedMultiplier.multiplier > 1.0 && (
+                        <div className="flex justify-between text-sm">
+                          <span style={{ color: 'var(--color-text-secondary)' }}>
+                            Risk Multiplier ({((quote.computed.pricing.scopedMultiplier.multiplier - 1) * 100).toFixed(0)}%)
+                          </span>
+                          <span className="font-medium" style={{ color: 'var(--color-accent-primary)' }}>
+                            +${quote.computed.pricing.scopedMultiplier.multiplierAmount.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <Separator />
+                      
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Total</span>
+                        <span style={{ color: 'var(--color-accent-primary)' }}>
+                          ${quote.computed.pricing.total.toLocaleString()}
                         </span>
                       </div>
-                    )}
-                    
-                    <Separator />
-                    
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total</span>
-                      <span style={{ color: 'var(--color-accent-primary)' }}>
-                        ${quote.computed.pricing.total.toLocaleString()}
-                      </span>
-                    </div>
-                  </>)}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
               
               {/* Warnings */}
               {quote.computed.warnings.length > 0 && (
@@ -750,23 +758,27 @@ export default function DeliverableCalculator() {
                 </Alert>
               )}
               
-              {/* Export Actions */}
-              <Card>
-                <CardContent className="pt-6 space-y-3">
-                  <Button className="w-full" variant="outline" disabled={hasCalculationError} onClick={() => checkAccessAndProceed(persistEstimateAndGoToCrew)}>
-                    <ArrowRight className="w-4 h-4 mr-2" />
-                    Use in Crew Calculator
-                  </Button>
-                  <Button className="w-full" disabled={selections.deliverables.length === 0} onClick={handleExportQuote}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Quote
-                  </Button>
-                  <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={handleExportInvoice}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Invoice
-                  </Button>
-                </CardContent>
-              </Card>
+              {isUnlocked && (
+                <>
+                  {/* Export Actions */}
+                  <Card>
+                    <CardContent className="pt-6 space-y-3">
+                      <Button className="w-full" variant="outline" disabled={hasCalculationError} onClick={() => checkAccessAndProceed(persistEstimateAndGoToCrew)}>
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                        Use in Crew Calculator
+                      </Button>
+                      <Button className="w-full" disabled={selections.deliverables.length === 0} onClick={handleExportQuote}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Export Quote
+                      </Button>
+                      <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={handleExportInvoice}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Export Invoice
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           </div>
         </div>
