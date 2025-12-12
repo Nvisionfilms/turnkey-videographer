@@ -28,6 +28,7 @@ import PresetTemplates from "../components/calculator/PresetTemplates";
 import CollapsibleSection from "../components/calculator/CollapsibleSection";
 import QuoteHistory, { saveToQuoteHistory } from "../components/calculator/QuoteHistory";
 import MobileFloatingTotal from "../components/calculator/MobileFloatingTotal";
+import LiveUpdatesTicker from "../components/LiveUpdatesTicker";
 // import OnboardingWizard from "../components/onboarding/OnboardingWizard";
 import { calculateQuote } from "../components/calculator/calculations";
 import { ExportService } from "../components/services/ExportService";
@@ -1344,6 +1345,15 @@ export default function Calculator() {
               </AlertDescription>
             </Alert>
           )}
+
+          <div className="mb-6">
+            <LiveUpdatesTicker
+              kickerText="Live quotes"
+              eventPrefix="just sent a"
+              eventSuffix="quote"
+              Icon={FileText}
+            />
+          </div>
 
           {/* Negotiation Ticker - Only show when calculations exist */}
           {calculations && calculations.total > 0 && (

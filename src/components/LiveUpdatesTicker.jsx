@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Globe } from "lucide-react";
 
-export default function LiveUpdatesTicker({ items, intervalMs = 3500 }) {
+export default function LiveUpdatesTicker({
+  items,
+  intervalMs = 3500,
+  kickerText = "Live around the world",
+  eventPrefix = "just closed a",
+  eventSuffix = "quote",
+  Icon = Globe
+}) {
   const namePool = useMemo(
     () => [
       "Mike",
@@ -105,8 +112,8 @@ export default function LiveUpdatesTicker({ items, intervalMs = 3500 }) {
             className="flex items-center gap-2 text-xs font-semibold tracking-wide uppercase"
             style={{ color: "var(--color-text-muted)" }}
           >
-            <Globe className="w-4 h-4" style={{ color: "var(--color-accent-primary)" }} />
-            <span>Live around the world</span>
+            <Icon className="w-4 h-4" style={{ color: "var(--color-accent-primary)" }} />
+            <span>{kickerText}</span>
           </div>
 
           <div className="flex-1 overflow-hidden">
@@ -119,11 +126,11 @@ export default function LiveUpdatesTicker({ items, intervalMs = 3500 }) {
               }}
             >
               <span className="font-semibold">{labelName}</span>
-              <span style={{ color: "var(--color-text-secondary)" }}> just closed a </span>
+              <span style={{ color: "var(--color-text-secondary)" }}> {eventPrefix} </span>
               <span className="font-semibold" style={{ color: "var(--color-accent-primary)" }}>
                 {money}
               </span>
-              <span style={{ color: "var(--color-text-secondary)" }}> quote</span>
+              <span style={{ color: "var(--color-text-secondary)" }}> {eventSuffix}</span>
             </div>
           </div>
         </div>
