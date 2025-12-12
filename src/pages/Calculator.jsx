@@ -261,8 +261,25 @@ export default function Calculator() {
     const hasBroadcast = (selections.modifiers || []).some(m => m.modifierId === 'broadcast_compliance');
     const postRequested = Boolean(selections.postRequested);
 
+    // Social-media style packages can often be a 1-person job; everything else defaults to a 2-person crew.
+    // Heuristic: content_creation with only short-form/BTS/photo/B-roll deliverables (no live/broadcast).
+    const socialMediaDeliverableIds = new Set([
+      'sfv_60s',
+      'bts_capture',
+      'photo_set_10_20',
+      'broll_library_export',
+    ]);
+
+    const selectedDeliverableIds = (selections.deliverables || []).map(d => d.deliverableId).filter(Boolean);
+    const isSocialMediaPackage =
+      selections.productionCategoryId === 'content_creation' &&
+      selectedDeliverableIds.length > 0 &&
+      selectedDeliverableIds.every(id => socialMediaDeliverableIds.has(id)) &&
+      !hasLive &&
+      !hasBroadcast;
+
     // Baseline camera operator
-    addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), 1);
+    addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), isSocialMediaPackage ? 1 : 2);
 
     // Scope influences responsibility roles
     if (scopeId === 'directed_production') {
