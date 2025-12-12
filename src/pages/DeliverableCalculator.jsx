@@ -147,6 +147,12 @@ export default function DeliverableCalculator() {
     }
 
     try {
+      localStorage.setItem(STORAGE_KEYS.APPLY_DELIVERABLE_PRESET_ONCE, '1');
+    } catch {
+      // Ignore storage errors
+    }
+
+    try {
       const existingSessionRaw = localStorage.getItem(STORAGE_KEYS.CALCULATOR_SESSION);
       const existingSession = existingSessionRaw ? JSON.parse(existingSessionRaw) : {};
 

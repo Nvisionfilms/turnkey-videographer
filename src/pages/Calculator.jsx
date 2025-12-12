@@ -388,6 +388,27 @@ export default function Calculator() {
     });
   };
 
+  useEffect(() => {
+    if (!suggestedCrewPreset) return;
+
+    let shouldApply = false;
+    try {
+      shouldApply = localStorage.getItem(STORAGE_KEYS.APPLY_DELIVERABLE_PRESET_ONCE) === '1';
+    } catch {
+      shouldApply = false;
+    }
+
+    if (!shouldApply) return;
+
+    applySuggestedCrewPreset();
+
+    try {
+      localStorage.removeItem(STORAGE_KEYS.APPLY_DELIVERABLE_PRESET_ONCE);
+    } catch {
+      // Ignore storage errors
+    }
+  }, [suggestedCrewPreset]);
+
   // Save form data to localStorage with debouncing (1 second delay)
   useEffect(() => {
     if (!isLoading) {

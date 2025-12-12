@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   SETTINGS: 'nvision_settings',
   CALCULATOR_SESSION: 'nvision_calculator_session',
   DELIVERABLE_ESTIMATE: 'nvision_deliverable_estimate',
+  APPLY_DELIVERABLE_PRESET_ONCE: 'nvision_apply_deliverable_preset_once',
   SAVED_SETTINGS: 'nvision_saved_settings',
   UNLOCKED: 'nvision_is_unlocked',
   TRIAL_START: 'nvision_trial_start_date',
