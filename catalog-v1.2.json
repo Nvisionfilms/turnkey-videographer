@@ -1,0 +1,460 @@
+{
+  "catalogVersion": "v1.2.0",
+  "currency": "USD",
+  "market": "Nationwide (Texas-based)",
+
+  "rules": {
+    "baseDayRate": 1200,
+    "minimumProjectSubtotal": 2500,
+    "minimumPostPerDeliverable": 350,
+    "minimumEngagement": {
+      "enabled": true,
+      "labelInvoice": "Minimum Project Engagement (Price Floor)"
+    }
+  },
+
+  "productionCategories": [
+    { "id": "content_creation", "label": "Content Creation" },
+    { "id": "live_stream_broadcast", "label": "Live Stream / Broadcast" },
+    { "id": "streaming_series", "label": "Streaming Series / Digital Show" },
+    { "id": "theatrical_film", "label": "Theatrical Film" },
+    { "id": "event_coverage", "label": "Event Coverage" }
+  ],
+
+  "executionScopes": [
+    {
+      "id": "capture_only",
+      "labelEstimate": "Capture Only",
+      "labelInvoice": "Production Services (Capture Only)",
+      "responsibilityLevel": "client-led",
+      "perDayAdd": 0,
+      "required": true
+    },
+    {
+      "id": "directed_production",
+      "labelEstimate": "Directed Production",
+      "labelInvoice": "Creative Direction & Production Oversight",
+      "responsibilityLevel": "shared",
+      "perDayAdd": 750,
+      "required": true
+    },
+    {
+      "id": "full_creative_direction",
+      "labelEstimate": "Full Creative Direction",
+      "labelInvoice": "Full Creative Direction & Production Oversight",
+      "responsibilityLevel": "vendor-led",
+      "perDayAdd": 1500,
+      "required": true
+    }
+  ],
+
+  "deliverables": [
+    {
+      "id": "sfv_60s",
+      "categoryId": "content_creation",
+      "labelEstimate": "Short-form Video (≤ 60s)",
+      "labelInvoice": "Short-form Video Production (≤ 60s)",
+      "unit": "each",
+      "unitPrice": 450,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 0.5,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "client_enters_days"
+      }
+    },
+    {
+      "id": "lfv_2_10",
+      "categoryId": "content_creation",
+      "labelEstimate": "Long-form Video (2–10 min)",
+      "labelInvoice": "Long-form Video Production (2–10 min)",
+      "unit": "each",
+      "unitPrice": 1200,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 1,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "client_enters_days"
+      }
+    },
+    {
+      "id": "interview_capture",
+      "categoryId": "content_creation",
+      "labelEstimate": "Interview Capture",
+      "labelInvoice": "Interview Capture Services",
+      "unit": "each",
+      "unitPrice": 850,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 1,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "client_enters_days"
+      }
+    },
+    {
+      "id": "scripted_brand_video",
+      "categoryId": "content_creation",
+      "labelEstimate": "Scripted Brand Video",
+      "labelInvoice": "Scripted Brand Video Production Services",
+      "unit": "each",
+      "unitPrice": 2500,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 1,
+        "requiresPost": true,
+        "minExecutionScope": "directed_production"
+      },
+      "productionDayPolicy": {
+        "mode": "client_enters_days"
+      }
+    },
+    {
+      "id": "bts_capture",
+      "categoryId": "content_creation",
+      "labelEstimate": "Behind-the-Scenes (BTS) Capture",
+      "labelInvoice": "Behind-the-Scenes Capture Services",
+      "unit": "each",
+      "unitPrice": 600,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 0.5,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "client_enters_days"
+      }
+    },
+    {
+      "id": "broll_library_export",
+      "categoryId": "content_creation",
+      "labelEstimate": "B-Roll Library Export (Organized, Delivered)",
+      "labelInvoice": "B-Roll Library Export Services",
+      "unit": "each",
+      "unitPrice": 900,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 0.5,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "client_enters_days"
+      }
+    },
+    {
+      "id": "photo_set_10_20",
+      "categoryId": "content_creation",
+      "labelEstimate": "Photography Set (10–20 selects)",
+      "labelInvoice": "Photography Set Production (10–20 selects)",
+      "unit": "each",
+      "unitPrice": 900,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 0.5,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "client_enters_days"
+      }
+    },
+
+    {
+      "id": "live_stream_production",
+      "categoryId": "live_stream_broadcast",
+      "labelEstimate": "Live Stream Production",
+      "labelInvoice": "Live Stream Production Services",
+      "unit": "each",
+      "unitPrice": 2500,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 1,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "locked",
+        "productionDaysLocked": 1,
+        "hideProductionDaysInPublicUI": true
+      }
+    },
+    {
+      "id": "multi_camera_switching",
+      "categoryId": "live_stream_broadcast",
+      "labelEstimate": "Multi-Camera Switching",
+      "labelInvoice": "Multi-Camera Switching Services",
+      "unit": "each",
+      "unitPrice": 1200,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 1,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "locked",
+        "productionDaysLocked": 1,
+        "hideProductionDaysInPublicUI": true
+      }
+    },
+    {
+      "id": "technical_direction",
+      "categoryId": "live_stream_broadcast",
+      "labelEstimate": "Technical Direction",
+      "labelInvoice": "Technical Direction Services",
+      "unit": "each",
+      "unitPrice": 1500,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 1,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "locked",
+        "productionDaysLocked": 1,
+        "hideProductionDaysInPublicUI": true
+      }
+    },
+    {
+      "id": "live_audio_mixing",
+      "categoryId": "live_stream_broadcast",
+      "labelEstimate": "Live Audio Mixing",
+      "labelInvoice": "Live Audio Mixing Services",
+      "unit": "each",
+      "unitPrice": 900,
+      "postMinimum": 350,
+      "constraints": {
+        "minProductionDays": 1,
+        "requiresPost": false,
+        "minExecutionScope": null
+      },
+      "productionDayPolicy": {
+        "mode": "locked",
+        "productionDaysLocked": 1,
+        "hideProductionDaysInPublicUI": true
+      }
+    }
+  ],
+
+  "modifiers": [
+    {
+      "id": "multi_camera_setup",
+      "labelEstimate": "Multi-Camera Setup",
+      "labelInvoice": "Multi-Camera Production Setup",
+      "visibility": "public",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 650,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": true
+    },
+    {
+      "id": "talent_direction_required",
+      "labelEstimate": "Talent Direction Required",
+      "labelInvoice": "Talent Direction Services",
+      "visibility": "public",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 500,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": true
+    },
+    {
+      "id": "script_development",
+      "labelEstimate": "Script Development",
+      "labelInvoice": "Script Development Services",
+      "visibility": "public",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 1200,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "motion_graphics",
+      "labelEstimate": "Motion Graphics",
+      "labelInvoice": "Motion Graphics Services",
+      "visibility": "public",
+      "requiresPostRequested": true,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 900,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "advanced_color_grading",
+      "labelEstimate": "Advanced Color Grading",
+      "labelInvoice": "Advanced Color Grading Services",
+      "visibility": "public",
+      "requiresPostRequested": true,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 650,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "sound_design_mix",
+      "labelEstimate": "Sound Design / Mix",
+      "labelInvoice": "Sound Design & Mixing Services",
+      "visibility": "public",
+      "requiresPostRequested": true,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 850,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "platform_specific_deliverables",
+      "labelEstimate": "Platform-Specific Deliverables",
+      "labelInvoice": "Platform-Specific Deliverables & Formatting",
+      "visibility": "public",
+      "requiresPostRequested": true,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 400,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "usage_rights_licensing",
+      "labelEstimate": "Usage Rights / Licensing",
+      "labelInvoice": "Usage Rights & Licensing",
+      "visibility": "public",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 1500,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+
+    {
+      "id": "live_environment_no_retakes",
+      "labelEstimate": "Live Environment (No Retakes)",
+      "labelInvoice": "Live Environment Execution (No Retakes)",
+      "visibility": "public",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "multiplier",
+        "appliesTo": "live_execution_only",
+        "value": 1.25
+      }
+    },
+    {
+      "id": "broadcast_technical_compliance",
+      "labelEstimate": "Broadcast-Level Technical Compliance",
+      "labelInvoice": "Broadcast-Level Technical Compliance",
+      "visibility": "public",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "multiplier",
+        "appliesTo": "live_execution_only",
+        "value": 1.2
+      }
+    },
+
+    {
+      "id": "travel_day",
+      "labelEstimate": "Travel Day",
+      "labelInvoice": "Travel Day Services",
+      "visibility": "admin",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 1200,
+        "unit": "day"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "rush_turnaround",
+      "labelEstimate": "Rush Turnaround",
+      "labelInvoice": "Rush Turnaround Services",
+      "visibility": "admin",
+      "requiresPostRequested": true,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 750,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "additional_revision_round",
+      "labelEstimate": "Additional Revision Round",
+      "labelInvoice": "Additional Revision Round Services",
+      "visibility": "admin",
+      "requiresPostRequested": true,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 350,
+        "unit": "round"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "reschedule_fee",
+      "labelEstimate": "Reschedule Fee",
+      "labelInvoice": "Reschedule Fee",
+      "visibility": "admin",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 500,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    },
+    {
+      "id": "cancellation_fee",
+      "labelEstimate": "Cancellation Fee",
+      "labelInvoice": "Cancellation Fee",
+      "visibility": "admin",
+      "requiresPostRequested": false,
+      "pricing": {
+        "type": "fixed",
+        "appliesTo": "production_only",
+        "value": 1500,
+        "unit": "service"
+      },
+      "eligibleForMultiplier": false
+    }
+  ]
+}

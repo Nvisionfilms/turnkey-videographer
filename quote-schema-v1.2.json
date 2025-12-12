@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nvisionfilms.example/schemas/quote-v1.2.schema.json",
+  "title": "Quote",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "currency", "market", "selections"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
+    "currency": { "type": "string", "enum": ["USD"] },
+    "market": { "type": "string" },
+
+    "clientMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "clientName": { "type": "string" },
+        "projectName": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "selections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "productionCategoryId",
+        "executionScopeId",
+        "productionDays",
+        "postRequested",
+        "deliverables"
+      ],
+      "properties": {
+        "productionCategoryId": { "type": "string" },
+        "executionScopeId": { "type": "string" },
+        "productionDays": {
+          "type": "number",
+          "minimum": 0,
+          "multipleOf": 0.5,
+          "description": "User-entered production days. Engine may override based on deliverable productionDayPolicy."
+        },
+        "postRequested": { "type": "boolean" },
+
+        "deliverables": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["deliverableId", "quantity"],
+            "properties": {
+              "deliverableId": { "type": "string" },
+              "quantity": { "type": "integer", "minimum": 1 },
+              "overrides": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "unitPrice": { "type": "number", "minimum": 0 },
+                  "postMinimum": { "type": "number", "minimum": 0 },
+                  "adminOnly": { "type": "boolean", "default": true }
+                }
+              }
+            }
+          }
+        },
+
+        "modifiers": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["modifierId"],
+            "properties": {
+              "modifierId": { "type": "string" },
+              "quantity": { "type": "number", "minimum": 1, "default": 1 }
+            }
+          }
+        },
+
+        "context": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "type": "string", "enum": ["public", "admin"], "default": "public" }
+          }
+        }
+      }
+    },
+
+    "computed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["estimateSummary", "lineItems", "pricing", "warnings", "validations"],
+      "properties": {
+        "estimateSummary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["productionCategoryLabel", "executionScopeLabel", "deliverables", "modifiers"],
+          "properties": {
+            "productionCategoryLabel": { "type": "string" },
+            "executionScopeLabel": { "type": "string" },
+            "deliverables": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["label", "quantity"],
+                "properties": {
+                  "label": { "type": "string" },
+                  "quantity": { "type": "number" }
+                }
+              }
+            },
+            "modifiers": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+
+        "lineItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "label", "quantity", "unit", "unitPrice", "amount"],
+            "properties": {
+              "id": { "type": "string" },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "production_day",
+                  "deliverable",
+                  "post_minimum",
+                  "execution_scope",
+                  "modifier_fixed",
+                  "price_floor"
+                ]
+              },
+              "label": { "type": "string" },
+              "quantity": { "type": "number", "minimum": 0 },
+              "unit": { "type": "string" },
+              "unitPrice": { "type": "number", "minimum": 0 },
+              "amount": { "type": "number" },
+              "eligibleForMultiplier": { "type": "boolean", "default": false },
+              "meta": { "type": "object", "additionalProperties": true }
+            }
+          }
+        },
+
+        "pricing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subtotalBeforeFloor",
+            "minimumProjectSubtotal",
+            "priceFloorAdded",
+            "subtotalAfterFloor",
+            "scopedMultiplier",
+            "total"
+          ],
+          "properties": {
+            "subtotalBeforeFloor": { "type": "number" },
+            "minimumProjectSubtotal": { "type": "number" },
+            "priceFloorAdded": { "type": "number" },
+            "subtotalAfterFloor": { "type": "number" },
+
+            "scopedMultiplier": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["multiplier", "appliedToLineItemIds", "multiplierAmount"],
+              "properties": {
+                "multiplier": { "type": "number", "minimum": 1 },
+                "appliedToLineItemIds": { "type": "array", "items": { "type": "string" } },
+                "multiplierAmount": { "type": "number" }
+              }
+            },
+
+            "total": { "type": "number" }
+          }
+        },
+
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "severity", "message"],
+            "properties": {
+              "code": { "type": "string" },
+              "severity": { "type": "string", "enum": ["info", "warning"] },
+              "message": { "type": "string" }
+            }
+          }
+        },
+
+        "validations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "severity", "message"],
+            "properties": {
+              "code": { "type": "string" },
+              "severity": { "type": "string", "enum": ["error"] },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quoteId": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "sent", "approved", "revised"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

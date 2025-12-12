@@ -24,6 +24,8 @@ import AdminLogin from "./AdminLogin";
 
 import AdminLoginDirect from "./AdminLoginDirect";
 
+import DeliverableCalculator from "./DeliverableCalculator";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -33,6 +35,8 @@ const PAGES = {
     Admin: Admin,
     
     Calculator: Calculator,
+    
+    DeliverableCalculator: DeliverableCalculator,
     
     Welcome: Welcome,
     
@@ -92,6 +96,8 @@ function PagesContent() {
                 <Route path="/admin/login" element={<AdminLogin />} />
                 
                 <Route path="/admin/test-login" element={<AdminLoginDirect />} />
+                
+                <Route path="/DeliverableCalculator" element={<DeliverableCalculator />} />
                 
             </Routes>
         </Layout>

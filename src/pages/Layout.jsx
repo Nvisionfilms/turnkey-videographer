@@ -30,6 +30,11 @@ const navigationItems = [
     icon: Calculator,
   },
   {
+    title: "Deliverable Calculator",
+    url: createPageUrl("DeliverableCalculator"),
+    icon: Video,
+  },
+  {
     title: "Setup Rates",
     url: createPageUrl("Admin"),
     icon: Settings,
