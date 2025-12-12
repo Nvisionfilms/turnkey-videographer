@@ -242,13 +242,22 @@ export default function Calculator() {
       return found?.id || null;
     };
 
-    const addRole = (arr, roleId, qty = 1) => {
+    const addRole = (arr, roleId, qty = 1, daySplit) => {
       if (!roleId) return;
       const existing = arr.find(r => r.role_id === roleId);
       if (existing) {
         existing.quantity = (existing.quantity || 0) + qty;
       } else {
         arr.push({ role_id: roleId, quantity: qty, minutes_output: 0, requests: 0 });
+      }
+
+      if (daySplit) {
+        const target = arr.find(r => r.role_id === roleId);
+        if (target) {
+          target.full_days = daySplit.full_days;
+          target.half_days = daySplit.half_days;
+          target.crew_qty = qty;
+        }
       }
     };
 
@@ -260,6 +269,24 @@ export default function Calculator() {
     const hasDrone = (selections.modifiers || []).some(m => m.modifierId === 'drone_aerials');
     const hasBroadcast = (selections.modifiers || []).some(m => m.modifierId === 'broadcast_compliance');
     const postRequested = Boolean(selections.postRequested);
+
+    const productionDaysFromComputed = (() => {
+      const li = (computed?.lineItems || []).find(x => x.kind === 'production_day');
+      return typeof li?.quantity === 'number' ? li.quantity : null;
+    })();
+
+    const baseProductionDays =
+      typeof productionDaysFromComputed === 'number'
+        ? productionDaysFromComputed
+        : Number(selections.productionDays || 0);
+
+    const computeDaySplit = (days) => {
+      const d = Number(days || 0);
+      if (d <= 0) return { full_days: 0, half_days: 0 };
+      const full = Math.floor(d);
+      const half = d - full >= 0.5 ? 1 : 0;
+      return { full_days: full, half_days: half };
+    };
 
     // Social-media style packages can often be a 1-person job; everything else defaults to a 2-person crew.
     // Heuristic: content_creation with only short-form/BTS/photo/B-roll deliverables (no live/broadcast).
@@ -278,27 +305,57 @@ export default function Calculator() {
       !hasLive &&
       !hasBroadcast;
 
+    const isLongFormPackage = selections.productionCategoryId === 'content_creation' &&
+      (selectedDeliverableIds.includes('lfv_2_10') || selectedDeliverableIds.includes('scripted_brand_video'));
+
+    const isEventCoverage = selections.productionCategoryId === 'event_coverage';
+    const isSeries = selections.productionCategoryId === 'streaming_series';
+    const isFilm = selections.productionCategoryId === 'theatrical_film';
+
+    const effectiveProductionDays = (() => {
+      if (isSeries) return Math.max(2, baseProductionDays || 0);
+      if (isFilm) return Math.max(30, baseProductionDays || 0);
+      return baseProductionDays || 0;
+    })();
+
+    const daySplit = computeDaySplit(effectiveProductionDays);
+
     // Baseline camera operator
-    addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), isSocialMediaPackage ? 1 : 2);
+    // - content_creation: typically solo (social + long-form). You can add more later.
+    // - event_coverage: suggested 2-person
+    // - series/film: suggested 2-person baseline + leadership roles
+    const baseCameraQty = isEventCoverage ? 2 : (isSeries || isFilm ? 2 : 1);
+    addRole(
+      selectedRoles,
+      roleIdByIncludes('camera op (with camera)'),
+      isSocialMediaPackage ? 1 : baseCameraQty,
+      daySplit
+    );
 
     // Scope influences responsibility roles
     if (scopeId === 'directed_production') {
-      addRole(selectedRoles, roleIdByIncludes('director'), 1);
+      addRole(selectedRoles, roleIdByIncludes('director'), 1, daySplit);
     }
     if (scopeId === 'full_creative_direction') {
-      addRole(selectedRoles, roleIdByIncludes('director'), 1);
-      addRole(selectedRoles, roleIdByIncludes('director of photography'), 1);
+      addRole(selectedRoles, roleIdByIncludes('director'), 1, daySplit);
+      addRole(selectedRoles, roleIdByIncludes('director of photography'), 1, daySplit);
     }
 
     // Live/broadcast adds oversight + audio
     if (hasLive || hasBroadcast) {
-      addRole(selectedRoles, roleIdByIncludes('director'), 1);
+      addRole(selectedRoles, roleIdByIncludes('director'), 1, daySplit);
+    }
+
+    // Series/film generally require a fuller crew
+    if (isSeries || isFilm) {
+      addRole(selectedRoles, roleIdByIncludes('director'), 1, daySplit);
+      addRole(selectedRoles, roleIdByIncludes('director of photography'), 1, daySplit);
     }
 
     // Multi-cam typically needs additional operator (no camera)
     if (hasMultiCam) {
       // Your crew is being hired with cameras, so add another "with camera" operator
-      addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), 1);
+      addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), 1, daySplit);
     }
 
     // Post / editing roles (all-in)

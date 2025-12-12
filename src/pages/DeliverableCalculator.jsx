@@ -73,6 +73,30 @@ export default function DeliverableCalculator() {
     return calculateDeliverableQuote(selections, catalogData);
   }, [selections]);
 
+  const supportedProductionCategories = useMemo(() => {
+    const categoryIdsWithDeliverables = new Set(
+      (catalogData.deliverables || []).map(d => d.categoryId).filter(Boolean)
+    );
+    return (catalogData.productionCategories || []).filter(c => categoryIdsWithDeliverables.has(c.id));
+  }, []);
+
+  useEffect(() => {
+    const hasDeliverablesForSelected = (catalogData.deliverables || []).some(
+      d => d.categoryId === selections.productionCategoryId
+    );
+
+    if (!hasDeliverablesForSelected) {
+      const fallbackId = supportedProductionCategories?.[0]?.id;
+      if (fallbackId && fallbackId !== selections.productionCategoryId) {
+        setSelections(prev => ({
+          ...prev,
+          productionCategoryId: fallbackId,
+          deliverables: [],
+        }));
+      }
+    }
+  }, [selections.productionCategoryId, supportedProductionCategories]);
+
   const checkAccessAndProceed = (action) => {
     if (isUnlocked) {
       action();
@@ -415,7 +439,7 @@ export default function DeliverableCalculator() {
               </CardHeader>
               <CardContent>
                 <RadioGroup value={selections.productionCategoryId} onValueChange={handleCategoryChange}>
-                  {catalogData.productionCategories.map(cat => (
+                  {supportedProductionCategories.map(cat => (
                     <div key={cat.id} className="flex items-center space-x-2">
                       <RadioGroupItem value={cat.id} id={cat.id} />
                       <Label htmlFor={cat.id} className="cursor-pointer">{cat.label}</Label>
