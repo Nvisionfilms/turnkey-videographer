@@ -549,6 +549,51 @@ export default function Calculator() {
     return result;
   }, [formData, dayRates, gearCosts, settings]);
 
+  const pricingInputsSignatureRef = React.useRef('');
+  useEffect(() => {
+    const signatureObj = {
+      day_type: formData.day_type,
+      custom_hours: formData.custom_hours,
+      experience_level: formData.experience_level,
+      custom_multiplier: formData.custom_multiplier,
+      selected_roles: formData.selected_roles,
+      include_audio_pre_post: formData.include_audio_pre_post,
+      gear_enabled: formData.gear_enabled,
+      selected_gear_items: formData.selected_gear_items,
+      selected_camera: formData.selected_camera,
+      apply_nonprofit_discount: formData.apply_nonprofit_discount,
+      apply_rush_fee: formData.apply_rush_fee,
+      travel_miles: formData.travel_miles,
+      rental_costs: formData.rental_costs,
+      usage_rights_enabled: formData.usage_rights_enabled,
+      usage_rights_type: formData.usage_rights_type,
+      usage_rights_cost: formData.usage_rights_cost,
+      talent_fees_enabled: formData.talent_fees_enabled,
+      talent_primary_count: formData.talent_primary_count,
+      talent_primary_rate: formData.talent_primary_rate,
+      talent_extra_count: formData.talent_extra_count,
+      talent_extra_rate: formData.talent_extra_rate,
+    };
+
+    let signature = '';
+    try {
+      signature = JSON.stringify(signatureObj);
+    } catch {
+      signature = String(Date.now());
+    }
+
+    const prevSignature = pricingInputsSignatureRef.current;
+    pricingInputsSignatureRef.current = signature;
+
+    // If the user previously used a manual/rounded override, clear it once they change pricing inputs.
+    if (prevSignature && prevSignature !== signature && formData.custom_price_override !== null) {
+      setFormData(prev => ({
+        ...prev,
+        custom_price_override: null,
+      }));
+    }
+  }, [formData]);
+
   // Keyboard shortcuts for power users
   useEffect(() => {
     const handleKeyPress = (e) => {
