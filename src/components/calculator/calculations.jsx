@@ -14,6 +14,7 @@ function round2(num) {
  */
 function calculateRoleCost(role, rateRow, dayType, customHours, settings) {
   const qty = role.quantity || 0;
+  const crewQty = role.crew_qty ?? qty;
   const baseFull = rateRow.full_day_rate || 0;
   const baseHalf = rateRow.half_day_rate || 0;
   const overtimeMultiplier = settings?.overtime_multiplier || 1.5;
@@ -22,21 +23,35 @@ function calculateRoleCost(role, rateRow, dayType, customHours, settings) {
 
   switch (rateRow.unit_type) {
     case "day":
-      if (dayType === "half") {
-        cost = qty * baseHalf;
-      } else if (dayType === "full") {
-        cost = qty * baseFull;
-      } else if (dayType === "custom") {
-        const hours = customHours || FULL_DAY_HOURS;
-        const prorataHours = Math.min(hours, FULL_DAY_HOURS);
-        const prorata = (prorataHours / FULL_DAY_HOURS) * (baseFull * qty);
-        
-        const overtimeHours = Math.max(0, hours - FULL_DAY_HOURS);
-        const overtime = overtimeHours > 0 
-          ? (baseFull / FULL_DAY_HOURS) * overtimeHours * overtimeMultiplier * qty
-          : 0;
-        
-        cost = prorata + overtime;
+      {
+        const halfDays = role.half_days;
+        const fullDays = role.full_days;
+
+        // If per-role day split exists, it overrides global dayType for day-based rates.
+        if (typeof halfDays === "number" || typeof fullDays === "number") {
+          const hd = Number(halfDays || 0);
+          const fd = Number(fullDays || 0);
+          cost = crewQty * ((hd * baseHalf) + (fd * baseFull));
+          break;
+        }
+
+        // Backward-compatible behavior
+        if (dayType === "half") {
+          cost = crewQty * baseHalf;
+        } else if (dayType === "full") {
+          cost = crewQty * baseFull;
+        } else if (dayType === "custom") {
+          const hours = customHours || FULL_DAY_HOURS;
+          const prorataHours = Math.min(hours, FULL_DAY_HOURS);
+          const prorata = (prorataHours / FULL_DAY_HOURS) * (baseFull * crewQty);
+          
+          const overtimeHours = Math.max(0, hours - FULL_DAY_HOURS);
+          const overtime = overtimeHours > 0 
+            ? (baseFull / FULL_DAY_HOURS) * overtimeHours * overtimeMultiplier * crewQty
+            : 0;
+          
+          cost = prorata + overtime;
+        }
       }
       break;
 

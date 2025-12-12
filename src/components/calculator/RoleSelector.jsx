@@ -55,6 +55,9 @@ export default function RoleSelector({
         role_name: rate.role,
         unit_type: rate.unit_type,
         quantity: rate.unit_type === 'day' ? 1 : 0,
+        crew_qty: rate.unit_type === 'day' ? 1 : 0,
+        half_days: rate.unit_type === 'day' ? (dayType === 'half' ? 1 : 0) : 0,
+        full_days: rate.unit_type === 'day' ? (dayType === 'full' ? 1 : 0) : 0,
         minutes_output: 0,
         requests: 0
       }]);
@@ -208,24 +211,85 @@ export default function RoleSelector({
                   <div className="mt-3 p-4 rounded-lg" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
                     <div className="flex gap-3">
                       {rate.unit_type === 'day' && (
-                        <div className="flex-1">
-                          <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                            {getQuantityLabel()}
-                          </Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={selectedRole?.quantity || 0}
-                            onChange={(e) => handleQuantityChange(rate.id, 'quantity', e.target.value)}
-                            className="h-10"
-                            style={{ 
-                              background: 'white',
-                              borderColor: 'var(--color-border)',
-                              color: 'var(--color-text-primary)'
-                            }}
-                          />
-                        </div>
+                        <>
+                          <div className="flex-1">
+                            <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                              Crew Qty
+                            </Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={selectedRole?.crew_qty ?? 1}
+                              onChange={(e) => handleQuantityChange(rate.id, 'crew_qty', e.target.value)}
+                              className="h-10"
+                              style={{ 
+                                background: 'white',
+                                borderColor: 'var(--color-border)',
+                                color: 'var(--color-text-primary)'
+                              }}
+                            />
+                          </div>
+                          {dayType !== 'custom' ? (
+                            <>
+                              <div className="flex-1">
+                                <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                                  Half Days
+                                </Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.5"
+                                  value={selectedRole?.half_days ?? 0}
+                                  onChange={(e) => handleQuantityChange(rate.id, 'half_days', e.target.value)}
+                                  className="h-10"
+                                  style={{ 
+                                    background: 'white',
+                                    borderColor: 'var(--color-border)',
+                                    color: 'var(--color-text-primary)'
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                                  Full Days
+                                </Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.5"
+                                  value={selectedRole?.full_days ?? 0}
+                                  onChange={(e) => handleQuantityChange(rate.id, 'full_days', e.target.value)}
+                                  className="h-10"
+                                  style={{ 
+                                    background: 'white',
+                                    borderColor: 'var(--color-border)',
+                                    color: 'var(--color-text-primary)'
+                                  }}
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex-1">
+                              <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                                Days
+                              </Label>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                value={selectedRole?.quantity || 0}
+                                onChange={(e) => handleQuantityChange(rate.id, 'quantity', e.target.value)}
+                                className="h-10"
+                                style={{ 
+                                  background: 'white',
+                                  borderColor: 'var(--color-border)',
+                                  color: 'var(--color-text-primary)'
+                                }}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                       {rate.unit_type === 'per_5_min' && (
                         <div className="flex-1">
