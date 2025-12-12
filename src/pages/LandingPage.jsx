@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import LiveUpdatesTicker from "@/components/LiveUpdatesTicker";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
+      <LiveUpdatesTicker />
       {/* Hero Section */}
       <HeroSection onLaunch={handleLaunchCalculator} />
       
