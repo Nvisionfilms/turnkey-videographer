@@ -950,6 +950,62 @@ export default function Calculator() {
     });
   };
 
+  const buildHybridExportCalculations = (baseCalculations, deliverablePayload) => {
+    if (!baseCalculations) return baseCalculations;
+
+    const deliverableRawLineItems = deliverablePayload?.computed?.lineItems || [];
+
+    const deliverableLineItems = deliverableRawLineItems
+      .filter(li => !["production_day", "execution_scope", "scoped_multiplier"].includes(li.kind))
+      .map(li => ({ description: li.label, amount: li.amount, kind: li.kind }));
+
+    if (deliverableLineItems.length === 0) return baseCalculations;
+
+    const deliverablesHasPostCharges = deliverableLineItems.some(li => li.kind === 'post_minimum' || (li.description || '').toLowerCase().includes('post-production'));
+
+    // If Deliverables includes post-production pricing, remove overlapping crew post items from export
+    // to avoid double-charging (editors, revisions, audio pre/post).
+    const crewLineItemsRaw = Array.isArray(baseCalculations.lineItems) ? baseCalculations.lineItems : [];
+    const removedCrewLineItems = deliverablesHasPostCharges
+      ? crewLineItemsRaw.filter(li => {
+          const d = (li.description || '').toLowerCase();
+          if (d.includes('editor')) return true;
+          if (d.includes('revisions')) return true;
+          if (d.includes('audio pre') || d.includes('audio pre & post')) return true;
+          return false;
+        })
+      : [];
+
+    const crewLineItems = deliverablesHasPostCharges
+      ? crewLineItemsRaw.filter(li => !removedCrewLineItems.includes(li))
+      : crewLineItemsRaw;
+
+    const removedCrewSubtotal = removedCrewLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0);
+    const deliverablesSubtotalForExport = deliverableLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0);
+
+    // Preserve whatever is already baked into baseCalculations.total (tax, discounts, travel, etc)
+    // and only adjust for (a) removing duplicate crew post items and (b) adding deliverables items.
+    const baseTotal = Number(baseCalculations.total || 0);
+    const nextTotal = baseTotal - removedCrewSubtotal + deliverablesSubtotalForExport;
+
+    const merged = {
+      ...baseCalculations,
+      lineItems: [
+        { description: "Production (Crew)", amount: 0, isSection: true },
+        ...crewLineItems,
+        { description: "Deliverables", amount: 0, isSection: true },
+        ...deliverableLineItems.map(li => ({ description: li.description, amount: li.amount }))
+      ],
+      total: nextTotal,
+    };
+
+    const depositPercent = settings?.deposit_percent || 50;
+    merged.depositDue = Math.round(merged.total * (depositPercent / 100) * 100) / 100;
+    merged.balanceDue = Math.round((merged.total - merged.depositDue) * 100) / 100;
+
+    return merged;
+  };
+
   const handlePrint = () => {
     checkAccessAndProceed(() => {
       if (!calculations) return;
@@ -989,26 +1045,7 @@ export default function Calculator() {
           const deliverableRaw = localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE);
           const deliverablePayload = deliverableRaw ? JSON.parse(deliverableRaw) : null;
 
-          const deliverableLineItems = (deliverablePayload?.computed?.lineItems || [])
-            .filter(li => !["production_day", "execution_scope", "scoped_multiplier"].includes(li.kind))
-            .map(li => ({ description: li.label, amount: li.amount }));
-
-          if (deliverableLineItems.length > 0) {
-            exportCalculations = {
-              ...exportCalculations,
-              lineItems: [
-                { description: "Production (Crew)", amount: 0, isSection: true },
-                ...(exportCalculations.lineItems || []),
-                { description: "Deliverables", amount: 0, isSection: true },
-                ...deliverableLineItems,
-              ],
-              total: Number(exportCalculations.total || 0) + deliverableLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0),
-            };
-
-            const depositPercent = settings?.deposit_percent || 50;
-            exportCalculations.depositDue = Math.round(exportCalculations.total * (depositPercent / 100) * 100) / 100;
-            exportCalculations.balanceDue = Math.round((exportCalculations.total - exportCalculations.depositDue) * 100) / 100;
-          }
+          exportCalculations = buildHybridExportCalculations(exportCalculations, deliverablePayload);
         } catch {
           // ignore
         }
@@ -1051,26 +1088,7 @@ export default function Calculator() {
           const deliverableRaw = localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE);
           const deliverablePayload = deliverableRaw ? JSON.parse(deliverableRaw) : null;
 
-          const deliverableLineItems = (deliverablePayload?.computed?.lineItems || [])
-            .filter(li => !["production_day", "execution_scope", "scoped_multiplier"].includes(li.kind))
-            .map(li => ({ description: li.label, amount: li.amount }));
-
-          if (deliverableLineItems.length > 0) {
-            exportCalculations = {
-              ...exportCalculations,
-              lineItems: [
-                { description: "Production (Crew)", amount: 0, isSection: true },
-                ...(exportCalculations.lineItems || []),
-                { description: "Deliverables", amount: 0, isSection: true },
-                ...deliverableLineItems,
-              ],
-              total: Number(exportCalculations.total || 0) + deliverableLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0),
-            };
-
-            const depositPercent = settings?.deposit_percent || 50;
-            exportCalculations.depositDue = Math.round(exportCalculations.total * (depositPercent / 100) * 100) / 100;
-            exportCalculations.balanceDue = Math.round((exportCalculations.total - exportCalculations.depositDue) * 100) / 100;
-          }
+          exportCalculations = buildHybridExportCalculations(exportCalculations, deliverablePayload);
         } catch {
           // ignore
         }
