@@ -119,22 +119,39 @@ export class EnhancedExportService {
             </tr>
           </thead>
           <tbody>
-            ${this.calc.lineItems?.map((item, index) => {
-              const parts = item.description.split(' - ');
-              const mainDesc = parts[0];
-              const subDesc = parts.slice(1).join(' - ');
-              return `
-              <tr ${index % 2 === 0 ? 'class="row-alt"' : ''}>
-                <td class="col-no">${index + 1}</td>
-                <td class="col-items">
-                  <div class="item-main">${mainDesc}</div>
-                  ${subDesc ? `<div class="item-sub">${subDesc}</div>` : ''}
-                </td>
-                <td class="col-qty">1</td>
-                <td class="col-price">$${item.amount.toFixed(2)}</td>
-                <td class="col-total">$${item.amount.toFixed(2)}</td>
-              </tr>
-            `}).join('') || ''}
+            ${(() => {
+              let lineNumber = 0;
+              return (this.calc.lineItems || []).map((item, index) => {
+                if (item?.isSection) {
+                  return `
+                  <tr ${index % 2 === 0 ? 'class="row-alt"' : ''}>
+                    <td class="col-no"></td>
+                    <td class="col-items" colspan="4">
+                      <div class="item-main" style="text-transform: uppercase; letter-spacing: 1px; color: #2563eb;">${item.description}</div>
+                    </td>
+                  </tr>
+                `;
+                }
+
+                lineNumber += 1;
+                const parts = (item.description || '').split(' - ');
+                const mainDesc = parts[0];
+                const subDesc = parts.slice(1).join(' - ');
+                const amount = Number(item.amount || 0);
+                return `
+                <tr ${index % 2 === 0 ? 'class="row-alt"' : ''}>
+                  <td class="col-no">${lineNumber}</td>
+                  <td class="col-items">
+                    <div class="item-main">${mainDesc}</div>
+                    ${subDesc ? `<div class="item-sub">${subDesc}</div>` : ''}
+                  </td>
+                  <td class="col-qty">1</td>
+                  <td class="col-price">$${amount.toFixed(2)}</td>
+                  <td class="col-total">$${amount.toFixed(2)}</td>
+                </tr>
+              `;
+              }).join('');
+            })()}
           </tbody>
           <tfoot>
             <tr class="total-row">

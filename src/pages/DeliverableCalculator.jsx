@@ -18,7 +18,8 @@ import {
   Download,
   RotateCcw,
   Plus,
-  Minus
+  Minus,
+  ArrowRight
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { calculateDeliverableQuote } from "../lib/deliverable-pricing-engine";
@@ -125,6 +126,61 @@ export default function DeliverableCalculator() {
         balanceDue,
       },
     };
+  };
+
+  const persistEstimateAndGoToCrew = () => {
+    const computed = quote?.computed;
+    if (!computed) return;
+
+    const payload = {
+      version: "v1",
+      createdAt: new Date().toISOString(),
+      clientMeta,
+      selections,
+      computed
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE, JSON.stringify(payload));
+    } catch {
+      // Ignore storage errors
+    }
+
+    try {
+      const existingSessionRaw = localStorage.getItem(STORAGE_KEYS.CALCULATOR_SESSION);
+      const existingSession = existingSessionRaw ? JSON.parse(existingSessionRaw) : {};
+
+      const nextNotes = [
+        existingSession.notes_for_quote || "",
+        "---",
+        "Deliverables Estimator Summary:",
+        `Category: ${computed.estimateSummary?.productionCategoryLabel || ""}`,
+        `Scope: ${computed.estimateSummary?.executionScopeLabel || ""}`,
+        `Post Requested: ${selections.postRequested ? "Yes" : "No"}`,
+        "Deliverables:",
+        ...(computed.estimateSummary?.deliverables || []).map(d => `- ${d.label} ×${d.quantity}`),
+        (computed.estimateSummary?.modifiers?.length ? "Modifiers:" : ""),
+        ...(computed.estimateSummary?.modifiers || []).map(m => `- ${m}`),
+      ].filter(Boolean).join("\n").trim();
+
+      const mergedSession = {
+        ...existingSession,
+        client_name: clientMeta.clientName || existingSession.client_name || "",
+        project_title: clientMeta.projectName || existingSession.project_title || "",
+        notes_for_quote: nextNotes
+      };
+
+      localStorage.setItem(STORAGE_KEYS.CALCULATOR_SESSION, JSON.stringify(mergedSession));
+    } catch {
+      // Ignore storage errors
+    }
+
+    toast({
+      title: "Sent to Crew Calculator",
+      description: "Your estimate is saved. Review crew pricing and export from the Crew Calculator.",
+    });
+
+    navigate(createPageUrl("Calculator"));
   };
 
   const handleExportQuote = () => {
@@ -686,6 +742,10 @@ export default function DeliverableCalculator() {
               {/* Export Actions */}
               <Card>
                 <CardContent className="pt-6 space-y-3">
+                  <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={persistEstimateAndGoToCrew}>
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Use in Crew Calculator
+                  </Button>
                   <Button className="w-full" disabled={selections.deliverables.length === 0} onClick={handleExportQuote}>
                     <Download className="w-4 h-4 mr-2" />
                     Export Quote

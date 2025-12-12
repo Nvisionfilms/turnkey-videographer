@@ -73,6 +73,16 @@ export default function Calculator() {
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [unlockCode, setUnlockCode] = useState('');
   const [unlockEmail, setUnlockEmail] = useState('');
+
+  const [includeDeliverablesInExport, setIncludeDeliverablesInExport] = useState(true);
+
+  const hasDeliverableEstimate = useMemo(() => {
+    try {
+      return Boolean(localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE));
+    } catch {
+      return false;
+    }
+  }, []);
   
   // Ref for debounced save timeout
   const saveTimeoutRef = React.useRef(null);
@@ -782,10 +792,41 @@ export default function Calculator() {
       }
       
       saveToQuoteHistory(formData, calculations.total);
+
+      let exportCalculations = calculations;
+      if (includeDeliverablesInExport) {
+        try {
+          const deliverableRaw = localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE);
+          const deliverablePayload = deliverableRaw ? JSON.parse(deliverableRaw) : null;
+
+          const deliverableLineItems = (deliverablePayload?.computed?.lineItems || [])
+            .filter(li => !["production_day", "execution_scope", "scoped_multiplier"].includes(li.kind))
+            .map(li => ({ description: li.label, amount: li.amount }));
+
+          if (deliverableLineItems.length > 0) {
+            exportCalculations = {
+              ...exportCalculations,
+              lineItems: [
+                { description: "Production (Crew)", amount: 0, isSection: true },
+                ...(exportCalculations.lineItems || []),
+                { description: "Deliverables", amount: 0, isSection: true },
+                ...deliverableLineItems,
+              ],
+              total: Number(exportCalculations.total || 0) + deliverableLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0),
+            };
+
+            const depositPercent = settings?.deposit_percent || 50;
+            exportCalculations.depositDue = Math.round(exportCalculations.total * (depositPercent / 100) * 100) / 100;
+            exportCalculations.balanceDue = Math.round((exportCalculations.total - exportCalculations.depositDue) * 100) / 100;
+          }
+        } catch {
+          // ignore
+        }
+      }
       
       const enhancedExport = new EnhancedExportService(
         formData,
-        calculations,
+        exportCalculations,
         dayRates,
         gearCosts,
         settings,
@@ -813,10 +854,41 @@ export default function Calculator() {
       }
       
       saveToQuoteHistory(formData, calculations.total);
+
+      let exportCalculations = calculations;
+      if (includeDeliverablesInExport) {
+        try {
+          const deliverableRaw = localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE);
+          const deliverablePayload = deliverableRaw ? JSON.parse(deliverableRaw) : null;
+
+          const deliverableLineItems = (deliverablePayload?.computed?.lineItems || [])
+            .filter(li => !["production_day", "execution_scope", "scoped_multiplier"].includes(li.kind))
+            .map(li => ({ description: li.label, amount: li.amount }));
+
+          if (deliverableLineItems.length > 0) {
+            exportCalculations = {
+              ...exportCalculations,
+              lineItems: [
+                { description: "Production (Crew)", amount: 0, isSection: true },
+                ...(exportCalculations.lineItems || []),
+                { description: "Deliverables", amount: 0, isSection: true },
+                ...deliverableLineItems,
+              ],
+              total: Number(exportCalculations.total || 0) + deliverableLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0),
+            };
+
+            const depositPercent = settings?.deposit_percent || 50;
+            exportCalculations.depositDue = Math.round(exportCalculations.total * (depositPercent / 100) * 100) / 100;
+            exportCalculations.balanceDue = Math.round((exportCalculations.total - exportCalculations.depositDue) * 100) / 100;
+          }
+        } catch {
+          // ignore
+        }
+      }
       
       const enhancedExport = new EnhancedExportService(
         formData,
-        calculations,
+        exportCalculations,
         dayRates,
         gearCosts,
         settings,
@@ -1124,6 +1196,17 @@ export default function Calculator() {
                 <Mail className="w-4 h-4 mr-2" />
                 Copy Text
               </Button>
+              {hasDeliverableEstimate && (
+                <div className="flex items-center space-x-2 px-3 py-2 rounded-lg" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border-light)' }}>
+                  <Checkbox
+                    checked={includeDeliverablesInExport}
+                    onCheckedChange={(checked) => setIncludeDeliverablesInExport(Boolean(checked))}
+                  />
+                  <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                    Include Deliverables in Export
+                  </span>
+                </div>
+              )}
               <Button
                 onClick={handleExportQuote}
                 variant="outline"
