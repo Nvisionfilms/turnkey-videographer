@@ -30,6 +30,11 @@ const navigationItems = [
     icon: Calculator,
   },
   {
+    title: "Crew Calculator",
+    url: createPageUrl("CrewCalculator"),
+    icon: Users,
+  },
+  {
     title: "Deliverable Calculator",
     url: createPageUrl("DeliverableCalculator"),
     icon: Video,
