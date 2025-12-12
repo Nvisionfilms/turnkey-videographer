@@ -73,29 +73,11 @@ export default function DeliverableCalculator() {
     return calculateDeliverableQuote(selections, catalogData);
   }, [selections]);
 
-  const supportedProductionCategories = useMemo(() => {
-    const categoryIdsWithDeliverables = new Set(
-      (catalogData.deliverables || []).map(d => d.categoryId).filter(Boolean)
+  const hasCalculationError = useMemo(() => {
+    return Boolean(
+      (quote?.computed?.validations || []).some(v => v?.severity === 'error')
     );
-    return (catalogData.productionCategories || []).filter(c => categoryIdsWithDeliverables.has(c.id));
-  }, []);
-
-  useEffect(() => {
-    const hasDeliverablesForSelected = (catalogData.deliverables || []).some(
-      d => d.categoryId === selections.productionCategoryId
-    );
-
-    if (!hasDeliverablesForSelected) {
-      const fallbackId = supportedProductionCategories?.[0]?.id;
-      if (fallbackId && fallbackId !== selections.productionCategoryId) {
-        setSelections(prev => ({
-          ...prev,
-          productionCategoryId: fallbackId,
-          deliverables: [],
-        }));
-      }
-    }
-  }, [selections.productionCategoryId, supportedProductionCategories]);
+  }, [quote]);
 
   const checkAccessAndProceed = (action) => {
     if (isUnlocked) {
@@ -439,7 +421,7 @@ export default function DeliverableCalculator() {
               </CardHeader>
               <CardContent>
                 <RadioGroup value={selections.productionCategoryId} onValueChange={handleCategoryChange}>
-                  {supportedProductionCategories.map(cat => (
+                  {catalogData.productionCategories.map(cat => (
                     <div key={cat.id} className="flex items-center space-x-2">
                       <RadioGroupItem value={cat.id} id={cat.id} />
                       <Label htmlFor={cat.id} className="cursor-pointer">{cat.label}</Label>
@@ -772,7 +754,7 @@ export default function DeliverableCalculator() {
               {/* Export Actions */}
               <Card>
                 <CardContent className="pt-6 space-y-3">
-                  <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={persistEstimateAndGoToCrew}>
+                  <Button className="w-full" variant="outline" disabled={hasCalculationError} onClick={persistEstimateAndGoToCrew}>
                     <ArrowRight className="w-4 h-4 mr-2" />
                     Use in Crew Calculator
                   </Button>
