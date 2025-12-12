@@ -83,6 +83,9 @@ export default function Calculator() {
       return false;
     }
   }, []);
+
+  const [deliverableEstimate, setDeliverableEstimate] = useState(null);
+  const [suggestedCrewPreset, setSuggestedCrewPreset] = useState(null);
   
   // Ref for debounced save timeout
   const saveTimeoutRef = React.useRef(null);
@@ -218,6 +221,172 @@ export default function Calculator() {
     loadAllData(true);
     setIsLoading(false);
   }, [loadAllData]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE);
+      setDeliverableEstimate(raw ? JSON.parse(raw) : null);
+    } catch {
+      setDeliverableEstimate(null);
+    }
+  }, []);
+
+  const buildSuggestedCrewPresetFromDeliverables = useCallback((payload, availableDayRates, availableGearCosts) => {
+    if (!payload?.selections || !payload?.computed) return null;
+
+    const selections = payload.selections;
+    const computed = payload.computed;
+
+    const roleIdByIncludes = (needle) => {
+      const found = (availableDayRates || []).find(r => (r.role || '').toLowerCase().includes(needle));
+      return found?.id || null;
+    };
+
+    const addRole = (arr, roleId, qty = 1) => {
+      if (!roleId) return;
+      const existing = arr.find(r => r.role_id === roleId);
+      if (existing) {
+        existing.quantity = (existing.quantity || 0) + qty;
+      } else {
+        arr.push({ role_id: roleId, quantity: qty, minutes_output: 0, requests: 0 });
+      }
+    };
+
+    const selectedRoles = [];
+
+    const scopeId = selections.executionScopeId;
+    const hasLive = selections.productionCategoryId === 'live_stream_broadcast' || (computed?.estimateSummary?.productionCategoryLabel || '').toLowerCase().includes('live');
+    const hasMultiCam = (selections.modifiers || []).some(m => m.modifierId === 'multi_camera_setup');
+    const hasDrone = (selections.modifiers || []).some(m => m.modifierId === 'drone_aerials');
+    const hasBroadcast = (selections.modifiers || []).some(m => m.modifierId === 'broadcast_compliance');
+    const postRequested = Boolean(selections.postRequested);
+
+    // Baseline camera operator
+    addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), 1);
+
+    // Scope influences responsibility roles
+    if (scopeId === 'directed_production') {
+      addRole(selectedRoles, roleIdByIncludes('director'), 1);
+    }
+    if (scopeId === 'full_creative_direction') {
+      addRole(selectedRoles, roleIdByIncludes('director'), 1);
+      addRole(selectedRoles, roleIdByIncludes('director of photography'), 1);
+    }
+
+    // Live/broadcast adds oversight + audio
+    if (hasLive || hasBroadcast) {
+      addRole(selectedRoles, roleIdByIncludes('director'), 1);
+    }
+
+    // Multi-cam typically needs additional operator (no camera)
+    if (hasMultiCam) {
+      // Your crew is being hired with cameras, so add another "with camera" operator
+      addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), 1);
+    }
+
+    // Post / editing roles (all-in)
+    if (postRequested) {
+      const leadEditorId = roleIdByIncludes('lead editor');
+      const lineEditorId = roleIdByIncludes('line editor');
+      const revisionsId = roleIdByIncludes('revisions per request');
+
+      // Rough heuristic: estimate minutes of finished content from selected deliverables
+      const minutesPerDeliverableId = {
+        short_form_video_60s: 1,
+        long_form_video_2_10: 6,
+        interview_capture: 3,
+        event_highlights_3_5: 4,
+        brand_story_1_3: 2,
+        bts_capture: 1,
+        live_stream_production: 10,
+        podcast_video: 5,
+        testimonial_video: 2,
+        training_video: 8,
+      };
+
+      const estimatedMinutes = (selections.deliverables || []).reduce((sum, d) => {
+        const qty = Number(d.quantity || 0);
+        const minutesEach = minutesPerDeliverableId[d.deliverableId] ?? 2;
+        return sum + qty * minutesEach;
+      }, 0);
+
+      const editorRoleId = leadEditorId || lineEditorId;
+      if (editorRoleId) {
+        // Ensure we add the role then patch its minutes_output
+        addRole(selectedRoles, editorRoleId, 1);
+        const editorEntry = selectedRoles.find(r => r.role_id === editorRoleId);
+        if (editorEntry) {
+          editorEntry.minutes_output = Math.max(editorEntry.minutes_output || 0, estimatedMinutes);
+        }
+      }
+
+      // Basic revision requests heuristic: 1 request per deliverable, minimum 2
+      const estimatedRequests = Math.max(2, (selections.deliverables || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0));
+      if (revisionsId) {
+        addRole(selectedRoles, revisionsId, 1);
+        const revEntry = selectedRoles.find(r => r.role_id === revisionsId);
+        if (revEntry) {
+          revEntry.requests = Math.max(revEntry.requests || 0, estimatedRequests);
+        }
+      }
+    }
+
+    // Gear suggestions
+    const gearIdByIncludes = (needle) => {
+      const found = (availableGearCosts || []).find(g => (g.item || '').toLowerCase().includes(needle));
+      return found?.id || null;
+    };
+
+    const defaultGearIds = (availableGearCosts || [])
+      .filter(g => g.include_by_default && !(g.item || '').toLowerCase().includes('studio') && !(g.item || '').toLowerCase().includes('rent'))
+      .map(g => g.id);
+
+    const selectedGearItems = [...defaultGearIds];
+
+    if (hasDrone) {
+      const droneId = gearIdByIncludes('drone');
+      if (droneId && !selectedGearItems.includes(droneId)) selectedGearItems.push(droneId);
+    }
+
+    // Audio pre/post suggestion
+    const includeAudioPrePost = Boolean(hasLive) || (computed?.estimateSummary?.deliverables || []).some(d => (d.label || '').toLowerCase().includes('interview'));
+
+    // Experience level: nudge up for higher responsibility / live
+    const experienceLevel = (scopeId === 'full_creative_direction' || hasLive) ? 'Senior' : 'Standard';
+
+    return {
+      selected_roles: selectedRoles,
+      gear_enabled: true,
+      selected_gear_items: selectedGearItems,
+      include_audio_pre_post: includeAudioPrePost,
+      day_type: 'full',
+      custom_hours: 10,
+      experience_level: experienceLevel,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!deliverableEstimate) {
+      setSuggestedCrewPreset(null);
+      return;
+    }
+    const preset = buildSuggestedCrewPresetFromDeliverables(deliverableEstimate, dayRates, gearCosts);
+    setSuggestedCrewPreset(preset);
+  }, [deliverableEstimate, dayRates, gearCosts, buildSuggestedCrewPresetFromDeliverables]);
+
+  const applySuggestedCrewPreset = () => {
+    if (!suggestedCrewPreset) return;
+
+    setFormData(prev => ({
+      ...prev,
+      ...suggestedCrewPreset,
+    }));
+
+    toast({
+      title: 'Suggested Setup Applied',
+      description: 'Roles and gear were pre-filled from your Deliverables Estimator.',
+    });
+  };
 
   // Save form data to localStorage with debouncing (1 second delay)
   useEffect(() => {
@@ -1060,7 +1229,26 @@ export default function Calculator() {
 
       {/* Calculator Section */}
       <div id="calculator" className="p-6 scroll-mt-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto p-6">
+        {suggestedCrewPreset && (
+          <div className="mb-4 p-4 rounded-xl" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <div className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                  Deliverables Estimator detected
+                </div>
+                <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                  Apply suggested crew roles + gear based on your deliverables/scope.
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={applySuggestedCrewPreset} variant="outline" size="sm" style={{ background: 'var(--color-bg-primary)', borderColor: 'var(--color-border-dark)' }}>
+                  Apply Suggested Setup
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             <div>
