@@ -411,15 +411,28 @@ export default function Calculator() {
       return found?.id || null;
     };
 
-    const defaultGearIds = (availableGearCosts || [])
-      .filter(g => g.include_by_default && !(g.item || '').toLowerCase().includes('studio') && !(g.item || '').toLowerCase().includes('rent'))
-      .map(g => g.id);
+    const selectedGearItems = [];
 
-    const selectedGearItems = [...defaultGearIds];
+    const addGear = (id) => {
+      if (!id) return;
+      if (!selectedGearItems.includes(id)) selectedGearItems.push(id);
+    };
+
+    // Baseline kit (always for presets)
+    // - audio equipment
+    // - lighting kit
+    // - camera body
+    // - lenses
+    // - tripod
+    addGear(gearIdByIncludes('audio'));
+    addGear(gearIdByIncludes('lighting'));
+    addGear(gearIdByIncludes('camera body'));
+    addGear(gearIdByIncludes('lenses'));
+    addGear(gearIdByIncludes('tripod'));
 
     if (hasDrone) {
       const droneId = gearIdByIncludes('drone');
-      if (droneId && !selectedGearItems.includes(droneId)) selectedGearItems.push(droneId);
+      addGear(droneId);
     }
 
     // Audio pre/post suggestion
