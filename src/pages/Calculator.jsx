@@ -524,6 +524,7 @@ export default function Calculator() {
       day_type: 'full',
       custom_hours: 10,
       experience_level: experienceLevel,
+      deliverable_estimate: payload, // Store the full estimate for reference
     };
   }, []);
 
@@ -579,14 +580,18 @@ export default function Calculator() {
     if (!shouldApply) return;
 
     console.log('Auto-applying preset from useEffect');
+    console.log('Preset object:', suggestedCrewPreset);
+    console.log('Preset selected_roles:', suggestedCrewPreset.selected_roles);
     
     // Apply preset directly to avoid timing issues
     setFormData(prev => {
+      console.log('Previous formData.selected_roles:', prev.selected_roles);
       const updated = {
         ...prev,
         ...suggestedCrewPreset,
       };
-      console.log('Applied preset - selected_roles:', updated.selected_roles);
+      console.log('Updated formData.selected_roles:', updated.selected_roles);
+      console.log('Updated formData full:', updated);
       return updated;
     });
 
