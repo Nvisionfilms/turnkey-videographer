@@ -607,6 +607,12 @@ export default function Calculator() {
       return updated;
     });
 
+    // Force a second state update to ensure UI re-renders
+    setTimeout(() => {
+      setFormData(prev => ({...prev}));
+      console.log('Forced re-render after preset application');
+    }, 100);
+
     try {
       localStorage.removeItem(STORAGE_KEYS.APPLY_DELIVERABLE_PRESET_ONCE);
     } catch {
