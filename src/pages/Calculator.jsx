@@ -282,7 +282,20 @@ export default function Calculator() {
       if (existing) {
         existing.quantity = (existing.quantity || 0) + qty;
       } else {
-        arr.push({ role_id: roleId, quantity: qty, minutes_output: 0, requests: 0, deliverable_count: 0 });
+        // Get role name from dayRates
+        const roleData = availableDayRates.find(r => r.id === roleId);
+        const roleName = roleData?.role || roleId;
+        const unitType = roleData?.unit_type || 'day';
+        
+        arr.push({ 
+          role_id: roleId, 
+          role_name: roleName,
+          unit_type: unitType,
+          quantity: qty, 
+          minutes_output: 0, 
+          requests: 0, 
+          deliverable_count: 0 
+        });
       }
 
       if (daySplit) {
@@ -391,29 +404,59 @@ export default function Calculator() {
       const longFormEditorId = roleIdByIncludes('long form editor');
       const revisionsId = roleIdByIncludes('revisions per request');
 
-      // Calculate total deliverable count
-      const totalDeliverableCount = (selections.deliverables || []).reduce((sum, d) => {
-        return sum + Number(d.quantity || 0);
-      }, 0);
-
-      // Determine which editor to use based on deliverable types
-      const longFormDeliverableIds = new Set(['lfv_2_10', 'scripted_brand_video', 'interview_capture', 'training_video', 'podcast_video']);
-      const hasLongFormContent = selectedDeliverableIds.some(id => longFormDeliverableIds.has(id));
-
-      const editorRoleId = hasLongFormContent ? longFormEditorId : socialMediaEditorId;
+      // Map deliverable IDs to editor types
+      const shortFormDeliverableIds = new Set([
+        'sfv_60s',           // Short-form video (<60s)
+        'bts_capture',       // Behind the Scenes Capture
+        'photo_set_10_20',   // Photo sets
+        'broll_library_export' // B-roll
+      ]);
       
-      if (editorRoleId && totalDeliverableCount > 0) {
-        // Add the editor role and set deliverable_count
-        addRole(selectedRoles, editorRoleId, 1);
-        const editorEntry = selectedRoles.find(r => r.role_id === editorRoleId);
+      const longFormDeliverableIds = new Set([
+        'lfv_2_10',              // Long-form Video (2-10 min)
+        'interview_capture',     // Interview Capture
+        'scripted_brand_video',  // Scripted Branded Video
+        'training_video',        // Training Video
+        'podcast_video'          // Podcast Video
+      ]);
+
+      // Count deliverables by type
+      let shortFormCount = 0;
+      let longFormCount = 0;
+      let totalDeliverableCount = 0;
+
+      (selections.deliverables || []).forEach(d => {
+        const qty = Number(d.quantity || 0);
+        totalDeliverableCount += qty;
+        
+        if (shortFormDeliverableIds.has(d.deliverableId)) {
+          shortFormCount += qty;
+        } else if (longFormDeliverableIds.has(d.deliverableId)) {
+          longFormCount += qty;
+        }
+      });
+
+      // Add Social Media/Shorts Editor if there are short-form deliverables
+      if (socialMediaEditorId && shortFormCount > 0) {
+        addRole(selectedRoles, socialMediaEditorId, 1);
+        const editorEntry = selectedRoles.find(r => r.role_id === socialMediaEditorId);
         if (editorEntry) {
-          editorEntry.deliverable_count = totalDeliverableCount;
+          editorEntry.deliverable_count = shortFormCount;
+        }
+      }
+
+      // Add Long Form Editor if there are long-form deliverables
+      if (longFormEditorId && longFormCount > 0) {
+        addRole(selectedRoles, longFormEditorId, 1);
+        const editorEntry = selectedRoles.find(r => r.role_id === longFormEditorId);
+        if (editorEntry) {
+          editorEntry.deliverable_count = longFormCount;
         }
       }
 
       // Basic revision requests heuristic: 1 request per deliverable, minimum 2
       const estimatedRequests = Math.max(2, totalDeliverableCount);
-      if (revisionsId) {
+      if (revisionsId && totalDeliverableCount > 0) {
         addRole(selectedRoles, revisionsId, 1);
         const revEntry = selectedRoles.find(r => r.role_id === revisionsId);
         if (revEntry) {
