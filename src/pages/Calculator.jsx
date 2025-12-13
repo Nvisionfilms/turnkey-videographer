@@ -74,7 +74,7 @@ export default function Calculator() {
   const [unlockCode, setUnlockCode] = useState('');
   const [unlockEmail, setUnlockEmail] = useState('');
 
-  const [includeDeliverablesInExport, setIncludeDeliverablesInExport] = useState(true);
+  const [includeDeliverablesInExport, setIncludeDeliverablesInExport] = useState(false);
 
   const hasDeliverableEstimate = useMemo(() => {
     try {
