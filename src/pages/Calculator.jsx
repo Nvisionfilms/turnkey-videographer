@@ -438,19 +438,23 @@ export default function Calculator() {
 
       // Add Social Media/Shorts Editor if there are short-form deliverables
       if (socialMediaEditorId && shortFormCount > 0) {
+        console.log(`Adding Social Media/Shorts Editor with ${shortFormCount} deliverables`);
         addRole(selectedRoles, socialMediaEditorId, 1);
         const editorEntry = selectedRoles.find(r => r.role_id === socialMediaEditorId);
         if (editorEntry) {
           editorEntry.deliverable_count = shortFormCount;
+          console.log('Social Media/Shorts Editor entry:', editorEntry);
         }
       }
 
       // Add Long Form Editor if there are long-form deliverables
       if (longFormEditorId && longFormCount > 0) {
+        console.log(`Adding Long Form Editor with ${longFormCount} deliverables`);
         addRole(selectedRoles, longFormEditorId, 1);
         const editorEntry = selectedRoles.find(r => r.role_id === longFormEditorId);
         if (editorEntry) {
           editorEntry.deliverable_count = longFormCount;
+          console.log('Long Form Editor entry:', editorEntry);
         }
       }
 
@@ -524,10 +528,16 @@ export default function Calculator() {
   const applySuggestedCrewPreset = () => {
     if (!suggestedCrewPreset) return;
 
+    console.log('=== APPLYING PRESET ===');
+    console.log('Preset selected_roles:', suggestedCrewPreset.selected_roles);
+    console.log('Current formData.selected_roles:', formData.selected_roles);
+
     setFormData(prev => ({
       ...prev,
       ...suggestedCrewPreset,
     }));
+
+    console.log('Preset applied to formData');
 
     toast({
       title: 'Suggested Setup Applied',
