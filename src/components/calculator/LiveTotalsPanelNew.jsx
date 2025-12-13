@@ -304,6 +304,57 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
               It's just a tool that gives you a number you can trust.
             </p>
           </div>
+
+          <div className="mt-6 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <div className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+              Keyboard Shortcuts
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
+              <div className="flex items-center justify-between gap-2">
+                <span>Save Quote</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Ctrl+S</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Export PDF</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Ctrl+E</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>New Quote</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Ctrl+N</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Duplicate Quote</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Ctrl+D</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Round Price</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Ctrl+R</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Copy Total</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Ctrl+C</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Discount 5%</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>1</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Discount 10%</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>2</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Discount 15%</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>3</kbd>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span>Clear Custom Price</span>
+                <kbd className="px-2 py-1 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Esc</kbd>
+              </div>
+            </div>
+            <div className="mt-2 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              Tip: use <kbd className="px-1.5 py-0.5 rounded font-mono" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>Cmd</kbd> on Mac instead of Ctrl.
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
