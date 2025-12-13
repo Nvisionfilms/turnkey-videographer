@@ -2442,10 +2442,10 @@ export default function Calculator() {
                     )}
                     
                     {/* Percentage and Cost Inputs (Synced) */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Percentage Input */}
-                      <div>
-                        <Label htmlFor="usage_rights_percentage" className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+                      <div className="space-y-2">
+                        <Label htmlFor="usage_rights_percentage" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
                           <Percent className="w-4 h-4" />
                           Percentage
                         </Label>
@@ -2476,8 +2476,8 @@ export default function Calculator() {
                       </div>
                       
                       {/* Dollar Amount Input */}
-                      <div>
-                        <Label htmlFor="usage_rights_cost" className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+                      <div className="space-y-2">
+                        <Label htmlFor="usage_rights_cost" className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
                           <DollarSign className="w-4 h-4" />
                           License Fee
                         </Label>
