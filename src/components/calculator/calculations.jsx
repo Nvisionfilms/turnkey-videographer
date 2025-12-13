@@ -225,15 +225,6 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
   const lineItems = [];
   let laborRaw = 0;
 
-  // Calculate total deliverable count from deliverable calculator
-  let totalDeliverableCount = 0;
-  if (deliverableEstimate?.selections?.deliverables) {
-    totalDeliverableCount = deliverableEstimate.selections.deliverables.reduce(
-      (sum, d) => sum + (d.quantity || 0), 
-      0
-    );
-  }
-
   // Separate production crew from post-production
   const productionCrewItems = [];
   const postProductionItems = [];
@@ -243,13 +234,9 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
       const rate = dayRates.find(r => r.id === selectedRole.role_id);
       if (!rate) return;
 
-      // For editor roles (per_5_min or per_deliverable), inject deliverable count if available
-      const roleWithDeliverables = (rate.unit_type === "per_5_min" || rate.unit_type === "per_deliverable") && totalDeliverableCount > 0
-        ? { ...selectedRole, deliverable_count: totalDeliverableCount }
-        : selectedRole;
-
+      // Use the deliverable_count from the role itself (manually entered or preset from deliverable calculator)
       const roleCost = calculateRoleCost(
-        roleWithDeliverables,
+        selectedRole,
         rate,
         dayType,
         customHours,
@@ -272,15 +259,17 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
           }
           desc += ")";
         } else if (rate.unit_type === "per_5_min") {
-          const delivCount = roleWithDeliverables.deliverable_count || 1;
+          const delivCount = selectedRole.deliverable_count || 1;
           desc += ` (${selectedRole.minutes_output || 0} min`;
           if (delivCount > 1) {
             desc += ` × ${delivCount} deliverables`;
           }
           desc += ")";
         } else if (rate.unit_type === "per_deliverable") {
-          const delivCount = roleWithDeliverables.deliverable_count || 1;
-          desc += ` (${delivCount} ${delivCount === 1 ? 'deliverable' : 'deliverables'})`;
+          const delivCount = selectedRole.deliverable_count || 0;
+          if (delivCount > 0) {
+            desc += ` (${delivCount} ${delivCount === 1 ? 'deliverable' : 'deliverables'})`;
+          }
         } else if (rate.unit_type === "per_request") {
           desc += ` (${selectedRole.requests || 0} request(s))`;
         }

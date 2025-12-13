@@ -57,21 +57,21 @@ export const DEFAULT_DAY_RATES = [
   },
   {
     id: "rate_5",
-    role: "Line Editor (per deliverable)",
+    role: "Social Media/Shorts Editor",
     unit_type: "per_deliverable",
-    half_day_rate: 400,
-    full_day_rate: 800,
+    half_day_rate: 300,
+    full_day_rate: 600,
     active: true,
-    notes: ""
+    notes: "For short-form content (reels, TikToks, social posts)"
   },
   {
     id: "rate_6",
-    role: "Lead Editor (per deliverable)",
+    role: "Long Form Editor",
     unit_type: "per_deliverable",
     half_day_rate: 500,
     full_day_rate: 1000,
     active: true,
-    notes: ""
+    notes: "For 2-10 min videos (explainers, promos, etc)"
   },
   {
     id: "rate_7",

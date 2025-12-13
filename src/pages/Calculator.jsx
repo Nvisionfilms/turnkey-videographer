@@ -261,7 +261,7 @@ export default function Calculator() {
       if (existing) {
         existing.quantity = (existing.quantity || 0) + qty;
       } else {
-        arr.push({ role_id: roleId, quantity: qty, minutes_output: 0, requests: 0 });
+        arr.push({ role_id: roleId, quantity: qty, minutes_output: 0, requests: 0, deliverable_count: 0 });
       }
 
       if (daySplit) {
@@ -366,42 +366,32 @@ export default function Calculator() {
 
     // Post / editing roles (all-in)
     if (postRequested) {
-      const leadEditorId = roleIdByIncludes('lead editor');
-      const lineEditorId = roleIdByIncludes('line editor');
+      const socialMediaEditorId = roleIdByIncludes('social media') || roleIdByIncludes('shorts editor');
+      const longFormEditorId = roleIdByIncludes('long form editor');
       const revisionsId = roleIdByIncludes('revisions per request');
 
-      // Rough heuristic: estimate minutes of finished content from selected deliverables
-      const minutesPerDeliverableId = {
-        short_form_video_60s: 1,
-        long_form_video_2_10: 6,
-        interview_capture: 3,
-        event_highlights_3_5: 4,
-        brand_story_1_3: 2,
-        bts_capture: 1,
-        live_stream_production: 10,
-        podcast_video: 5,
-        testimonial_video: 2,
-        training_video: 8,
-      };
-
-      const estimatedMinutes = (selections.deliverables || []).reduce((sum, d) => {
-        const qty = Number(d.quantity || 0);
-        const minutesEach = minutesPerDeliverableId[d.deliverableId] ?? 2;
-        return sum + qty * minutesEach;
+      // Calculate total deliverable count
+      const totalDeliverableCount = (selections.deliverables || []).reduce((sum, d) => {
+        return sum + Number(d.quantity || 0);
       }, 0);
 
-      const editorRoleId = leadEditorId || lineEditorId;
-      if (editorRoleId) {
-        // Ensure we add the role then patch its minutes_output
+      // Determine which editor to use based on deliverable types
+      const longFormDeliverableIds = new Set(['lfv_2_10', 'scripted_brand_video', 'interview_capture', 'training_video', 'podcast_video']);
+      const hasLongFormContent = selectedDeliverableIds.some(id => longFormDeliverableIds.has(id));
+
+      const editorRoleId = hasLongFormContent ? longFormEditorId : socialMediaEditorId;
+      
+      if (editorRoleId && totalDeliverableCount > 0) {
+        // Add the editor role and set deliverable_count
         addRole(selectedRoles, editorRoleId, 1);
         const editorEntry = selectedRoles.find(r => r.role_id === editorRoleId);
         if (editorEntry) {
-          editorEntry.minutes_output = Math.max(editorEntry.minutes_output || 0, estimatedMinutes);
+          editorEntry.deliverable_count = totalDeliverableCount;
         }
       }
 
       // Basic revision requests heuristic: 1 request per deliverable, minimum 2
-      const estimatedRequests = Math.max(2, (selections.deliverables || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0));
+      const estimatedRequests = Math.max(2, totalDeliverableCount);
       if (revisionsId) {
         addRole(selectedRoles, revisionsId, 1);
         const revEntry = selectedRoles.find(r => r.role_id === revisionsId);

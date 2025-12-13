@@ -60,7 +60,7 @@ export default function RoleSelector({
         full_days: rate.unit_type === 'day' ? (dayType === 'full' ? 1 : (dayType === 'half' ? 0 : 1)) : 0,
         minutes_output: 0,
         requests: 0,
-        deliverable_count: rate.unit_type === 'per_deliverable' ? 1 : 0
+        deliverable_count: 0
       }]);
     } else {
       onRoleChange(selectedRoles.filter(r => r.role_id !== rate.id));
@@ -324,10 +324,11 @@ export default function RoleSelector({
                           </Label>
                           <Input
                             type="number"
-                            min="1"
-                            value={selectedRole?.deliverable_count || 1}
+                            min="0"
+                            value={selectedRole?.deliverable_count || 0}
                             onChange={(e) => handleQuantityChange(rate.id, 'deliverable_count', e.target.value)}
                             className="h-10"
+                            placeholder="Enter count or use preset"
                             style={{ 
                               background: 'white',
                               borderColor: 'var(--color-border)',
