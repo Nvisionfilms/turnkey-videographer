@@ -646,6 +646,91 @@ export default function Calculator() {
     }
   }, [formData.experience_level, settings]);
 
+  // Auto-generate notes from deliverables and crew selections (1.5 second debounce)
+  const notesTimeoutRef = React.useRef(null);
+  useEffect(() => {
+    // Clear existing timeout
+    if (notesTimeoutRef.current) {
+      clearTimeout(notesTimeoutRef.current);
+    }
+    
+    // Set new timeout for debounced notes generation
+    notesTimeoutRef.current = setTimeout(() => {
+      const noteParts = [];
+      
+      // Add deliverable info if coming from deliverable calculator
+      if (deliverableEstimate?.selections?.deliverables && deliverableEstimate.selections.deliverables.length > 0) {
+        const deliverables = deliverableEstimate.selections.deliverables
+          .map(d => `${d.quantity}x ${d.deliverableLabel || d.deliverableId}`)
+          .join(', ');
+        noteParts.push(`Deliverables: ${deliverables}`);
+      }
+      
+      // Add crew info
+      if (formData.selected_roles && formData.selected_roles.length > 0) {
+        const crewList = formData.selected_roles.map(role => {
+          const rateName = dayRates.find(r => r.id === role.role_id)?.role || role.role_name || 'Crew';
+          const qty = role.crew_qty || role.quantity || 1;
+          const fullDays = role.full_days || 0;
+          const halfDays = role.half_days || 0;
+          const days = fullDays + halfDays;
+          return `${qty}x ${rateName} (${days} ${days === 1 ? 'day' : 'days'})`;
+        }).join(', ');
+        noteParts.push(`Crew: ${crewList}`);
+      }
+      
+      // Add gear info
+      if (formData.gear_enabled && formData.selected_gear_items && formData.selected_gear_items.length > 0) {
+        const gearList = formData.selected_gear_items
+          .map(gearId => gearCosts.find(g => g.id === gearId)?.item)
+          .filter(Boolean)
+          .join(', ');
+        if (gearList) {
+          noteParts.push(`Equipment: ${gearList}`);
+        }
+      }
+      
+      // Add camera info
+      if (formData.selected_camera && formData.cameras) {
+        const camera = formData.cameras.find(c => c.id === formData.selected_camera);
+        if (camera) {
+          noteParts.push(`Camera: ${camera.model}`);
+        }
+      }
+      
+      // Add usage rights info
+      if (formData.usage_rights_enabled) {
+        noteParts.push(`Usage Rights: ${formData.usage_rights_duration || formData.usage_rights_type}`);
+      }
+      
+      // Add talent info
+      if (formData.talent_fees_enabled) {
+        const talentParts = [];
+        if (formData.talent_primary_count > 0) {
+          talentParts.push(`${formData.talent_primary_count} primary talent`);
+        }
+        if (formData.talent_extra_count > 0) {
+          talentParts.push(`${formData.talent_extra_count} extras`);
+        }
+        if (talentParts.length > 0) {
+          noteParts.push(`Talent: ${talentParts.join(', ')}`);
+        }
+      }
+      
+      // Only update if we have generated notes and the field is currently empty
+      if (noteParts.length > 0 && !formData.notes_for_quote) {
+        const generatedNotes = noteParts.join(' • ');
+        setFormData(prev => ({ ...prev, notes_for_quote: generatedNotes }));
+      }
+    }, 1500); // 1.5 second delay
+    
+    return () => {
+      if (notesTimeoutRef.current) {
+        clearTimeout(notesTimeoutRef.current);
+      }
+    };
+  }, [formData.selected_roles, formData.selected_gear_items, formData.selected_camera, formData.usage_rights_enabled, formData.talent_fees_enabled, deliverableEstimate, dayRates, gearCosts]);
+
   // Calculate quote
   const calculations = useMemo(() => {
     console.log('=== RUNNING CALCULATIONS ===');

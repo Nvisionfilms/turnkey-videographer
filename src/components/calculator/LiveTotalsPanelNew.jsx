@@ -41,30 +41,33 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
       }).join(' + ')
     : 'None';
   
-  // Calculate production hours (not cumulative person-hours)
-  const calculateProductionHours = () => {
-    if (formData.day_type === 'custom') {
-      return formData.custom_hours || 8;
-    } else if (formData.day_type === 'full') {
-      // For full days, calculate total days across all roles
-      const totalDays = formData.selected_roles?.reduce((sum, role) => {
-        const days = role.full_days || 1;
-        return sum + days;
-      }, 0) || 1;
-      return totalDays * 10; // 10 hours per full day
-    } else if (formData.day_type === 'half') {
-      // For half days, calculate total half-days across all roles
-      const totalHalfDays = formData.selected_roles?.reduce((sum, role) => {
-        const halfDays = role.half_days || 1;
-        return sum + halfDays;
-      }, 0) || 1;
-      return totalHalfDays * 6; // 6 hours per half day
+  // Calculate total accumulated crew hours (all crew members × their hours)
+  const calculateAccumulatedCrewHours = () => {
+    if (!formData?.selected_roles || formData.selected_roles.length === 0) {
+      return 0;
     }
     
-    return formData?.custom_hours || calc?.hours || 8;
+    let totalHours = 0;
+    
+    formData.selected_roles.forEach(role => {
+      const crewQty = role.crew_qty || role.quantity || 1;
+      const fullDays = role.full_days || 0;
+      const halfDays = role.half_days || 0;
+      
+      if (formData.day_type === 'custom') {
+        const customHours = formData.custom_hours || 8;
+        const totalDays = fullDays + halfDays;
+        totalHours += crewQty * totalDays * customHours;
+      } else {
+        // Full days: 10 hours each, Half days: 6 hours each
+        totalHours += crewQty * (fullDays * 10 + halfDays * 6);
+      }
+    });
+    
+    return totalHours;
   };
   
-  const hours = calculateProductionHours();
+  const hours = calculateAccumulatedCrewHours();
   
   // Get camera info - find the selected camera from cameras array, or use default
   let cameraInfo = 'None';
@@ -82,8 +85,11 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
     }
   }
   
-  // Get lighting info  
-  const lightingInfo = formData?.selected_gear_items?.length > 0
+  // Get package type - "Crew" if crew-only, "Content" if from deliverables
+  const packageType = formData?.deliverable_estimate ? 'Content' : 'Crew';
+  
+  // Get package info (gear included or not)
+  const packageInfo = formData?.selected_gear_items?.length > 0
     ? 'Included'
     : 'None';
 
@@ -124,11 +130,11 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
             </div>
           </div>
 
-          {/* Lighting */}
+          {/* Package */}
           <div className="rounded-lg p-3 border" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
-            <div className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>LIGHTING</div>
+            <div className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>PACKAGE</div>
             <div className="mt-2 font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
-              {lightingInfo}
+              {packageType}
             </div>
           </div>
         </div>
