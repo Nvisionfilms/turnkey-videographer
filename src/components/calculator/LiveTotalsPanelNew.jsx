@@ -5,7 +5,7 @@ import { AlertCircle, Copy, Check, DollarSign, Percent } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function LiveTotalsPanel({ calculations, settings, formData, onUpdateCustomPrice, onUpdateDiscount }) {
+export default function LiveTotalsPanel({ calculations, settings, formData, dayRates, onUpdateCustomPrice, onUpdateDiscount }) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   if (!calculations) {
@@ -25,13 +25,46 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
 
   const calc = calculations;
   
-  // Get crew info
+  // Get crew info with proper role name resolution
   const crewInfo = formData?.selected_roles?.length > 0 
-    ? formData.selected_roles.map(r => r.role_name || r.role_id).join(' + ')
+    ? formData.selected_roles.map(r => {
+        // Try to get role name from the role data or look it up
+        if (r.role_name) return r.role_name;
+        
+        // Look up the actual role name from dayRates
+        if (dayRates) {
+          const rate = dayRates.find(dr => dr.id === r.role_id);
+          return rate ? rate.role : r.role_id;
+        }
+        
+        return r.role_id;
+      }).join(' + ')
     : 'None';
   
-  // Get hours
-  const hours = formData?.custom_hours || calc?.hours || 8;
+  // Calculate production hours (not cumulative person-hours)
+  const calculateProductionHours = () => {
+    if (formData.day_type === 'custom') {
+      return formData.custom_hours || 8;
+    } else if (formData.day_type === 'full') {
+      // For full days, calculate total days across all roles
+      const totalDays = formData.selected_roles?.reduce((sum, role) => {
+        const days = role.full_days || 1;
+        return sum + days;
+      }, 0) || 1;
+      return totalDays * 10; // 10 hours per full day
+    } else if (formData.day_type === 'half') {
+      // For half days, calculate total half-days across all roles
+      const totalHalfDays = formData.selected_roles?.reduce((sum, role) => {
+        const halfDays = role.half_days || 1;
+        return sum + halfDays;
+      }, 0) || 1;
+      return totalHalfDays * 6; // 6 hours per half day
+    }
+    
+    return formData?.custom_hours || calc?.hours || 8;
+  };
+  
+  const hours = calculateProductionHours();
   
   // Get camera info - find the selected camera from cameras array, or use default
   let cameraInfo = 'None';

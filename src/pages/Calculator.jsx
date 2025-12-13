@@ -2689,6 +2689,7 @@ export default function Calculator() {
               calculations={calculations} 
               settings={settings} 
               formData={{...formData, cameras}}
+              dayRates={dayRates}
               onUpdateCustomPrice={(price) => {
                 setFormData(prev => ({...prev, custom_price_override: price}));
               }}
