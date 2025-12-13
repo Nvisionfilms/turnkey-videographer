@@ -558,6 +558,7 @@ export default function Calculator() {
     });
   }, [suggestedCrewPreset, formData, toast]);
 
+  // Apply preset immediately when it's ready
   useEffect(() => {
     if (!suggestedCrewPreset) return;
 
@@ -571,14 +572,23 @@ export default function Calculator() {
     if (!shouldApply) return;
 
     console.log('Auto-applying preset from useEffect');
-    applySuggestedCrewPreset();
+    
+    // Apply preset directly to avoid timing issues
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        ...suggestedCrewPreset,
+      };
+      console.log('Applied preset - selected_roles:', updated.selected_roles);
+      return updated;
+    });
 
     try {
       localStorage.removeItem(STORAGE_KEYS.APPLY_DELIVERABLE_PRESET_ONCE);
     } catch {
       // Ignore storage errors
     }
-  }, [suggestedCrewPreset, applySuggestedCrewPreset]);
+  }, [suggestedCrewPreset]);
 
   // Save form data to localStorage with debouncing (1 second delay)
   useEffect(() => {
