@@ -220,6 +220,10 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     );
   }
 
+  // Separate production crew from post-production
+  const productionCrewItems = [];
+  const postProductionItems = [];
+
   if (Array.isArray(formData.selected_roles)) {
     formData.selected_roles.forEach(selectedRole => {
       const rate = dayRates.find(r => r.id === selectedRole.role_id);
@@ -264,7 +268,19 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
           desc += ` (${selectedRole.requests || 0} request(s))`;
         }
 
-        lineItems.push({ description: desc, amount: adjustedCost });
+        const lineItem = { description: desc, amount: adjustedCost };
+        
+        // Categorize: post-production vs production crew
+        const isPostProduction = rate.unit_type === "per_5_min" || 
+                                 rate.unit_type === "per_request" ||
+                                 (rate.role || '').toLowerCase().includes('editor') ||
+                                 (rate.role || '').toLowerCase().includes('revision');
+        
+        if (isPostProduction) {
+          postProductionItems.push(lineItem);
+        } else {
+          productionCrewItems.push(lineItem);
+        }
       }
     });
   }
@@ -277,8 +293,19 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
       const baseRate = dayType === 'half' ? audioRate.half_day_rate : audioRate.full_day_rate;
       const audioCost = baseRate * experienceMultiplier * industryIndex * regionMultiplier;
       laborRaw += audioCost;
-      lineItems.push({ description: "Audio Pre & Post Production", amount: audioCost });
+      postProductionItems.push({ description: "Audio Pre & Post Production", amount: audioCost });
     }
+  }
+
+  // Build final line items with sections
+  if (productionCrewItems.length > 0) {
+    lineItems.push({ description: "Production & Crew", amount: 0, isSection: true });
+    lineItems.push(...productionCrewItems);
+  }
+  
+  if (postProductionItems.length > 0) {
+    lineItems.push({ description: "Post-Production", amount: 0, isSection: true });
+    lineItems.push(...postProductionItems);
   }
 
   // === CALCULATE GEAR AMORTIZATION ===
