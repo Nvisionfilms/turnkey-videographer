@@ -529,7 +529,7 @@ export default function Calculator() {
     setSuggestedCrewPreset(preset);
   }, [deliverableEstimate, dayRates, gearCosts, buildSuggestedCrewPresetFromDeliverables]);
 
-  const applySuggestedCrewPreset = () => {
+  const applySuggestedCrewPreset = useCallback(() => {
     if (!suggestedCrewPreset) return;
 
     console.log('=== APPLYING PRESET ===');
@@ -556,7 +556,7 @@ export default function Calculator() {
       title: 'Suggested Setup Applied',
       description: 'Roles and gear were pre-filled from your Deliverables Estimator.',
     });
-  };
+  }, [suggestedCrewPreset, formData, toast]);
 
   useEffect(() => {
     if (!suggestedCrewPreset) return;
@@ -570,6 +570,7 @@ export default function Calculator() {
 
     if (!shouldApply) return;
 
+    console.log('Auto-applying preset from useEffect');
     applySuggestedCrewPreset();
 
     try {
@@ -577,7 +578,7 @@ export default function Calculator() {
     } catch {
       // Ignore storage errors
     }
-  }, [suggestedCrewPreset]);
+  }, [suggestedCrewPreset, applySuggestedCrewPreset]);
 
   // Save form data to localStorage with debouncing (1 second delay)
   useEffect(() => {
