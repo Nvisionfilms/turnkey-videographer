@@ -326,7 +326,14 @@ export default function Calculator() {
     const hasMultiCam = (selections.modifiers || []).some(m => m.modifierId === 'multi_camera_setup');
     const hasDrone = (selections.modifiers || []).some(m => m.modifierId === 'drone_aerials');
     const hasBroadcast = (selections.modifiers || []).some(m => m.modifierId === 'broadcast_compliance');
-    const postRequested = Boolean(selections.postRequested);
+    
+    // If deliverables are selected, assume post/editing is needed
+    const hasDeliverables = (selections.deliverables || []).length > 0;
+    const postRequested = Boolean(selections.postRequested) || hasDeliverables;
+    
+    console.log('selections.postRequested:', selections.postRequested);
+    console.log('hasDeliverables:', hasDeliverables);
+    console.log('postRequested (final):', postRequested);
 
     const productionDaysFromComputed = (() => {
       const li = (computed?.lineItems || []).find(x => x.kind === 'production_day');
