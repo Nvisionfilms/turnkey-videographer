@@ -6,6 +6,9 @@ export default function NegotiationTicker({ calculations, settings }) {
     return null;
   }
 
+  const baseTotal = calculations.originalTotal || calculations.total;
+  const overrideScale = baseTotal > 0 ? (calculations.total / baseTotal) : 1;
+
   // Get base components
   const laborSubtotal = calculations.laborSubtotal || 0;
   const overhead = calculations.overhead || 0;
@@ -26,7 +29,7 @@ export default function NegotiationTicker({ calculations, settings }) {
   const taxTravel = settings?.tax_travel || false;
   const taxableAmountLow = taxTravel ? subtotalLowWithFees : (subtotalLowWithFees - travelCost);
   const taxLow = taxableAmountLow * (taxRatePercent / 100);
-  const lowTier = subtotalLowWithFees + taxLow;
+  const lowTier = (subtotalLowWithFees + taxLow) * overrideScale;
   
   // GREEN (Invoice): Current calculated total with normal profit margin
   // This uses the "Profit Margin (%)" from settings
@@ -41,7 +44,7 @@ export default function NegotiationTicker({ calculations, settings }) {
   const subtotalHighWithFees = subtotalHigh + rushFee - nonprofitDiscount;
   const taxableAmountHigh = taxTravel ? subtotalHighWithFees : (subtotalHighWithFees - travelCost);
   const taxHigh = taxableAmountHigh * (taxRatePercent / 100);
-  const highTier = subtotalHighWithFees + taxHigh;
+  const highTier = (subtotalHighWithFees + taxHigh) * overrideScale;
 
   return (
     <div className="w-full overflow-hidden" style={{ background: 'var(--color-bg-card)', borderBottom: '2px solid var(--color-accent-primary)' }}>
