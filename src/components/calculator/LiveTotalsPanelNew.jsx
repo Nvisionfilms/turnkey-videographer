@@ -166,8 +166,11 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
               });
             }}
           >
-            {copied ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
-            {copied ? 'Copied!' : 'Copy'}
+            <span className="flex items-center gap-1">
+              {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
+            </span>
+            <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-muted)' }}>Ctrl+C</span>
           </Button>
           
           <Button
@@ -201,8 +204,11 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
               });
             }}
           >
-            <DollarSign className="w-3 h-3 mr-1" />
-            Round
+            <span className="flex items-center gap-1">
+              <DollarSign className="w-3 h-3" />
+              <span>Round</span>
+            </span>
+            <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-muted)' }}>Ctrl+R</span>
           </Button>
         </div>
 
@@ -240,8 +246,15 @@ export default function LiveTotalsPanel({ calculations, settings, formData, onUp
                 });
               }}
             >
-              <Percent className="w-3 h-3 mr-0.5" />
-              -{percent}%
+              <div className="w-full flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <Percent className="w-3 h-3" />
+                  <span>-{percent}%</span>
+                </span>
+                <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-muted)' }}>
+                  {percent === 5 ? '1' : percent === 10 ? '2' : '3'}
+                </span>
+              </div>
             </Button>
           ))}
         </div>

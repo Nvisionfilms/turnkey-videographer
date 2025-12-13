@@ -751,6 +751,49 @@ export default function Calculator() {
               });
             }
             break;
+
+          case 'c':
+            e.preventDefault();
+            // Copy total
+            if (calculations) {
+              navigator.clipboard.writeText((calculations.total ?? 0).toFixed(2));
+              toast({
+                title: "Copied!",
+                description: `$${(calculations.total ?? 0).toFixed(2)} copied to clipboard`,
+              });
+            }
+            break;
+
+          case '1':
+          case '2':
+          case '3':
+            e.preventDefault();
+            // Quick discounts: 1=5%, 2=10%, 3=15% (cumulative)
+            if (calculations) {
+              const addPercent = e.key === '1' ? 5 : (e.key === '2' ? 10 : 15);
+              setFormData(prev => {
+                const currentDiscount = prev?.custom_discount_percent || 0;
+                const newTotalDiscount = currentDiscount + addPercent;
+                const baseTotal = calculations.originalTotal || calculations.total;
+                const discounted = baseTotal * (1 - newTotalDiscount / 100);
+                try {
+                  navigator.clipboard.writeText((discounted ?? 0).toFixed(2));
+                } catch {
+                  // ignore clipboard errors
+                }
+                toast({
+                  title: `${newTotalDiscount}% Total Discount`,
+                  description: `New total: $${discounted.toLocaleString()}`,
+                });
+
+                return {
+                  ...prev,
+                  custom_price_override: discounted,
+                  custom_discount_percent: newTotalDiscount,
+                };
+              });
+            }
+            break;
         }
       } else if (e.key === 'Escape') {
         // Clear custom price on Escape
@@ -1618,69 +1661,6 @@ export default function Calculator() {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset Form
               </Button>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
-                  >
-                    <KeyIcon className="w-4 h-4 mr-2" />
-                    Shortcuts
-                  </Button>
-                </DialogTrigger>
-                <DialogContent style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
-                  <DialogHeader>
-                    <DialogTitle style={{ color: 'var(--color-text-primary)' }}>
-                      ⌨️ Keyboard Shortcuts
-                    </DialogTitle>
-                    <DialogDescription style={{ color: 'var(--color-text-secondary)' }}>
-                      Speed up your workflow with these shortcuts
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-3 py-4">
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>Save Quote</span>
-                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
-                        Ctrl+S
-                      </kbd>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>Export PDF</span>
-                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
-                        Ctrl+E
-                      </kbd>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>New Quote</span>
-                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
-                        Ctrl+N
-                      </kbd>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>Duplicate Quote</span>
-                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
-                        Ctrl+D
-                      </kbd>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>Round Price</span>
-                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
-                        Ctrl+R
-                      </kbd>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-primary)' }}>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>Clear Custom Price</span>
-                      <kbd className="px-3 py-1 rounded font-mono text-sm" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
-                        Esc
-                      </kbd>
-                    </div>
-                  </div>
-                  <div className="text-xs text-center pt-4" style={{ color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)' }}>
-                    💡 Tip: Use <kbd className="px-2 py-0.5 rounded font-mono text-xs" style={{ background: 'var(--color-bg-tertiary)' }}>Cmd</kbd> on Mac instead of Ctrl
-                  </div>
-                </DialogContent>
-              </Dialog>
               <Button
                 onClick={() => {
                   const timestamp = new Date().toLocaleString();

@@ -149,9 +149,22 @@ export default function DeliverableCalculator() {
       const existingSessionRaw = localStorage.getItem(STORAGE_KEYS.CALCULATOR_SESSION);
       const existingSession = existingSessionRaw ? JSON.parse(existingSessionRaw) : {};
 
+      const stripDeliverablesSummaryBlock = (notesText) => {
+        const text = String(notesText || "");
+        const marker = "Deliverables Estimator Summary:";
+        const idx = text.indexOf(marker);
+        if (idx === -1) return text.trim();
+
+        const before = text.slice(0, idx).trimEnd();
+        const cleaned = before.replace(/\n---\s*$/m, "").trimEnd();
+        return cleaned.trim();
+      };
+
+      const existingBaseNotes = stripDeliverablesSummaryBlock(existingSession.notes_for_quote || "");
+
       const nextNotes = [
-        existingSession.notes_for_quote || "",
-        "---",
+        existingBaseNotes,
+        existingBaseNotes ? "---" : "",
         "Deliverables Estimator Summary:",
         `Category: ${computed.estimateSummary?.productionCategoryLabel || ""}`,
         `Scope: ${computed.estimateSummary?.executionScopeLabel || ""}`,
