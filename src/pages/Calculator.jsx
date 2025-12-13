@@ -137,8 +137,29 @@ export default function Calculator() {
       // Load day rates
       const ratesStr = localStorage.getItem(STORAGE_KEYS.DAY_RATES);
       if (ratesStr) {
-        const loadedRates = JSON.parse(ratesStr);
+        let loadedRates = JSON.parse(ratesStr);
         console.log('Loaded day rates:', loadedRates);
+        
+        // Auto-migrate: Replace old Line/Lead Editor roles with new Social Media/Shorts and Long Form Editor roles
+        const oldLineEditorId = 'rate_5';
+        const oldLeadEditorId = 'rate_6';
+        const hasOldLineEditor = loadedRates.some(r => r.id === oldLineEditorId && r.role.includes('Line Editor'));
+        const hasOldLeadEditor = loadedRates.some(r => r.id === oldLeadEditorId && r.role.includes('Lead Editor'));
+        
+        if (hasOldLineEditor || hasOldLeadEditor) {
+          console.log('Auto-migrating old Line/Lead Editor roles to new Social Media/Shorts and Long Form Editor roles');
+          
+          // Remove old editor roles and replace with new ones from defaults
+          loadedRates = loadedRates.filter(r => r.id !== oldLineEditorId && r.id !== oldLeadEditorId);
+          const newSocialMediaEditor = DEFAULT_DAY_RATES.find(r => r.id === oldLineEditorId);
+          const newLongFormEditor = DEFAULT_DAY_RATES.find(r => r.id === oldLeadEditorId);
+          
+          if (newSocialMediaEditor) loadedRates.push(newSocialMediaEditor);
+          if (newLongFormEditor) loadedRates.push(newLongFormEditor);
+          
+          localStorage.setItem(STORAGE_KEYS.DAY_RATES, JSON.stringify(loadedRates));
+          console.log('Migration complete - old editors replaced with new ones');
+        }
         
         // Auto-migrate: Add missing default roles (like Drone Operator) for existing users
         const existingRoleIds = new Set(loadedRates.map(r => r.id));
