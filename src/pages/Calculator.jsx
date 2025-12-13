@@ -119,6 +119,7 @@ export default function Calculator() {
     usage_rights_enabled: false,
     usage_rights_type: "1_year",
     usage_rights_cost: 0,
+    usage_rights_percentage: 20,
     usage_rights_duration: "1 year",
     talent_fees_enabled: false,
     talent_primary_count: 0,
@@ -2013,10 +2014,10 @@ export default function Calculator() {
               selectedLevel={formData.experience_level}
               onLevelChange={(level) => {
                 const newMultiplier = settings?.experience_levels?.[level] || 1.0;
-                setFormData({...formData, experience_level: level, custom_multiplier: newMultiplier});
+                setFormData(prev => ({...prev, experience_level: level, custom_multiplier: newMultiplier}));
               }}
               customMultiplier={formData.custom_multiplier}
-              onCustomMultiplierChange={(multiplier) => setFormData({...formData, custom_multiplier: multiplier})}
+              onCustomMultiplierChange={(multiplier) => setFormData(prev => ({...prev, custom_multiplier: multiplier}))}
               experienceLevels={settings?.experience_levels}
               cardClassName="shadow-md border-[var(--color-border-dark)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
               cardHeaderClassName="bg-[var(--color-bg-tertiary)] border-b border-[var(--color-border-dark)]"
