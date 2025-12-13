@@ -655,7 +655,7 @@ export default function Calculator() {
       return null;
     }
     
-    const result = calculateQuote(formData, dayRates, gearCosts, settings);
+    const result = calculateQuote(formData, dayRates, gearCosts, settings, deliverableEstimate);
     
     // Store original total before any overrides
     result.originalTotal = result.total;
@@ -669,7 +669,7 @@ export default function Calculator() {
     
     console.log('Calculation result:', result);
     return result;
-  }, [formData, dayRates, gearCosts, settings]);
+  }, [formData, dayRates, gearCosts, settings, deliverableEstimate]);
 
   const pricingInputsSignatureRef = React.useRef('');
   useEffect(() => {

@@ -68,7 +68,9 @@ function calculateRoleCost(role, rateRow, dayType, customHours, settings) {
         chosenRate = Math.max(baseHalf, baseFull);
       }
       
-      cost = blocks * chosenRate;
+      // Multiply by number of deliverables if specified
+      const deliverableCount = role.deliverable_count || 1;
+      cost = blocks * chosenRate * deliverableCount;
       break;
 
     case "per_request":
@@ -116,7 +118,7 @@ function calculateTravelCost(formData, settings) {
 /**
  * Main calculation engine
  */
-export function calculateQuote(formData, dayRates, gearCosts, settings) {
+export function calculateQuote(formData, dayRates, gearCosts, settings, deliverableEstimate = null) {
   if (!Array.isArray(dayRates) || !Array.isArray(gearCosts) || !settings) {
     console.error('Invalid input data for calculateQuote');
     return null;
@@ -209,13 +211,27 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
   const lineItems = [];
   let laborRaw = 0;
 
+  // Calculate total deliverable count from deliverable calculator
+  let totalDeliverableCount = 0;
+  if (deliverableEstimate?.selections?.deliverables) {
+    totalDeliverableCount = deliverableEstimate.selections.deliverables.reduce(
+      (sum, d) => sum + (d.quantity || 0), 
+      0
+    );
+  }
+
   if (Array.isArray(formData.selected_roles)) {
     formData.selected_roles.forEach(selectedRole => {
       const rate = dayRates.find(r => r.id === selectedRole.role_id);
       if (!rate) return;
 
+      // For editor roles (per_5_min), inject deliverable count if available
+      const roleWithDeliverables = rate.unit_type === "per_5_min" && totalDeliverableCount > 0
+        ? { ...selectedRole, deliverable_count: totalDeliverableCount }
+        : selectedRole;
+
       const roleCost = calculateRoleCost(
-        selectedRole,
+        roleWithDeliverables,
         rate,
         dayType,
         customHours,
@@ -238,7 +254,12 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
           }
           desc += ")";
         } else if (rate.unit_type === "per_5_min") {
-          desc += ` (${selectedRole.minutes_output || 0} min)`;
+          const delivCount = roleWithDeliverables.deliverable_count || 1;
+          desc += ` (${selectedRole.minutes_output || 0} min`;
+          if (delivCount > 1) {
+            desc += ` × ${delivCount} deliverables`;
+          }
+          desc += ")";
         } else if (rate.unit_type === "per_request") {
           desc += ` (${selectedRole.requests || 0} request(s))`;
         }
