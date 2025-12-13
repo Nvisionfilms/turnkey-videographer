@@ -81,7 +81,8 @@ const PRESETS = {
         { role_id: "rate_1", role_name: "Director of Photography", quantity: 1 },
         { role_id: "rate_2", role_name: "Camera Operator (no camera)", quantity: 1 },
         { role_id: "rate_4", role_name: "Gaffer", quantity: 1 },
-        { role_id: "rate_5", role_name: "Grip", quantity: 1 }
+        { role_id: "rate_5", role_name: "Grip", quantity: 1 },
+        { role_id: "rate_9", role_name: "Drone Operator", quantity: 1 }
       ],
       include_audio_pre_post: true,
       gear_enabled: true,

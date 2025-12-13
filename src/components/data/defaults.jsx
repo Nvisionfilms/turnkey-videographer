@@ -90,6 +90,15 @@ export const DEFAULT_DAY_RATES = [
     full_day_rate: 2200,
     active: true,
     notes: ""
+  },
+  {
+    id: "rate_9",
+    role: "Drone Operator",
+    unit_type: "day",
+    half_day_rate: 800,
+    full_day_rate: 1500,
+    active: true,
+    notes: ""
   }
 ];
 

@@ -252,8 +252,9 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
   if (formData.include_audio_pre_post) {
     const audioRate = dayRates.find(r => r.role === "Audio Pre & Post");
     if (audioRate) {
-      const audioCost = Math.max(audioRate.half_day_rate, audioRate.full_day_rate) * 
-                        experienceMultiplier * industryIndex * regionMultiplier;
+      // Use appropriate rate based on day type
+      const baseRate = dayType === 'half' ? audioRate.half_day_rate : audioRate.full_day_rate;
+      const audioCost = baseRate * experienceMultiplier * industryIndex * regionMultiplier;
       laborRaw += audioCost;
       lineItems.push({ description: "Audio Pre & Post Production", amount: audioCost });
     }
