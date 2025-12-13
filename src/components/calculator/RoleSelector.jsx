@@ -59,7 +59,8 @@ export default function RoleSelector({
         half_days: rate.unit_type === 'day' ? (dayType === 'half' ? 1 : 0) : 0,
         full_days: rate.unit_type === 'day' ? (dayType === 'full' ? 1 : (dayType === 'half' ? 0 : 1)) : 0,
         minutes_output: 0,
-        requests: 0
+        requests: 0,
+        deliverable_count: rate.unit_type === 'per_deliverable' ? 1 : 0
       }]);
     } else {
       onRoleChange(selectedRoles.filter(r => r.role_id !== rate.id));
@@ -82,6 +83,12 @@ export default function RoleSelector({
           ? rate.half_day_rate 
           : rate.full_day_rate;
         return `$${rateToUse}/5-min block`;
+      }
+      if (rate.unit_type === 'per_deliverable') {
+        const rateToUse = dayType === "half" && rate.half_day_rate > 0 
+          ? rate.half_day_rate 
+          : rate.full_day_rate;
+        return `$${rateToUse}/deliverable`;
       }
       if (rate.unit_type === 'per_request') {
         return `$${rate.full_day_rate}/request`;
@@ -301,6 +308,25 @@ export default function RoleSelector({
                             min="0"
                             value={selectedRole?.minutes_output || 0}
                             onChange={(e) => handleQuantityChange(rate.id, 'minutes_output', e.target.value)}
+                            className="h-10"
+                            style={{ 
+                              background: 'white',
+                              borderColor: 'var(--color-border)',
+                              color: 'var(--color-text-primary)'
+                            }}
+                          />
+                        </div>
+                      )}
+                      {rate.unit_type === 'per_deliverable' && (
+                        <div className="flex-1">
+                          <Label className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                            Number of Deliverables
+                          </Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={selectedRole?.deliverable_count || 1}
+                            onChange={(e) => handleQuantityChange(rate.id, 'deliverable_count', e.target.value)}
                             className="h-10"
                             style={{ 
                               background: 'white',

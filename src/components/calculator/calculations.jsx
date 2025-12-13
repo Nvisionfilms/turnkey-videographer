@@ -73,6 +73,20 @@ function calculateRoleCost(role, rateRow, dayType, customHours, settings) {
       cost = blocks * chosenRate * deliverableCount;
       break;
 
+    case "per_deliverable":
+      // Flat rate per deliverable, regardless of video length
+      const numDeliverables = role.deliverable_count || 1;
+      let deliverableRate;
+      if (dayType === "half" && baseHalf > 0) {
+        deliverableRate = baseHalf;
+      } else if (dayType === "full" && baseFull > 0) {
+        deliverableRate = baseFull;
+      } else {
+        deliverableRate = Math.max(baseHalf, baseFull);
+      }
+      cost = numDeliverables * deliverableRate;
+      break;
+
     case "per_request":
       const requests = role.requests || 0;
       cost = requests * Math.max(baseHalf, baseFull);
@@ -229,8 +243,8 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
       const rate = dayRates.find(r => r.id === selectedRole.role_id);
       if (!rate) return;
 
-      // For editor roles (per_5_min), inject deliverable count if available
-      const roleWithDeliverables = rate.unit_type === "per_5_min" && totalDeliverableCount > 0
+      // For editor roles (per_5_min or per_deliverable), inject deliverable count if available
+      const roleWithDeliverables = (rate.unit_type === "per_5_min" || rate.unit_type === "per_deliverable") && totalDeliverableCount > 0
         ? { ...selectedRole, deliverable_count: totalDeliverableCount }
         : selectedRole;
 
@@ -264,6 +278,9 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
             desc += ` × ${delivCount} deliverables`;
           }
           desc += ")";
+        } else if (rate.unit_type === "per_deliverable") {
+          const delivCount = roleWithDeliverables.deliverable_count || 1;
+          desc += ` (${delivCount} ${delivCount === 1 ? 'deliverable' : 'deliverables'})`;
         } else if (rate.unit_type === "per_request") {
           desc += ` (${selectedRole.requests || 0} request(s))`;
         }
@@ -272,6 +289,7 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
         
         // Categorize: post-production vs production crew
         const isPostProduction = rate.unit_type === "per_5_min" || 
+                                 rate.unit_type === "per_deliverable" ||
                                  rate.unit_type === "per_request" ||
                                  (rate.role || '').toLowerCase().includes('editor') ||
                                  (rate.role || '').toLowerCase().includes('revision');

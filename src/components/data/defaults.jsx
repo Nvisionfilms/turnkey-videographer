@@ -57,8 +57,8 @@ export const DEFAULT_DAY_RATES = [
   },
   {
     id: "rate_5",
-    role: "Line Editor (per 5 min)",
-    unit_type: "per_5_min",
+    role: "Line Editor (per deliverable)",
+    unit_type: "per_deliverable",
     half_day_rate: 400,
     full_day_rate: 800,
     active: true,
@@ -66,8 +66,8 @@ export const DEFAULT_DAY_RATES = [
   },
   {
     id: "rate_6",
-    role: "Lead Editor (per 5 min)",
-    unit_type: "per_5_min",
+    role: "Lead Editor (per deliverable)",
+    unit_type: "per_deliverable",
     half_day_rate: 500,
     full_day_rate: 1000,
     active: true,
