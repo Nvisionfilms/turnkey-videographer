@@ -2409,7 +2409,6 @@ export default function Calculator() {
 
             {/* Roles */}
             <RoleSelector
-              key={`roles-${formData.selected_roles.length}-${formData.selected_roles.map(r => r.role_id).join('-')}`}
               dayRates={dayRates}
               selectedRoles={formData.selected_roles}
               onRoleChange={(roles) => {
