@@ -229,7 +229,10 @@ export function calculateQuote(formData, dayRates, gearCosts, settings) {
 
         let desc = rate.role;
         if (rate.unit_type === "day") {
-          desc += ` (${selectedRole.quantity || 0} ${dayType === "half" ? "half day(s)" : dayType === "full" ? "full day(s)" : "day(s)"}`;
+          const actualDays = selectedRole.full_days || (dayType === "full" ? 1 : 0);
+          const actualHalfDays = selectedRole.half_days || (dayType === "half" ? 1 : 0);
+          const totalDays = actualDays + actualHalfDays;
+          desc += ` (${selectedRole.quantity || 0} crew × ${totalDays} ${totalDays === 1 ? "day" : "days"}`;
           if (dayType === "custom") {
             desc += ` × ${customHours}h`;
           }

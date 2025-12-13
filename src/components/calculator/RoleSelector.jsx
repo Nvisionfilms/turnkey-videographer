@@ -57,7 +57,7 @@ export default function RoleSelector({
         quantity: rate.unit_type === 'day' ? 1 : 0,
         crew_qty: rate.unit_type === 'day' ? 1 : 0,
         half_days: rate.unit_type === 'day' ? (dayType === 'half' ? 1 : 0) : 0,
-        full_days: rate.unit_type === 'day' ? (dayType === 'full' ? 1 : 0) : 0,
+        full_days: rate.unit_type === 'day' ? (dayType === 'full' ? 1 : (dayType === 'half' ? 0 : 1)) : 0,
         minutes_output: 0,
         requests: 0
       }]);

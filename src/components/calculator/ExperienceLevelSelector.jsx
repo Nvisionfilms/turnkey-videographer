@@ -34,6 +34,10 @@ export default function ExperienceLevelSelector({
     const multiplier = levels[level];
     onLevelChange(level);
     onCustomMultiplierChange(multiplier);
+    // Clear any custom price override when selecting a preset
+    if (window.clearCustomPriceOverride) {
+      window.clearCustomPriceOverride();
+    }
   };
 
   const handleSliderChange = (value) => {
@@ -47,6 +51,10 @@ export default function ExperienceLevelSelector({
     
     if (matchingPreset) {
       onLevelChange(matchingPreset[0]);
+      // Clear any custom price override when matching preset
+      if (window.clearCustomPriceOverride) {
+        window.clearCustomPriceOverride();
+      }
     }
   };
 
@@ -54,6 +62,10 @@ export default function ExperienceLevelSelector({
     if (selectedLevel && levels[selectedLevel]) {
       const presetMultiplier = levels[selectedLevel];
       onCustomMultiplierChange(presetMultiplier);
+      // Clear any custom price override when using preset
+      if (window.clearCustomPriceOverride) {
+        window.clearCustomPriceOverride();
+      }
     }
   };
 

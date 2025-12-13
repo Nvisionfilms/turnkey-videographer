@@ -57,6 +57,56 @@ export class EnhancedExportService {
     const notesToCustomer = this.settings?.notes_to_customer || "";
     const showSignature = this.settings?.show_signature_field !== false;
     const showPaymentSchedule = this.settings?.show_payment_schedule !== false;
+
+    const rawLineItems = Array.isArray(this.calc?.lineItems) ? this.calc.lineItems : [];
+
+    const combinedLineItems = (() => {
+      const out = [];
+      const byKey = new Map();
+
+      for (const item of rawLineItems) {
+        if (item?.isSection) {
+          out.push(item);
+          continue;
+        }
+
+        const qty = typeof item?.quantity === 'number' ? item.quantity : 1;
+        const unitPrice = typeof item?.unitPrice === 'number'
+          ? item.unitPrice
+          : (qty > 0 ? (Number(item?.amount || 0) / qty) : Number(item?.amount || 0));
+
+        const key = `${item?.description || ''}::${unitPrice.toFixed(4)}`;
+        const existing = byKey.get(key);
+        if (!existing) {
+          const next = {
+            ...item,
+            quantity: qty,
+            unitPrice,
+            amount: Number(item?.amount || 0),
+          };
+          byKey.set(key, next);
+          out.push(next);
+        } else {
+          existing.quantity = Number(existing.quantity || 0) + Number(qty || 0);
+          existing.amount = Number(existing.amount || 0) + Number(item?.amount || 0);
+        }
+      }
+
+      return out;
+    })();
+
+    const tableSum = combinedLineItems
+      .filter(i => !i?.isSection)
+      .reduce((s, i) => s + (Number(i?.amount || 0)), 0);
+    const targetTotal = Number(this.calc?.total || 0);
+    const diff = targetTotal - tableSum;
+
+    const displayLineItems = (() => {
+      if (!Number.isFinite(diff) || Math.abs(diff) < 0.01) return combinedLineItems;
+      const next = [...combinedLineItems];
+      next.push({ description: 'Custom Price Adjustment', amount: diff, quantity: 1, unitPrice: diff });
+      return next;
+    })();
     
     return `
       <!DOCTYPE html>
@@ -121,7 +171,7 @@ export class EnhancedExportService {
           <tbody>
             ${(() => {
               let lineNumber = 0;
-              return (this.calc.lineItems || []).map((item, index) => {
+              return (displayLineItems || []).map((item, index) => {
                 if (item?.isSection) {
                   return `
                   <tr ${index % 2 === 0 ? 'class="row-alt"' : ''}>
@@ -138,6 +188,10 @@ export class EnhancedExportService {
                 const mainDesc = parts[0];
                 const subDesc = parts.slice(1).join(' - ');
                 const amount = Number(item.amount || 0);
+                const qty = typeof item?.quantity === 'number' ? item.quantity : 1;
+                const unitPrice = typeof item?.unitPrice === 'number'
+                  ? item.unitPrice
+                  : (qty > 0 ? (amount / qty) : amount);
                 return `
                 <tr ${index % 2 === 0 ? 'class="row-alt"' : ''}>
                   <td class="col-no">${lineNumber}</td>
@@ -145,8 +199,8 @@ export class EnhancedExportService {
                     <div class="item-main">${mainDesc}</div>
                     ${subDesc ? `<div class="item-sub">${subDesc}</div>` : ''}
                   </td>
-                  <td class="col-qty">1</td>
-                  <td class="col-price">$${amount.toFixed(2)}</td>
+                  <td class="col-qty">${qty}</td>
+                  <td class="col-price">$${unitPrice.toFixed(2)}</td>
                   <td class="col-total">$${amount.toFixed(2)}</td>
                 </tr>
               `;

@@ -583,6 +583,28 @@ export default function Calculator() {
     };
   }, [loadAllData]);
 
+  // Expose clearCustomPriceOverride function globally for other components to call
+  useEffect(() => {
+    window.clearCustomPriceOverride = () => {
+      setFormData(prev => {
+        const { custom_price_override, custom_discount_percent, ...rest } = prev;
+        return {
+          ...rest,
+          custom_price_override: null,
+          custom_discount_percent: null
+        };
+      });
+      toast({
+        title: "Custom Pricing Cleared",
+        description: "Custom price override has been removed. Pricing will update automatically.",
+      });
+    };
+    
+    return () => {
+      delete window.clearCustomPriceOverride;
+    };
+  }, []);
+
   // Set default gear selection when gear costs first load
   useEffect(() => {
     if (gearCosts.length > 0 && formData.selected_gear_items.length === 0 && formData.gear_enabled && !isLoading) {
@@ -1130,9 +1152,31 @@ export default function Calculator() {
 
     const deliverableRawLineItems = deliverablePayload?.computed?.lineItems || [];
 
-    const deliverableLineItems = deliverableRawLineItems
+    const deliverableLineItemsRaw = deliverableRawLineItems
       .filter(li => !["production_day", "execution_scope", "scoped_multiplier"].includes(li.kind))
-      .map(li => ({ description: li.label, amount: li.amount, kind: li.kind }));
+      .map(li => ({
+        description: li.label,
+        amount: Number(li.amount || 0),
+        kind: li.kind,
+        quantity: typeof li.quantity === 'number' ? li.quantity : 1,
+        unitPrice: typeof li.unitPrice === 'number' ? li.unitPrice : null,
+      }));
+
+    // Combine duplicates for cleaner exports (e.g., repeated post minimum rows)
+    const deliverableLineItems = (() => {
+      const byKey = new Map();
+      for (const li of deliverableLineItemsRaw) {
+        const key = `${li.kind || ''}::${li.description || ''}::${li.unitPrice ?? ''}`;
+        const existing = byKey.get(key);
+        if (!existing) {
+          byKey.set(key, { ...li });
+        } else {
+          existing.quantity = (Number(existing.quantity || 0) + Number(li.quantity || 0));
+          existing.amount = (Number(existing.amount || 0) + Number(li.amount || 0));
+        }
+      }
+      return Array.from(byKey.values());
+    })();
 
     if (deliverableLineItems.length === 0) return baseCalculations;
 
@@ -1158,10 +1202,22 @@ export default function Calculator() {
     const removedCrewSubtotal = removedCrewLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0);
     const deliverablesSubtotalForExport = deliverableLineItems.reduce((s, li) => s + (Number(li.amount) || 0), 0);
 
-    // Preserve whatever is already baked into baseCalculations.total (tax, discounts, travel, etc)
+    // Preserve whatever is already baked into baseCalculations totals (tax, discounts, travel, etc)
     // and only adjust for (a) removing duplicate crew post items and (b) adding deliverables items.
+    // If a custom price override/discount was applied (originalTotal differs from total), apply the
+    // same proportional scaling to the merged total so exports remain consistent.
     const baseTotal = Number(baseCalculations.total || 0);
-    const nextTotal = baseTotal - removedCrewSubtotal + deliverablesSubtotalForExport;
+    const baseOriginalTotal = Number(baseCalculations.originalTotal || 0);
+    const hasOverride = baseOriginalTotal > 0 && baseTotal > 0 && Math.abs(baseTotal - baseOriginalTotal) > 0.01;
+    const overrideScale = hasOverride ? (baseTotal / baseOriginalTotal) : 1;
+
+    const mergedOriginalTotal = hasOverride
+      ? (baseOriginalTotal - removedCrewSubtotal + deliverablesSubtotalForExport)
+      : null;
+
+    const nextTotal = hasOverride
+      ? (mergedOriginalTotal * overrideScale)
+      : (baseTotal - removedCrewSubtotal + deliverablesSubtotalForExport);
 
     const merged = {
       ...baseCalculations,
@@ -1169,10 +1225,19 @@ export default function Calculator() {
         { description: "Production (Crew)", amount: 0, isSection: true },
         ...crewLineItems,
         { description: "Deliverables", amount: 0, isSection: true },
-        ...deliverableLineItems.map(li => ({ description: li.description, amount: li.amount }))
+        ...deliverableLineItems.map(li => ({
+          description: li.description,
+          amount: li.amount,
+          quantity: li.quantity,
+          unitPrice: li.unitPrice,
+        }))
       ],
       total: nextTotal,
     };
+
+    if (hasOverride && typeof mergedOriginalTotal === 'number') {
+      merged.originalTotal = mergedOriginalTotal;
+    }
 
     const depositPercent = settings?.deposit_percent || 50;
     merged.depositDue = Math.round(merged.total * (depositPercent / 100) * 100) / 100;
