@@ -2368,11 +2368,12 @@ export default function Calculator() {
 
             {/* Roles */}
             <RoleSelector
+              key={`roles-${formData.selected_roles.length}-${formData.selected_roles.map(r => r.role_id).join('-')}`}
               dayRates={dayRates}
               selectedRoles={formData.selected_roles}
               onRoleChange={(roles) => {
                 console.log('RoleSelector onChange:', roles);
-                setFormData({...formData, selected_roles: roles});
+                setFormData(prev => ({...prev, selected_roles: roles}));
               }}
               dayType={formData.day_type}
               customHours={formData.custom_hours}
