@@ -443,6 +443,8 @@ export default function Calculator() {
         const editorEntry = selectedRoles.find(r => r.role_id === socialMediaEditorId);
         if (editorEntry) {
           editorEntry.deliverable_count = shortFormCount;
+          editorEntry.crew_qty = 1;
+          editorEntry.quantity = 1;
           console.log('Social Media/Shorts Editor entry:', editorEntry);
         }
       }
@@ -454,6 +456,8 @@ export default function Calculator() {
         const editorEntry = selectedRoles.find(r => r.role_id === longFormEditorId);
         if (editorEntry) {
           editorEntry.deliverable_count = longFormCount;
+          editorEntry.crew_qty = 1;
+          editorEntry.quantity = 1;
           console.log('Long Form Editor entry:', editorEntry);
         }
       }
@@ -532,12 +536,21 @@ export default function Calculator() {
     console.log('Preset selected_roles:', suggestedCrewPreset.selected_roles);
     console.log('Current formData.selected_roles:', formData.selected_roles);
 
-    setFormData(prev => ({
-      ...prev,
-      ...suggestedCrewPreset,
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        ...suggestedCrewPreset,
+      };
+      console.log('Updated formData after preset:', updated);
+      console.log('Updated selected_roles:', updated.selected_roles);
+      return updated;
+    });
 
-    console.log('Preset applied to formData');
+    // Use setTimeout to log state after React has updated
+    setTimeout(() => {
+      console.log('FormData after state update:', formData);
+      console.log('Selected roles after state update:', formData.selected_roles);
+    }, 100);
 
     toast({
       title: 'Suggested Setup Applied',
