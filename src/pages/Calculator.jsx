@@ -411,9 +411,17 @@ export default function Calculator() {
 
     // Post / editing roles (all-in)
     if (postRequested) {
-      const socialMediaEditorId = roleIdByIncludes('social media') || roleIdByIncludes('shorts editor');
-      const longFormEditorId = roleIdByIncludes('long form editor');
+      // Find editor roles by exact name match to avoid conflicts
+      const socialMediaEditorId = (availableDayRates || []).find(r => 
+        r.role && (r.role.toLowerCase().includes('social media') || r.role.toLowerCase().includes('shorts'))
+      )?.id;
+      const longFormEditorId = (availableDayRates || []).find(r => 
+        r.role && r.role.toLowerCase().includes('long form')
+      )?.id;
       const revisionsId = roleIdByIncludes('revisions per request');
+      
+      console.log('Found socialMediaEditorId:', socialMediaEditorId);
+      console.log('Found longFormEditorId:', longFormEditorId);
 
       // Map deliverable IDs to editor types
       const shortFormDeliverableIds = new Set([
