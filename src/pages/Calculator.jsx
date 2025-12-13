@@ -275,11 +275,15 @@ export default function Calculator() {
   const buildSuggestedCrewPresetFromDeliverables = useCallback((payload, availableDayRates, availableGearCosts) => {
     if (!payload?.selections || !payload?.computed) return null;
 
+    console.log('Building preset with dayRates:', availableDayRates);
+    console.log('dayRates count:', availableDayRates?.length);
+
     const selections = payload.selections;
     const computed = payload.computed;
 
     const roleIdByIncludes = (needle) => {
       const found = (availableDayRates || []).find(r => (r.role || '').toLowerCase().includes(needle));
+      console.log(`roleIdByIncludes('${needle}'):`, found?.id, found?.role);
       return found?.id || null;
     };
 
