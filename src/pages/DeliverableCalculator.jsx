@@ -380,6 +380,12 @@ export default function DeliverableCalculator() {
           <p style={{ color: 'var(--color-text-secondary)' }}>
             Professional video production pricing based on deliverables, scope, and responsibility
           </p>
+          <Alert className="mt-4" style={{ background: 'var(--color-bg-tertiary)', borderColor: 'var(--color-border-light)' }}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
+              <strong>Quick Estimate Tool:</strong> This calculator provides general rate estimates. When you proceed to the Crew Calculator, you'll use your own custom rates and pricing - not the deliverable calculator's estimates.
+            </AlertDescription>
+          </Alert>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

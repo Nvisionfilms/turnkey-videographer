@@ -346,12 +346,9 @@ export default function Calculator() {
     );
 
     // Scope influences responsibility roles
+    // Note: Full creative direction is excluded - users selecting crew means they're using their own custom rates
     if (scopeId === 'directed_production') {
       addRole(selectedRoles, roleIdByIncludes('director'), 1, daySplit);
-    }
-    if (scopeId === 'full_creative_direction') {
-      addRole(selectedRoles, roleIdByIncludes('director'), 1, daySplit);
-      addRole(selectedRoles, roleIdByIncludes('director of photography'), 1, daySplit);
     }
 
     // Live/broadcast adds oversight + audio
@@ -365,11 +362,7 @@ export default function Calculator() {
       addRole(selectedRoles, roleIdByIncludes('director of photography'), 1, daySplit);
     }
 
-    // Multi-cam typically needs additional operator (no camera)
-    if (hasMultiCam) {
-      // Your crew is being hired with cameras, so add another "with camera" operator
-      addRole(selectedRoles, roleIdByIncludes('camera op (with camera)'), 1, daySplit);
-    }
+    // Multi-cam setup is excluded - users decide camera setup when selecting roles manually
 
     // Post / editing roles (all-in)
     if (postRequested) {
@@ -1683,17 +1676,6 @@ export default function Calculator() {
                 <Mail className="w-4 h-4 mr-2" />
                 Copy Text
               </Button>
-              {hasDeliverableEstimate && (
-                <div className="flex items-center space-x-2 px-3 py-2 rounded-lg" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border-light)' }}>
-                  <Checkbox
-                    checked={includeDeliverablesInExport}
-                    onCheckedChange={(checked) => setIncludeDeliverablesInExport(Boolean(checked))}
-                  />
-                  <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    Include Deliverables in Export
-                  </span>
-                </div>
-              )}
               <Button
                 onClick={handleExportQuote}
                 variant="outline"
