@@ -224,12 +224,19 @@ export default function Calculator() {
       }
 
       // Load saved form data (only on initial mount)
+      // BUT skip if we're about to apply a deliverable preset
       if (includeFormData) {
-        const savedFormData = localStorage.getItem(STORAGE_KEYS.CALCULATOR_SESSION);
-        if (savedFormData) {
-          const parsed = JSON.parse(savedFormData);
-          console.log('Loaded saved form data:', parsed);
-          setFormData(parsed);
+        const shouldApplyPreset = localStorage.getItem(STORAGE_KEYS.APPLY_DELIVERABLE_PRESET_ONCE) === '1';
+        
+        if (shouldApplyPreset) {
+          console.log('Skipping localStorage load - preset will be applied');
+        } else {
+          const savedFormData = localStorage.getItem(STORAGE_KEYS.CALCULATOR_SESSION);
+          if (savedFormData) {
+            const parsed = JSON.parse(savedFormData);
+            console.log('Loaded saved form data:', parsed);
+            setFormData(parsed);
+          }
         }
       }
     } catch (error) {
