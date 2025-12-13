@@ -139,7 +139,19 @@ export default function Calculator() {
       if (ratesStr) {
         const loadedRates = JSON.parse(ratesStr);
         console.log('Loaded day rates:', loadedRates);
-        setDayRates(loadedRates);
+        
+        // Auto-migrate: Add missing default roles (like Drone Operator) for existing users
+        const existingRoleIds = new Set(loadedRates.map(r => r.id));
+        const missingRoles = DEFAULT_DAY_RATES.filter(dr => !existingRoleIds.has(dr.id));
+        
+        if (missingRoles.length > 0) {
+          console.log('Auto-migrating missing roles:', missingRoles);
+          const updatedRates = [...loadedRates, ...missingRoles];
+          localStorage.setItem(STORAGE_KEYS.DAY_RATES, JSON.stringify(updatedRates));
+          setDayRates(updatedRates);
+        } else {
+          setDayRates(loadedRates);
+        }
       } else {
         console.log('No day rates in localStorage, using defaults');
         localStorage.setItem(STORAGE_KEYS.DAY_RATES, JSON.stringify(DEFAULT_DAY_RATES));

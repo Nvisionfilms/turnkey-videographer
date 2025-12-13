@@ -74,7 +74,19 @@ export default function Admin() {
         localStorage.setItem(STORAGE_KEYS.DAY_RATES, JSON.stringify(DEFAULT_DAY_RATES));
         rates = JSON.stringify(DEFAULT_DAY_RATES);
       }
-      setDayRates(JSON.parse(rates));
+      
+      // Auto-migrate: Add missing default roles (like Drone Operator) for existing users
+      const loadedRates = JSON.parse(rates);
+      const existingRoleIds = new Set(loadedRates.map(r => r.id));
+      const missingRoles = DEFAULT_DAY_RATES.filter(dr => !existingRoleIds.has(dr.id));
+      
+      if (missingRoles.length > 0) {
+        const updatedRates = [...loadedRates, ...missingRoles];
+        localStorage.setItem(STORAGE_KEYS.DAY_RATES, JSON.stringify(updatedRates));
+        setDayRates(updatedRates);
+      } else {
+        setDayRates(loadedRates);
+      }
 
       let gear = localStorage.getItem(STORAGE_KEYS.GEAR_COSTS);
       if (!gear) {
