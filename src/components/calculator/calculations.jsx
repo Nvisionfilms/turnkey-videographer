@@ -369,6 +369,57 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
   const taxableAmount = taxTravel ? subtotal2 : (subtotal2 - travelCost);
   const tax = taxableAmount * (taxRatePercent / 100);
 
+  // === ADD OTHER COSTS AS LINE ITEMS ===
+  // Add gear amortization
+  if (gearAmortized > 0) {
+    lineItems.push({ description: "Equipment & Gear", amount: round2(gearAmortized) });
+  }
+  
+  // Add travel costs
+  if (travelCost > 0) {
+    lineItems.push({ description: `Travel (${travelMiles} miles @ $${mileageRate}/mi)`, amount: round2(travelCost) });
+  }
+  
+  // Add rental costs
+  if (rentalCosts > 0) {
+    lineItems.push({ description: "Rental Costs", amount: round2(rentalCosts) });
+  }
+  
+  // Add usage rights
+  if (usageRightsCost > 0) {
+    lineItems.push({ description: "Usage Rights & Licensing", amount: round2(usageRightsCost) });
+  }
+  
+  // Add talent fees
+  if (talentFees > 0) {
+    lineItems.push({ description: "Talent Fees", amount: round2(talentFees) });
+  }
+  
+  // Add overhead
+  if (overhead > 0) {
+    lineItems.push({ description: `Overhead (${overheadPercent}%)`, amount: round2(overhead) });
+  }
+  
+  // Add profit margin
+  if (profitMargin > 0) {
+    lineItems.push({ description: `Profit Margin (${profitMarginPercent}%)`, amount: round2(profitMargin) });
+  }
+  
+  // Add rush fee
+  if (rushFee > 0) {
+    lineItems.push({ description: `Rush Fee (${rushFeePercent}%)`, amount: round2(rushFee) });
+  }
+  
+  // Add nonprofit discount
+  if (nonprofitDiscount > 0) {
+    lineItems.push({ description: `Nonprofit Discount (${nonprofitDiscountPercent}%)`, amount: -round2(nonprofitDiscount) });
+  }
+  
+  // Add tax
+  if (tax > 0) {
+    lineItems.push({ description: `Tax (${taxRatePercent}%)`, amount: round2(tax) });
+  }
+
   // === FINAL TOTALS ===
   const total = round2(subtotal2 + tax);
   
