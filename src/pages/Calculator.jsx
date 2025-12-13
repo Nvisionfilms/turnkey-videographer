@@ -275,15 +275,12 @@ export default function Calculator() {
   const buildSuggestedCrewPresetFromDeliverables = useCallback((payload, availableDayRates, availableGearCosts) => {
     if (!payload?.selections || !payload?.computed) return null;
 
-    console.log('Building preset with dayRates:', availableDayRates);
-    console.log('dayRates count:', availableDayRates?.length);
 
     const selections = payload.selections;
     const computed = payload.computed;
 
     const roleIdByIncludes = (needle) => {
       const found = (availableDayRates || []).find(r => (r.role || '').toLowerCase().includes(needle));
-      console.log(`roleIdByIncludes('${needle}'):`, found?.id, found?.role);
       return found?.id || null;
     };
 
@@ -331,9 +328,6 @@ export default function Calculator() {
     const hasDeliverables = (selections.deliverables || []).length > 0;
     const postRequested = Boolean(selections.postRequested) || hasDeliverables;
     
-    console.log('selections.postRequested:', selections.postRequested);
-    console.log('hasDeliverables:', hasDeliverables);
-    console.log('postRequested (final):', postRequested);
 
     const productionDaysFromComputed = (() => {
       const li = (computed?.lineItems || []).find(x => x.kind === 'production_day');
@@ -427,8 +421,6 @@ export default function Calculator() {
       )?.id;
       const revisionsId = roleIdByIncludes('revisions per request');
       
-      console.log('Found socialMediaEditorId:', socialMediaEditorId);
-      console.log('Found longFormEditorId:', longFormEditorId);
 
       // Map deliverable IDs to editor types
       const shortFormDeliverableIds = new Set([
@@ -464,27 +456,23 @@ export default function Calculator() {
 
       // Add Social Media/Shorts Editor if there are short-form deliverables
       if (socialMediaEditorId && shortFormCount > 0) {
-        console.log(`Adding Social Media/Shorts Editor with ${shortFormCount} deliverables`);
         addRole(selectedRoles, socialMediaEditorId, 1);
         const editorEntry = selectedRoles.find(r => r.role_id === socialMediaEditorId);
         if (editorEntry) {
           editorEntry.deliverable_count = shortFormCount;
           editorEntry.crew_qty = 1;
           editorEntry.quantity = 1;
-          console.log('Social Media/Shorts Editor entry:', editorEntry);
         }
       }
 
       // Add Long Form Editor if there are long-form deliverables
       if (longFormEditorId && longFormCount > 0) {
-        console.log(`Adding Long Form Editor with ${longFormCount} deliverables`);
         addRole(selectedRoles, longFormEditorId, 1);
         const editorEntry = selectedRoles.find(r => r.role_id === longFormEditorId);
         if (editorEntry) {
           editorEntry.deliverable_count = longFormCount;
           editorEntry.crew_qty = 1;
           editorEntry.quantity = 1;
-          console.log('Long Form Editor entry:', editorEntry);
         }
       }
 
@@ -598,26 +586,15 @@ export default function Calculator() {
 
     if (!shouldApply) return;
 
-    console.log('Auto-applying preset from useEffect');
-    console.log('Preset object:', suggestedCrewPreset);
-    console.log('Preset selected_roles:', suggestedCrewPreset.selected_roles);
-    
     // Apply preset directly to avoid timing issues
-    setFormData(prev => {
-      console.log('Previous formData.selected_roles:', prev.selected_roles);
-      const updated = {
-        ...prev,
-        ...suggestedCrewPreset,
-      };
-      console.log('Updated formData.selected_roles:', updated.selected_roles);
-      console.log('Updated formData full:', updated);
-      return updated;
-    });
+    setFormData(prev => ({
+      ...prev,
+      ...suggestedCrewPreset,
+    }));
 
     // Force a second state update to ensure UI re-renders
     setTimeout(() => {
       setFormData(prev => ({...prev}));
-      console.log('Forced re-render after preset application');
     }, 100);
 
     try {

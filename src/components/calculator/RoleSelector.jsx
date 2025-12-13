@@ -73,13 +73,7 @@ export default function RoleSelector({
     ));
   };
 
-  const isRoleSelected = (rateId) => {
-    const isSelected = selectedRoles.some(r => r.role_id === rateId);
-    if (rateId === 'rate_5' || rateId === 'rate_6') {
-      console.log(`isRoleSelected(${rateId}):`, isSelected, 'selectedRoles:', selectedRoles.map(r => r.role_id));
-    }
-    return isSelected;
-  };
+  const isRoleSelected = (rateId) => selectedRoles.some(r => r.role_id === rateId);
   const getSelectedRole = (rateId) => selectedRoles.find(r => r.role_id === rateId);
 
   const getRateDisplay = (rate) => {
