@@ -1189,9 +1189,16 @@ export default function Calculator() {
     const removedCrewLineItems = deliverablesHasPostCharges
       ? crewLineItemsRaw.filter(li => {
           const d = (li.description || '').toLowerCase();
+          // Remove editing services
           if (d.includes('editor')) return true;
           if (d.includes('revisions')) return true;
-          if (d.includes('audio pre') || d.includes('audio pre & post')) return true;
+          // Remove audio pre/post ONLY if deliverables specifically include audio services
+          const deliverablesHasAudio = deliverableLineItems.some(dli => 
+            (dli.description || '').toLowerCase().includes('audio')
+          );
+          if (deliverablesHasAudio && (d.includes('audio pre') || d.includes('audio pre & post'))) return true;
+          // Remove post-production services that overlap with deliverables
+          if (d.includes('post-production')) return true;
           return false;
         })
       : [];

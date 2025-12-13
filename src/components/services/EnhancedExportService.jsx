@@ -101,8 +101,10 @@ export class EnhancedExportService {
     const targetTotal = Number(this.calc?.total || 0);
     const diff = targetTotal - tableSum;
 
+    // Only add Custom Price Adjustment if there's a significant difference (>$1)
+    // AND it's not just due to rounding or deliverables being included
     const displayLineItems = (() => {
-      if (!Number.isFinite(diff) || Math.abs(diff) < 0.01) return combinedLineItems;
+      if (!Number.isFinite(diff) || Math.abs(diff) < 1.00) return combinedLineItems;
       const next = [...combinedLineItems];
       next.push({ description: 'Custom Price Adjustment', amount: diff, quantity: 1, unitPrice: diff });
       return next;
