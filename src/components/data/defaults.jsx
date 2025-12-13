@@ -143,7 +143,7 @@ export const DEFAULT_GEAR_COSTS = [
     id: "gear_7",
     item: "Drone",
     total_investment: 2000,
-    include_by_default: false
+    include_by_default: true
   },
   {
     id: "gear_8",
