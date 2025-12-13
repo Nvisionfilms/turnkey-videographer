@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RotateCcw, AlertCircle, Download, Mail, Shield, Calendar as CalendarIcon, Lock, Clock, Sparkles, Heart, Coffee, ArrowRight, ChevronLeft, ChevronRight, DollarSign, FileText, Settings as SettingsIcon, Key as KeyIcon, Copy as CopyIcon, User, Briefcase, Users, Package, Video as VideoIcon, Check } from "lucide-react";
+import { RotateCcw, AlertCircle, Download, Mail, Shield, Calendar as CalendarIcon, Lock, Clock, Sparkles, Heart, Coffee, ArrowRight, ChevronLeft, ChevronRight, DollarSign, FileText, Settings as SettingsIcon, Key as KeyIcon, Copy as CopyIcon, User, Briefcase, Users, Package, Video as VideoIcon, Check, Percent } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
@@ -1555,8 +1555,8 @@ export default function Calculator() {
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Quote Calculator</h2>
-              <p style={{ color: 'var(--color-text-secondary)' }}>Create professional quotes with industry-standard pricing</p>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Crew Calculator</h2>
+              <p style={{ color: 'var(--color-text-secondary)' }}>Build your crew and calculate project costs with custom rates</p>
             </div>
             <div className="flex flex-wrap gap-2 w-full justify-between md:justify-end">
               {!isUnlocked && (
@@ -2441,31 +2441,76 @@ export default function Calculator() {
                       </div>
                     )}
                     
-                    {/* Cost Input */}
-                    <div>
-                      <Label htmlFor="usage_rights_cost" className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
-                        <DollarSign className="w-4 h-4" />
-                        License Fee
-                      </Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold" style={{ color: 'var(--color-text-muted)' }}>$</span>
-                        <Input
-                          id="usage_rights_cost"
-                          type="number"
-                          min="0"
-                          step="100"
-                          value={formData.usage_rights_cost}
-                          onChange={(e) => setFormData({...formData, usage_rights_cost: parseFloat(e.target.value) || 0})}
-                          className="pl-8 p-3 text-lg font-semibold rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
-                          style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
-                          placeholder="0.00"
-                        />
+                    {/* Percentage and Cost Inputs (Synced) */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Percentage Input */}
+                      <div>
+                        <Label htmlFor="usage_rights_percentage" className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+                          <Percent className="w-4 h-4" />
+                          Percentage
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="usage_rights_percentage"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value={formData.usage_rights_percentage}
+                            onChange={(e) => {
+                              const percentage = parseFloat(e.target.value) || 0;
+                              const baseTotal = calculations?.subtotal || 0;
+                              const calculatedCost = (baseTotal * percentage) / 100;
+                              setFormData(prev => ({
+                                ...prev, 
+                                usage_rights_percentage: percentage,
+                                usage_rights_cost: Math.round(calculatedCost * 100) / 100
+                              }));
+                            }}
+                            className="pr-8 p-3 text-lg font-semibold rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                            style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                            placeholder="20"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg font-semibold" style={{ color: 'var(--color-text-muted)' }}>%</span>
+                        </div>
                       </div>
-                      <div className="mt-2 p-3 rounded-lg" style={{ background: 'rgba(212, 175, 55, 0.05)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
-                        <p className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-                          💡 <strong>Industry Standard:</strong> 20-50% of production cost
-                        </p>
+                      
+                      {/* Dollar Amount Input */}
+                      <div>
+                        <Label htmlFor="usage_rights_cost" className="text-sm font-medium mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
+                          <DollarSign className="w-4 h-4" />
+                          License Fee
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                          <Input
+                            id="usage_rights_cost"
+                            type="number"
+                            min="0"
+                            step="100"
+                            value={formData.usage_rights_cost}
+                            onChange={(e) => {
+                              const cost = parseFloat(e.target.value) || 0;
+                              const baseTotal = calculations?.subtotal || 0;
+                              const calculatedPercentage = baseTotal > 0 ? (cost / baseTotal) * 100 : 0;
+                              setFormData(prev => ({
+                                ...prev,
+                                usage_rights_cost: cost,
+                                usage_rights_percentage: Math.round(calculatedPercentage * 10) / 10
+                              }));
+                            }}
+                            className="pl-8 p-3 text-lg font-semibold rounded-lg transition-all duration-200 focus:ring-2 focus:ring-[var(--color-accent-primary)]"
+                            style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)' }}
+                            placeholder="0.00"
+                          />
+                        </div>
                       </div>
+                    </div>
+                    
+                    <div className="mt-2 p-3 rounded-lg" style={{ background: 'rgba(212, 175, 55, 0.05)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                      <p className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                        💡 <strong>Industry Standard:</strong> 20-50% of production cost • Base: ${calculations?.subtotal?.toFixed(2) || '0.00'}
+                      </p>
                     </div>
                   </div>
                 )}
