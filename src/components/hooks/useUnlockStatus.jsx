@@ -21,6 +21,18 @@ export function useUnlockStatus() {
   const [subscriptionDetails, setSubscriptionDetails] = useState(null);
 
   const checkStatus = () => {
+    // TEMPORARY: Always unlock for testing
+    const TESTING_MODE = true;
+    
+    if (TESTING_MODE) {
+      setIsUnlocked(true);
+      setIsTrialActive(false);
+      setTrialDaysLeft(null);
+      setHasUsedFreeQuote(false);
+      setSubscriptionDetails(null);
+      return;
+    }
+    
     // Check if permanently unlocked (legacy or subscription)
     const legacyUnlocked = localStorage.getItem(STORAGE_KEYS.UNLOCKED) === 'true';
     
