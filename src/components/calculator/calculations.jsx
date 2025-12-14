@@ -315,31 +315,30 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
   // === OVERHEAD & PROFIT (applied to labor only) ===
   const overheadPercent = settings?.overhead_percent || 0;
   const profitMarginPercent = settings?.profit_margin_percent || 0;
-  const operationsFeePercent = overheadPercent + profitMarginPercent;
+  const operationsFeeMultiplier = 1 + ((overheadPercent + profitMarginPercent) / 100);
 
-  // Calculate labor costs for each section
-  const productionCrewLabor = productionCrewItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-  const postProductionLabor = postProductionItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+  // Apply operations fee multiplier to each line item (bake it into the price)
+  const productionCrewItemsWithFee = productionCrewItems.map(item => ({
+    ...item,
+    amount: round2(item.amount * operationsFeeMultiplier),
+    unitPrice: item.unitPrice ? round2(item.unitPrice * operationsFeeMultiplier) : undefined
+  }));
 
-  // Calculate operations fees for each section
-  const productionOperationsFee = productionCrewLabor * (operationsFeePercent / 100);
-  const postProductionOperationsFee = postProductionLabor * (operationsFeePercent / 100);
+  const postProductionItemsWithFee = postProductionItems.map(item => ({
+    ...item,
+    amount: round2(item.amount * operationsFeeMultiplier),
+    unitPrice: item.unitPrice ? round2(item.unitPrice * operationsFeeMultiplier) : undefined
+  }));
 
-  // Build final line items with sections and operations fees
-  if (productionCrewItems.length > 0) {
+  // Build final line items with sections (no separate operations fee lines)
+  if (productionCrewItemsWithFee.length > 0) {
     lineItems.push({ description: "Production & Crew", amount: 0, isSection: true });
-    lineItems.push(...productionCrewItems);
-    if (productionOperationsFee > 0) {
-      lineItems.push({ description: `Operations Fee (${operationsFeePercent}%)`, amount: round2(productionOperationsFee) });
-    }
+    lineItems.push(...productionCrewItemsWithFee);
   }
   
-  if (postProductionItems.length > 0) {
+  if (postProductionItemsWithFee.length > 0) {
     lineItems.push({ description: "Post-Production", amount: 0, isSection: true });
-    lineItems.push(...postProductionItems);
-    if (postProductionOperationsFee > 0) {
-      lineItems.push({ description: `Operations Fee (${operationsFeePercent}%)`, amount: round2(postProductionOperationsFee) });
-    }
+    lineItems.push(...postProductionItemsWithFee);
   }
 
   // === CALCULATE GEAR AMORTIZATION ===
