@@ -265,16 +265,24 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
             desc += ` × ${delivCount} deliverables`;
           }
           desc += ")";
-        } else if (rate.unit_type === "per_deliverable") {
-          const delivCount = selectedRole.deliverable_count || 0;
-          if (delivCount > 0) {
-            desc += ` (${delivCount} ${delivCount === 1 ? 'deliverable' : 'deliverables'})`;
-          }
         } else if (rate.unit_type === "per_request") {
           desc += ` (${selectedRole.requests || 0} request(s))`;
         }
 
-        const lineItem = { description: desc, amount: adjustedCost };
+        // Build line item with quantity and unit price for per_deliverable roles
+        let lineItem;
+        if (rate.unit_type === "per_deliverable") {
+          const delivCount = selectedRole.deliverable_count || 1;
+          const unitPrice = adjustedCost / delivCount;
+          lineItem = { 
+            description: desc, 
+            amount: adjustedCost,
+            quantity: delivCount,
+            unitPrice: unitPrice
+          };
+        } else {
+          lineItem = { description: desc, amount: adjustedCost };
+        }
         
         // Categorize: post-production vs production crew
         const isPostProduction = rate.unit_type === "per_5_min" || 
@@ -304,15 +312,34 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     }
   }
 
-  // Build final line items with sections
+  // === OVERHEAD & PROFIT (applied to labor only) ===
+  const overheadPercent = settings?.overhead_percent || 0;
+  const profitMarginPercent = settings?.profit_margin_percent || 0;
+  const operationsFeePercent = overheadPercent + profitMarginPercent;
+
+  // Calculate labor costs for each section
+  const productionCrewLabor = productionCrewItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+  const postProductionLabor = postProductionItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+  // Calculate operations fees for each section
+  const productionOperationsFee = productionCrewLabor * (operationsFeePercent / 100);
+  const postProductionOperationsFee = postProductionLabor * (operationsFeePercent / 100);
+
+  // Build final line items with sections and operations fees
   if (productionCrewItems.length > 0) {
     lineItems.push({ description: "Production & Crew", amount: 0, isSection: true });
     lineItems.push(...productionCrewItems);
+    if (productionOperationsFee > 0) {
+      lineItems.push({ description: `Operations Fee (${operationsFeePercent}%)`, amount: round2(productionOperationsFee) });
+    }
   }
   
   if (postProductionItems.length > 0) {
     lineItems.push({ description: "Post-Production", amount: 0, isSection: true });
     lineItems.push(...postProductionItems);
+    if (postProductionOperationsFee > 0) {
+      lineItems.push({ description: `Operations Fee (${operationsFeePercent}%)`, amount: round2(postProductionOperationsFee) });
+    }
   }
 
   // === CALCULATE GEAR AMORTIZATION ===
@@ -345,10 +372,7 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     talentFees = primaryTalent + extraTalent;
   }
 
-  // === OVERHEAD & PROFIT (applied to labor only) ===
-  const overheadPercent = settings?.overhead_percent || 0;
-  const profitMarginPercent = settings?.profit_margin_percent || 0;
-  
+  // Calculate overhead and profit from labor
   const overhead = laborRaw * (overheadPercent / 100);
   const profitMargin = laborRaw * (profitMarginPercent / 100);
   
