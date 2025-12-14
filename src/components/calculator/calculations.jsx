@@ -402,15 +402,8 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     lineItems.push({ description: "Talent Fees", amount: round2(talentFees) });
   }
   
-  // Add overhead
-  if (overhead > 0) {
-    lineItems.push({ description: `Overhead (${overheadPercent}%)`, amount: round2(overhead) });
-  }
-  
-  // Add profit margin
-  if (profitMargin > 0) {
-    lineItems.push({ description: `Profit Margin (${profitMarginPercent}%)`, amount: round2(profitMargin) });
-  }
+  // Overhead and profit margin are calculated and included in pricing
+  // but not shown as separate line items in client-facing quotes
   
   // Add rush fee
   if (rushFee > 0) {
