@@ -98,6 +98,7 @@ export default function DeliverableCalculator() {
     const pricing = computed?.pricing;
 
     const total = pricing?.total || 0;
+    const originalTotal = pricing?.total || 0;
     const depositPercent = settings?.deposit_percent || 50;
     const depositDue = Math.round(total * (depositPercent / 100) * 100) / 100;
     const balanceDue = Math.round((total - depositDue) * 100) / 100;
@@ -112,9 +113,14 @@ export default function DeliverableCalculator() {
       calculations: {
         lineItems: (computed?.lineItems || []).map((li) => ({
           description: li.label,
+          quantity: typeof li.quantity === 'number' ? li.quantity : 1,
+          unitPrice: typeof li.unitPrice === 'number'
+            ? li.unitPrice
+            : (typeof li.amount === 'number' ? li.amount : 0),
           amount: li.amount,
         })),
         total,
+        originalTotal,
         depositDue,
         balanceDue,
       },
@@ -279,6 +285,16 @@ export default function DeliverableCalculator() {
   // Handle deliverable toggle
   const handleDeliverableToggle = (deliverableId) => {
     setSelections(prev => {
+      const delivDef = catalogData.deliverables.find(d => d.id === deliverableId);
+      const requiredScopeId = delivDef?.constraints?.minExecutionScope || null;
+      const requiresPost = Boolean(delivDef?.constraints?.requiresPost);
+
+      const scopes = catalogData.executionScopes || [];
+      const requiredScopeIndex = requiredScopeId
+        ? scopes.findIndex(s => s.id === requiredScopeId)
+        : -1;
+      const currentScopeIndex = scopes.findIndex(s => s.id === prev.executionScopeId);
+
       const existing = prev.deliverables.find(d => d.deliverableId === deliverableId);
       
       if (existing) {
@@ -288,9 +304,28 @@ export default function DeliverableCalculator() {
           deliverables: prev.deliverables.filter(d => d.deliverableId !== deliverableId)
         };
       } else {
+        if (requiredScopeIndex !== -1 && currentScopeIndex !== -1 && currentScopeIndex < requiredScopeIndex) {
+          toast({
+            title: "Execution Scope Updated",
+            description: `"${delivDef?.labelEstimate || 'This deliverable'}" requires ${requiredScopeId.replace(/_/g, ' ')}. Scope updated automatically.`,
+          });
+        }
+
+        if (requiresPost && !prev.postRequested) {
+          toast({
+            title: "Post-Production Enabled",
+            description: `"${delivDef?.labelEstimate || 'This deliverable'}" requires post-production. Enabled automatically.`,
+          });
+        }
+
         // Add with quantity 1
         return {
           ...prev,
+          executionScopeId:
+            (requiredScopeIndex !== -1 && currentScopeIndex !== -1 && currentScopeIndex < requiredScopeIndex)
+              ? requiredScopeId
+              : prev.executionScopeId,
+          postRequested: requiresPost ? true : prev.postRequested,
           deliverables: [...prev.deliverables, { deliverableId, quantity: 1 }]
         };
       }

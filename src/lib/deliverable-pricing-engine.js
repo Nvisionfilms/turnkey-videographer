@@ -43,11 +43,30 @@ function computeEffectiveProductionDays(selections, catalog) {
 function buildLineItems(selections, catalog, effectiveProductionDays) {
   const lineItems = [];
   const scope = catalog.executionScopes.find(s => s.id === selections.executionScopeId);
+
+  const pushSection = (label) => {
+    lineItems.push({
+      id: `section_${label.toLowerCase().replace(/\s+/g, '_')}`,
+      kind: "section",
+      label,
+      quantity: 0,
+      unit: "",
+      unitPrice: 0,
+      amount: 0,
+      eligibleForMultiplier: false,
+      isSection: true
+    });
+  };
   
   if (!scope) {
     throw new Error('Invalid execution scope selected');
   }
   
+  // 1. Production
+  if (effectiveProductionDays > 0 || scope?.perDayAdd > 0) {
+    pushSection("Production");
+  }
+
   // 1. Production Days
   if (effectiveProductionDays > 0) {
     lineItems.push({
@@ -77,6 +96,10 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
   }
   
   // 3. Deliverables
+  if ((selections.deliverables || []).length > 0) {
+    pushSection("Deliverables");
+  }
+
   selections.deliverables.forEach((deliverable, index) => {
     const delivDef = catalog.deliverables.find(d => d.id === deliverable.deliverableId);
     if (!delivDef) return;
@@ -117,32 +140,44 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
   
   // 4. Post Minimums (only if postRequested == true)
   if (selections.postRequested) {
-    selections.deliverables.forEach((deliverable, index) => {
+    pushSection("Post-Production");
+
+    let postMinimumTotal = 0;
+    selections.deliverables.forEach((deliverable) => {
       const delivDef = catalog.deliverables.find(d => d.id === deliverable.deliverableId);
       if (!delivDef) return;
-      
+
       let postMin = Math.max(
         delivDef.postMinimum || 0,
         catalog.rules.minimumPostPerDeliverable || 0
       );
-      
+
       if (deliverable.overrides?.postMinimum !== undefined) {
         postMin = deliverable.overrides.postMinimum;
       }
-      
+
+      postMinimumTotal += (deliverable.quantity * postMin);
+    });
+
+    if (postMinimumTotal > 0) {
       lineItems.push({
-        id: `post_minimum_${deliverable.deliverableId}_${index}`,
+        id: "post_minimum_total",
         kind: "post_minimum",
         label: "Post-Production Services (Minimum)",
-        quantity: deliverable.quantity,
-        unit: "each",
-        unitPrice: postMin,
-        amount: deliverable.quantity * postMin,
+        quantity: 1,
+        unit: "service",
+        unitPrice: postMinimumTotal,
+        amount: postMinimumTotal,
         eligibleForMultiplier: false
       });
-    });
+    }
   }
   
+  // 5. Add-ons / Modifiers
+  if ((selections.modifiers || []).length > 0) {
+    pushSection("Add-ons");
+  }
+
   // 5. Fixed Modifiers
   (selections.modifiers || []).forEach((modifier, index) => {
     const modDef = catalog.modifiers.find(m => m.id === modifier.modifierId);

@@ -95,18 +95,37 @@ export class EnhancedExportService {
       return out;
     })();
 
-    const tableSum = combinedLineItems
+    const discountPercent = Number(this.formData?.custom_discount_percent || 0);
+    const originalTotal = Number(this.calc?.originalTotal || 0);
+    const targetTotal = Number(this.calc?.total || 0);
+    const discountAmount = discountPercent > 0
+      ? Math.max(0, originalTotal - targetTotal)
+      : 0;
+
+    const baseDisplayLineItems = (() => {
+      if (!(discountPercent > 0 && discountAmount > 0)) return combinedLineItems;
+      const next = [...combinedLineItems];
+      next.push({
+        description: `Discount (${discountPercent}%)`,
+        quantity: 1,
+        unitPrice: -discountAmount,
+        amount: -discountAmount,
+      });
+      return next;
+    })();
+
+    const tableSum = baseDisplayLineItems
       .filter(i => !i?.isSection)
       .reduce((s, i) => s + (Number(i?.amount || 0)), 0);
-    const targetTotal = Number(this.calc?.total || 0);
     const diff = targetTotal - tableSum;
 
-    // Only add Custom Price Adjustment if there's a significant difference (>$1)
-    // AND it's not just due to rounding or deliverables being included
+    // Only add an adjustment row if there's a significant difference (>$1).
+    // We avoid "Custom Price" wording in client-facing exports.
     const displayLineItems = (() => {
-      if (!Number.isFinite(diff) || Math.abs(diff) < 1.00) return combinedLineItems;
-      const next = [...combinedLineItems];
-      next.push({ description: 'Custom Price Adjustment', amount: diff, quantity: 1, unitPrice: diff });
+      if (!Number.isFinite(diff) || Math.abs(diff) < 1.00) return baseDisplayLineItems;
+      const next = [...baseDisplayLineItems];
+      const label = diff < 0 ? 'Discount' : 'Service Fee';
+      next.push({ description: label, amount: diff, quantity: 1, unitPrice: diff });
       return next;
     })();
     
@@ -209,13 +228,14 @@ export class EnhancedExportService {
               }).join('');
             })()}
           </tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td colspan="4" class="total-label">Total:</td>
-              <td class="total-amount">$${this.calc.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            </tr>
-          </tfoot>
         </table>
+
+        <div class="totals-box">
+          <div class="totals-row totals-row-strong">
+            <span>Total:</span>
+            <span>$${targetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+        </div>
 
         <div class="bottom-section">
           ${showPaymentSchedule && this.settings?.deposit_enabled !== false && this.calc.depositDue > 0 ? `
@@ -304,15 +324,13 @@ export class EnhancedExportService {
       }
       
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-        background: #ffffff;
-        color: #1f2937;
-        padding: 48px;
-        max-width: 900px;
-        margin: 0 auto;
-        line-height: 1.6;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        margin: 0;
+        padding: 20px;
       }
-
+      
       .invoice-header {
         display: flex;
         justify-content: space-between;
@@ -439,10 +457,11 @@ export class EnhancedExportService {
       .invoice-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 40px;
-        border: 1px solid #e5e7eb;
+        margin: 20px 0;
+        background: white;
         border-radius: 12px;
         overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
       }
 
       .invoice-table thead {
