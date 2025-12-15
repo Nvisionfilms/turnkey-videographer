@@ -842,7 +842,124 @@ export default function Calculator() {
     
     // Apply custom price override if set (from round/discount buttons)
     if (formData.custom_price_override !== null && formData.custom_price_override > 0) {
-      result.total = formData.custom_price_override;
+      const round2 = (num) => Math.round((Number(num) || 0) * 100) / 100;
+
+      const targetTotal = Number(formData.custom_price_override || 0);
+      const originalTotal = Number(result.originalTotal || 0);
+      const discountPercent = Number(formData.custom_discount_percent || 0);
+
+      // If it's a percent discount, we keep line items intact and let exports render a Discount row.
+      // If it's rounding/manual override (no percent discount), we disperse the delta into service line items
+      // so no extra "Custom Price"/"Service Fee" rows appear in exports.
+      const isPercentDiscount = discountPercent > 0;
+
+      if (!isPercentDiscount && Array.isArray(result?.lineItems)) {
+        const taxRate = (settings?.tax_rate_percent || 0) / 100;
+        const baseTaxableAmount = Number(result.taxableAmount || 0);
+
+        // Compute required pre-tax delta so that after tax the total hits the target.
+        // Assumes the rounding delta is applied to taxable service work (most common case).
+        const deltaTotal = targetTotal - originalTotal;
+        const deltaPreTax = taxRate > 0 ? (deltaTotal / (1 + taxRate)) : deltaTotal;
+
+        const isNonSection = (li) => li && !li.isSection;
+        const isExcludedForRounding = (li) => {
+          const desc = String(li?.description || '');
+          if (!desc) return true;
+          if (desc === 'Equipment & Gear') return true;
+          if (desc.startsWith('Travel (')) return true;
+          if (desc === 'Rental Costs') return true;
+          if (desc === 'Usage Rights & Licensing') return true;
+          if (desc === 'Talent Fees') return true;
+          if (desc.startsWith('Rush Fee')) return true;
+          if (desc.startsWith('Nonprofit Discount')) return true;
+          if (desc.startsWith('Tax (')) return true;
+          return false;
+        };
+
+        const candidateIndexes = result.lineItems
+          .map((li, idx) => ({ li, idx }))
+          .filter(({ li }) => isNonSection(li) && !isExcludedForRounding(li) && Number(li?.amount || 0) > 0)
+          .map(({ idx }) => idx);
+
+        const indexesToAdjust = candidateIndexes.length > 0
+          ? candidateIndexes
+          : result.lineItems
+              .map((li, idx) => ({ li, idx }))
+              .filter(({ li }) => isNonSection(li) && Number(li?.amount || 0) > 0)
+              .map(({ idx }) => idx)
+              .slice(0, 1);
+
+        if (indexesToAdjust.length > 0 && Math.abs(deltaPreTax) >= 0.01) {
+          const serviceTotal = indexesToAdjust
+            .reduce((sum, idx) => sum + Number(result.lineItems[idx]?.amount || 0), 0);
+
+          let remaining = deltaPreTax;
+          let lastAdjustedIdx = indexesToAdjust[indexesToAdjust.length - 1];
+          indexesToAdjust.forEach((idx, i) => {
+            const li = result.lineItems[idx];
+            const base = Number(li?.amount || 0);
+            const qty = typeof li?.quantity === 'number' ? li.quantity : null;
+
+            const add = (i === indexesToAdjust.length - 1)
+              ? remaining
+              : (serviceTotal > 0 ? (deltaPreTax * (base / serviceTotal)) : 0);
+
+            const roundedAdd = (i === indexesToAdjust.length - 1) ? add : round2(add);
+            remaining = round2(remaining - roundedAdd);
+
+            const nextAmount = round2(base + roundedAdd);
+            li.amount = nextAmount;
+            if (qty && qty > 0) {
+              li.unitPrice = round2(nextAmount / qty);
+            }
+
+            lastAdjustedIdx = idx;
+          });
+
+          // Keep the derived totals internally consistent for display (subtotal/tax/total).
+          result.subtotal = round2(Number(result.subtotal || 0) + deltaPreTax);
+          result.laborWithOverheadProfit = round2(Number(result.laborWithOverheadProfit || 0) + deltaPreTax);
+
+          const subtotal2 = round2(Number(result.subtotal || 0) + Number(result.rushFee || 0) - Number(result.nonprofitDiscount || 0));
+          const taxableAmount = round2(baseTaxableAmount + deltaPreTax);
+          let tax = round2(taxableAmount * taxRate);
+          let total = round2(subtotal2 + tax);
+
+          // Fix rounding drift so we hit the exact target total.
+          const drift = round2(targetTotal - total);
+          if (Math.abs(drift) >= 0.01) {
+            if (taxRate > 0) {
+              tax = round2(tax + drift);
+              total = round2(total + drift);
+            } else if (Number.isInteger(lastAdjustedIdx) && lastAdjustedIdx >= 0) {
+              const li = result.lineItems[lastAdjustedIdx];
+              const qty = typeof li?.quantity === 'number' ? li.quantity : null;
+              li.amount = round2(Number(li.amount || 0) + drift);
+              if (qty && qty > 0) {
+                li.unitPrice = round2(li.amount / qty);
+              }
+              total = round2(total + drift);
+            }
+          }
+
+          result.taxableAmount = taxableAmount;
+          result.tax = tax;
+          result.total = total;
+
+          // Update the Tax line item amount to match.
+          const taxIdx = result.lineItems.findIndex(li => !li?.isSection && String(li?.description || '').startsWith('Tax ('));
+          if (taxIdx !== -1) {
+            result.lineItems[taxIdx].amount = round2(tax);
+          }
+        }
+      }
+
+      // Always force total to the target for percent discount, and for any remaining cases.
+      if (isPercentDiscount) {
+        result.total = targetTotal;
+      }
+
       result.depositDue = result.total * ((settings?.deposit_percent || 50) / 100);
       result.balanceDue = result.total - result.depositDue;
     }
