@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Video, Settings, Calculator, Lock, BarChart3, LogOut, LogIn, Users } from "lucide-react";
@@ -50,13 +50,6 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { isUnlocked, hasUsedFreeQuote } = useUnlockStatus();
 
-  const pathname = (location?.pathname || "").toLowerCase();
-  const isInternalRoute = pathname.startsWith("/admin") || pathname.startsWith("/affiliate") || pathname === "/admin";
-  const isClientFacingRoute = !isInternalRoute;
-
-  useEffect(() => {
-    document.body.classList.toggle("client-facing", isClientFacingRoute);
-  }, [isClientFacingRoute]);
 
   return (
     <SidebarProvider>
@@ -84,38 +77,9 @@ export default function Layout({ children }) {
           --color-button-text: #ffffff;
         }
 
-        body.client-facing {
-          --color-bg-primary: #07060a;
-          --color-bg-secondary: #0f0b16;
-          --color-bg-tertiary: #141126;
-          --color-bg-card: #0e0c14;
-          --color-accent-primary: #ff2bd6;
-          --color-accent-secondary: #00e5ff;
-          --color-accent-hover: #ff6be6;
-          --color-text-primary: #f8f7ff;
-          --color-text-secondary: #d1c7ff;
-          --color-text-muted: #9b8fd6;
-          --color-border: #2a2144;
-          --color-border-light: #1b162a;
-          --color-border-dark: #3b2e63;
-          --color-success: #46f59a;
-          --color-warning: #ffd24a;
-          --color-error: #ff4d4d;
-          --color-input-bg: #0f0b16;
-          --color-input-border: #3b2e63;
-          --color-button-text: #07060a;
-        }
-        
         body {
           background: var(--color-bg-primary);
           color: var(--color-text-primary);
-        }
-
-        body.client-facing {
-          background:
-            radial-gradient(80% 60% at 50% 0%, rgba(255, 43, 214, 0.18) 0%, rgba(7, 6, 10, 1) 60%),
-            radial-gradient(60% 50% at 0% 30%, rgba(0, 229, 255, 0.14) 0%, rgba(7, 6, 10, 0) 55%),
-            var(--color-bg-primary);
         }
         
         .nav-item-inactive {
