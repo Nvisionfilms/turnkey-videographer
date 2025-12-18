@@ -43,6 +43,7 @@ function computeEffectiveProductionDays(selections, catalog) {
 function buildLineItems(selections, catalog, effectiveProductionDays) {
   const lineItems = [];
   const scope = catalog.executionScopes.find(s => s.id === selections.executionScopeId);
+  const category = catalog.productionCategories.find(c => c.id === selections.productionCategoryId);
 
   const pushSection = (label) => {
     lineItems.push({
@@ -62,6 +63,9 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
     throw new Error('Invalid execution scope selected');
   }
   
+  // Use category-specific base day rate, or fall back to global default
+  const baseDayRate = selections.customBaseDayRate ?? category?.baseDayRate ?? catalog.rules.baseDayRate;
+  
   // 1. Production
   if (effectiveProductionDays > 0 || scope?.perDayAdd > 0) {
     pushSection("Production");
@@ -75,8 +79,8 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
       label: "Production Day Services",
       quantity: effectiveProductionDays,
       unit: "day",
-      unitPrice: catalog.rules.baseDayRate,
-      amount: effectiveProductionDays * catalog.rules.baseDayRate,
+      unitPrice: baseDayRate,
+      amount: effectiveProductionDays * baseDayRate,
       eligibleForMultiplier: true
     });
   }

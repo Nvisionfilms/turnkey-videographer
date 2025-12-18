@@ -14,11 +14,11 @@
   },
 
   "productionCategories": [
-    { "id": "content_creation", "label": "Content Creation" },
-    { "id": "live_stream_broadcast", "label": "Live Stream / Broadcast" },
-    { "id": "streaming_series", "label": "Streaming Series / Digital Show" },
-    { "id": "theatrical_film", "label": "Theatrical Film" },
-    { "id": "event_coverage", "label": "Event Coverage" }
+    { "id": "content_creation", "label": "Content Creation", "baseDayRate": 1200, "description": "Social media, marketing videos, branded content" },
+    { "id": "live_stream_broadcast", "label": "Live Stream / Broadcast", "baseDayRate": 1800, "description": "Multi-camera live events, webinars, broadcasts" },
+    { "id": "streaming_series", "label": "Streaming Series / Digital Show", "baseDayRate": 2500, "description": "Episodic content, web series, YouTube shows" },
+    { "id": "theatrical_film", "label": "Theatrical Film", "baseDayRate": 3500, "description": "Narrative films, documentaries, cinema-quality production" },
+    { "id": "event_coverage", "label": "Event Coverage", "baseDayRate": 1000, "description": "Conferences, weddings, corporate events" }
   ],
 
   "executionScopes": [

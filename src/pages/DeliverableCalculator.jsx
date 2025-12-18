@@ -270,7 +270,8 @@ export default function DeliverableCalculator() {
     setSelections(prev => ({
       ...prev,
       productionCategoryId: categoryId,
-      deliverables: [] // Clear deliverables when category changes
+      deliverables: [], // Clear deliverables when category changes
+      customBaseDayRate: null // Reset custom rate to use new category's default
     }));
   };
   
@@ -484,15 +485,70 @@ export default function DeliverableCalculator() {
                   <Package className="w-5 h-5" />
                   Production Category
                 </CardTitle>
+                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  Select the type of production — each has industry-standard base rates
+                </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <RadioGroup value={selections.productionCategoryId} onValueChange={handleCategoryChange}>
-                  {catalogData.productionCategories.map(cat => (
-                    <div key={cat.id} className="flex items-center space-x-2">
-                      <RadioGroupItem value={cat.id} id={cat.id} />
-                      <Label htmlFor={cat.id} className="cursor-pointer">{cat.label}</Label>
-                    </div>
-                  ))}
+                  {catalogData.productionCategories.map(cat => {
+                    const isSelected = selections.productionCategoryId === cat.id;
+                    return (
+                      <div 
+                        key={cat.id} 
+                        className={`p-4 rounded-lg border-2 transition-all cursor-pointer`}
+                        style={{ 
+                          background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
+                          border: isSelected ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
+                        }}
+                        onClick={() => handleCategoryChange(cat.id)}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <RadioGroupItem value={cat.id} id={cat.id} className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor={cat.id} className="cursor-pointer font-semibold text-base">
+                              {cat.label}
+                            </Label>
+                            {cat.description && (
+                              <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                                {cat.description}
+                              </p>
+                            )}
+                            {isUnlocked && cat.baseDayRate && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                                  Base Day Rate:
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="100"
+                                    value={isSelected ? (selections.customBaseDayRate ?? cat.baseDayRate) : cat.baseDayRate}
+                                    onChange={(e) => {
+                                      if (isSelected) {
+                                        const val = parseFloat(e.target.value) || 0;
+                                        setSelections(prev => ({
+                                          ...prev,
+                                          customBaseDayRate: val
+                                        }));
+                                      }
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-24 h-8 text-sm text-center"
+                                    style={{ padding: '4px 8px' }}
+                                    disabled={!isSelected}
+                                  />
+                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>/day</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </RadioGroup>
               </CardContent>
             </Card>
