@@ -82,15 +82,17 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
   }
   
   // 2. Execution Scope (REQUIRED, always visible if not capture_only)
-  if (scope.perDayAdd > 0 && effectiveProductionDays > 0) {
+  // Use custom scope rate if provided, otherwise use catalog default
+  const scopeRate = selections.customScopeRates?.[scope.id] ?? scope.perDayAdd;
+  if (scopeRate > 0 && effectiveProductionDays > 0) {
     lineItems.push({
       id: "execution_scope",
       kind: "execution_scope",
       label: scope.labelInvoice,
       quantity: effectiveProductionDays,
       unit: "day",
-      unitPrice: scope.perDayAdd,
-      amount: effectiveProductionDays * scope.perDayAdd,
+      unitPrice: scopeRate,
+      amount: effectiveProductionDays * scopeRate,
       eligibleForMultiplier: true
     });
   }
@@ -124,7 +126,7 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
       }
     }
     
-    const unitPrice = deliverable.overrides?.unitPrice ?? delivDef.unitPrice;
+    const unitPrice = deliverable.customRate ?? deliverable.overrides?.unitPrice ?? delivDef.unitPrice;
     
     lineItems.push({
       id: `deliverable_${deliverable.deliverableId}_${index}`,

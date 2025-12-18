@@ -318,7 +318,7 @@ export default function DeliverableCalculator() {
           });
         }
 
-        // Add with quantity 1
+        // Add with quantity 1 and default rate from catalog
         return {
           ...prev,
           executionScopeId:
@@ -326,7 +326,11 @@ export default function DeliverableCalculator() {
               ? requiredScopeId
               : prev.executionScopeId,
           postRequested: requiresPost ? true : prev.postRequested,
-          deliverables: [...prev.deliverables, { deliverableId, quantity: 1 }]
+          deliverables: [...prev.deliverables, { 
+            deliverableId, 
+            quantity: 1,
+            customRate: null // null means use default catalog rate
+          }]
         };
       }
     });
@@ -340,6 +344,21 @@ export default function DeliverableCalculator() {
         if (d.deliverableId === deliverableId) {
           const newQty = Math.max(1, d.quantity + delta);
           return { ...d, quantity: newQty };
+        }
+        return d;
+      })
+    }));
+  };
+  
+  // Handle deliverable custom rate change
+  const handleDeliverableRateChange = (deliverableId, newRate) => {
+    setSelections(prev => ({
+      ...prev,
+      deliverables: prev.deliverables.map(d => {
+        if (d.deliverableId === deliverableId) {
+          // If empty or 0, set to null to use default
+          const rate = newRate === '' || newRate === 0 ? null : parseFloat(newRate) || null;
+          return { ...d, customRate: rate };
         }
         return d;
       })
@@ -398,6 +417,12 @@ export default function DeliverableCalculator() {
   const getDeliverableQuantity = (deliverableId) => {
     const deliv = selections.deliverables.find(d => d.deliverableId === deliverableId);
     return deliv?.quantity || 1;
+  };
+  
+  // Get deliverable custom rate (or null if using default)
+  const getDeliverableCustomRate = (deliverableId) => {
+    const deliv = selections.deliverables.find(d => d.deliverableId === deliverableId);
+    return deliv?.customRate ?? null;
   };
   
   // Check if modifier is selected
@@ -506,23 +531,43 @@ export default function DeliverableCalculator() {
                       </div>
                       
                       {isSelected && (
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeliverableQuantityChange(deliv.id, -1)}
-                            disabled={quantity <= 1}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <span className="w-8 text-center font-medium">{quantity}</span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeliverableQuantityChange(deliv.id, 1)}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
+                        <div className="flex items-center gap-3">
+                          {/* Quantity controls */}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeliverableQuantityChange(deliv.id, -1)}
+                              disabled={quantity <= 1}
+                            >
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">{quantity}</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeliverableQuantityChange(deliv.id, 1)}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
+                          {/* Custom rate input */}
+                          {isUnlocked && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="25"
+                                placeholder={deliv.unitPrice.toString()}
+                                value={getDeliverableCustomRate(deliv.id) ?? ''}
+                                onChange={(e) => handleDeliverableRateChange(deliv.id, e.target.value)}
+                                className="w-20 h-8 text-sm text-center"
+                                style={{ padding: '4px 8px' }}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -538,25 +583,82 @@ export default function DeliverableCalculator() {
                   <Settings className="w-5 h-5" />
                   Execution Scope (Required)
                 </CardTitle>
+                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  How much creative direction and oversight are you providing?
+                </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <RadioGroup value={selections.executionScopeId} onValueChange={handleExecutionScopeChange}>
-                  {catalogData.executionScopes.map(scope => (
-                    <div key={scope.id} className="flex items-start space-x-2 p-3 rounded-lg border">
-                      <RadioGroupItem value={scope.id} id={scope.id} className="mt-1" />
-                      <div className="flex-1">
-                        <Label htmlFor={scope.id} className="cursor-pointer font-medium">
-                          {scope.labelEstimate}
-                        </Label>
-                        <div className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                          {scope.responsibilityLevel === "client-led" && "Client-led production"}
-                          {scope.responsibilityLevel === "shared" && "Shared responsibility"}
-                          {scope.responsibilityLevel === "vendor-led" && "Full vendor responsibility"}
-                          {isUnlocked && scope.perDayAdd > 0 && ` • +$${scope.perDayAdd}/day`}
+                  {catalogData.executionScopes.map(scope => {
+                    const isSelected = selections.executionScopeId === scope.id;
+                    const scopeDescriptions = {
+                      "capture_only": "You show up, shoot what the client directs, and deliver raw footage. Client handles all creative decisions, shot lists, and direction on set.",
+                      "directed_production": "You collaborate with the client on creative direction. You help plan shots, provide input on framing/lighting, and guide the production while client maintains final say.",
+                      "full_creative_direction": "You own the entire creative vision. You develop concepts, create shot lists, direct talent, and make all creative decisions. Client approves final deliverables."
+                    };
+                    
+                    return (
+                      <div 
+                        key={scope.id} 
+                        className={`p-4 rounded-lg border-2 transition-all ${isSelected ? 'border-[var(--color-accent-primary)]' : 'border-transparent'}`}
+                        style={{ 
+                          background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
+                          border: isSelected ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
+                        }}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <RadioGroupItem value={scope.id} id={scope.id} className="mt-1" />
+                          <div className="flex-1">
+                            <Label htmlFor={scope.id} className="cursor-pointer font-semibold text-base">
+                              {scope.labelEstimate}
+                            </Label>
+                            <div className="text-xs font-medium mt-1 mb-2" style={{ color: 'var(--color-accent-primary)' }}>
+                              {scope.responsibilityLevel === "client-led" && "🎯 Client-Led"}
+                              {scope.responsibilityLevel === "shared" && "🤝 Shared Responsibility"}
+                              {scope.responsibilityLevel === "vendor-led" && "🎬 You Lead Everything"}
+                            </div>
+                            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                              {scopeDescriptions[scope.id] || ""}
+                            </p>
+                            {isUnlocked && scope.perDayAdd > 0 && (
+                              <div className="mt-3 flex items-center gap-2">
+                                <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                                  Rate: 
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="50"
+                                    value={selections.customScopeRates?.[scope.id] ?? scope.perDayAdd}
+                                    onChange={(e) => {
+                                      const val = parseFloat(e.target.value) || 0;
+                                      setSelections(prev => ({
+                                        ...prev,
+                                        customScopeRates: {
+                                          ...prev.customScopeRates,
+                                          [scope.id]: val
+                                        }
+                                      }));
+                                    }}
+                                    className="w-24 h-8 text-sm text-center"
+                                    style={{ padding: '4px 8px' }}
+                                  />
+                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>/day</span>
+                                </div>
+                              </div>
+                            )}
+                            {scope.perDayAdd === 0 && (
+                              <div className="mt-2 text-sm font-medium" style={{ color: 'var(--color-success)' }}>
+                                No additional fee
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </RadioGroup>
               </CardContent>
             </Card>
