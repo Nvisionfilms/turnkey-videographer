@@ -149,8 +149,11 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
     });
   });
   
-  // 4. Post Minimums (only if postRequested == true)
-  if (selections.postRequested) {
+  // 4. Post Minimums (only if postRequested == true AND production days are included)
+  // In post-only mode, the deliverable price already includes editing - no separate post minimum
+  const isPostOnlyMode = selections.includeProductionDays === false || selections.workType === 'post_only';
+  
+  if (selections.postRequested && !isPostOnlyMode) {
     pushSection("Post-Production");
 
     let postMinimumTotal = 0;
