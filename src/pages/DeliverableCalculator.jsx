@@ -37,13 +37,18 @@ export default function DeliverableCalculator() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   
   // Form state matching the schema
+  // Nothing is pre-activated - user must select a work type first
   const [selections, setSelections] = useState({
+    workType: null, // null = nothing selected yet
     productionCategoryId: "content_creation",
     executionScopeId: "capture_only",
-    productionDays: 1,
+    productionDays: 0,
+    includeProductionDays: false,
     postRequested: false,
     deliverables: [],
     modifiers: [],
+    customBaseDayRate: null,
+    customScopeRates: {},
     context: {
       mode: "public"
     }
@@ -637,80 +642,79 @@ export default function DeliverableCalculator() {
               </CardContent>
             </Card>
             
-            {/* Layer 1: Production Category */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="w-5 h-5" />
-                  Production Category
-                </CardTitle>
-                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                  Select the type of production — each has industry-standard base rates
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <RadioGroup value={selections.productionCategoryId} onValueChange={handleCategoryChange}>
-                  {catalogData.productionCategories.map(cat => {
-                    const isSelected = selections.productionCategoryId === cat.id;
-                    return (
-                      <div 
-                        key={cat.id} 
-                        className={`p-4 rounded-lg border-2 transition-all cursor-pointer`}
-                        style={{ 
-                          background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
-                          border: isSelected ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
-                        }}
-                        onClick={() => handleCategoryChange(cat.id)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <RadioGroupItem value={cat.id} id={cat.id} className="mt-1" />
-                          <div className="flex-1">
-                            <Label htmlFor={cat.id} className="cursor-pointer font-semibold text-base">
-                              {cat.label}
-                            </Label>
-                            {cat.description && (
-                              <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                                {cat.description}
-                              </p>
-                            )}
-                            {isUnlocked && cat.baseDayRate && (
-                              <div className="mt-2 flex items-center gap-2">
-                                <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                                  Base Day Rate:
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>$</span>
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    step="100"
-                                    value={isSelected ? (selections.customBaseDayRate ?? cat.baseDayRate) : cat.baseDayRate}
-                                    onChange={(e) => {
-                                      if (isSelected) {
+            {/* Layer 1: Production Category - Only show when production days are enabled */}
+            {selections.includeProductionDays && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Production Category
+                  </CardTitle>
+                  <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                    Select the type of production — each has industry-standard base rates
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <RadioGroup value={selections.productionCategoryId} onValueChange={handleCategoryChange}>
+                    {catalogData.productionCategories.map(cat => {
+                      const isSelected = selections.productionCategoryId === cat.id;
+                      return (
+                        <div 
+                          key={cat.id} 
+                          className={`p-4 rounded-lg border-2 transition-all cursor-pointer`}
+                          style={{ 
+                            background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
+                            border: isSelected ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
+                          }}
+                          onClick={() => handleCategoryChange(cat.id)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <RadioGroupItem value={cat.id} id={cat.id} className="mt-1" />
+                            <div className="flex-1">
+                              <Label htmlFor={cat.id} className="cursor-pointer font-semibold text-base">
+                                {cat.label}
+                              </Label>
+                              {cat.description && (
+                                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                                  {cat.description}
+                                </p>
+                              )}
+                              {isUnlocked && isSelected && cat.baseDayRate && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                                    Base Day Rate:
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>$</span>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="100"
+                                      value={selections.customBaseDayRate ?? cat.baseDayRate}
+                                      onChange={(e) => {
                                         const val = parseFloat(e.target.value) || 0;
                                         setSelections(prev => ({
                                           ...prev,
                                           customBaseDayRate: val
                                         }));
-                                      }
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="w-24 h-8 text-sm text-center"
-                                    style={{ padding: '4px 8px' }}
-                                    disabled={!isSelected}
-                                  />
-                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>/day</span>
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="w-24 h-8 text-sm text-center"
+                                      style={{ padding: '4px 8px' }}
+                                    />
+                                    <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>/day</span>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </RadioGroup>
-              </CardContent>
-            </Card>
+                      );
+                    })}
+                  </RadioGroup>
+                </CardContent>
+              </Card>
+            )}
             
             {/* Layer 2: Deliverables */}
             <Card>
