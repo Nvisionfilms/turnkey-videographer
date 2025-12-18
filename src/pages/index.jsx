@@ -26,6 +26,8 @@ import AdminLoginDirect from "./AdminLoginDirect";
 
 import DeliverableCalculator from "./DeliverableCalculator";
 
+import ContentPlaybook from "./ContentPlaybook";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -41,6 +43,8 @@ const PAGES = {
     Welcome: Welcome,
     
     Unlock: Unlock,
+    
+    ContentPlaybook: ContentPlaybook,
     
 }
 
@@ -98,6 +102,8 @@ function PagesContent() {
                 <Route path="/admin/test-login" element={<AdminLoginDirect />} />
                 
                 <Route path="/DeliverableCalculator" element={<DeliverableCalculator />} />
+                
+                <Route path="/ContentPlaybook" element={<ContentPlaybook />} />
                 
             </Routes>
         </Layout>
