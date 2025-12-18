@@ -218,13 +218,15 @@ function buildLineItems(selections, catalog, effectiveProductionDays) {
 
 /**
  * Apply minimum project engagement (visible line item)
+ * Only applies when production days are included
  */
-function applyMinimumEngagement(lineItems, catalog) {
+function applyMinimumEngagement(lineItems, catalog, hasProductionDays = true) {
   const subtotalBeforeFloor = lineItems.reduce((sum, item) => sum + item.amount, 0);
   const minimumProjectSubtotal = catalog.rules.minimumProjectSubtotal || 0;
   let priceFloorAdded = 0;
   
-  if (subtotalBeforeFloor < minimumProjectSubtotal) {
+  // Only apply minimum if production days are included
+  if (hasProductionDays && subtotalBeforeFloor < minimumProjectSubtotal) {
     priceFloorAdded = minimumProjectSubtotal - subtotalBeforeFloor;
     
     lineItems.push({
@@ -367,12 +369,15 @@ export function calculateDeliverableQuote(selections, catalog) {
     // Step 1: Compute effective production days
     const effectiveProductionDays = computeEffectiveProductionDays(selections, catalog);
     
+    // Check if production days are included (for price floor logic)
+    const hasProductionDays = selections.includeProductionDays !== false && effectiveProductionDays > 0;
+    
     // Step 2: Build line items
     const lineItems = buildLineItems(selections, catalog, effectiveProductionDays);
     
-    // Step 3: Apply minimum project engagement
+    // Step 3: Apply minimum project engagement (only if production days included)
     const { subtotalBeforeFloor, priceFloorAdded, subtotalAfterFloor } = 
-      applyMinimumEngagement(lineItems, catalog);
+      applyMinimumEngagement(lineItems, catalog, hasProductionDays);
     
     // Step 4: Apply scoped multipliers
     const scopedMultiplier = applyScopedMultipliers(selections, catalog, lineItems);

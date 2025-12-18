@@ -478,6 +478,165 @@ export default function DeliverableCalculator() {
               </CardContent>
             </Card>
             
+            {/* Work Type - Primary Mode Selector */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  What type of work is this?
+                </CardTitle>
+                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  This determines your pricing structure and available options
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Work Type Options */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Post-Production Only */}
+                  <div 
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all`}
+                    style={{ 
+                      background: selections.workType === 'post_only' ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
+                      border: selections.workType === 'post_only' ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
+                    }}
+                    onClick={() => setSelections(prev => ({
+                      ...prev,
+                      workType: 'post_only',
+                      includeProductionDays: false,
+                      productionDays: 0,
+                      postRequested: true,
+                      executionScopeId: 'capture_only'
+                    }))}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">✂️</div>
+                      <div className="font-semibold">Post-Production Only</div>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                        Editing, color, sound — no shooting
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Capture Only */}
+                  <div 
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all`}
+                    style={{ 
+                      background: selections.workType === 'capture_only' ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
+                      border: selections.workType === 'capture_only' ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
+                    }}
+                    onClick={() => setSelections(prev => ({
+                      ...prev,
+                      workType: 'capture_only',
+                      includeProductionDays: true,
+                      productionDays: prev.productionDays || 1,
+                      postRequested: false,
+                      executionScopeId: 'capture_only'
+                    }))}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">🎥</div>
+                      <div className="font-semibold">Capture Only</div>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                        Shoot and deliver footage — client edits
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Full Production */}
+                  <div 
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all`}
+                    style={{ 
+                      background: selections.workType === 'full_production' ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
+                      border: selections.workType === 'full_production' ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
+                    }}
+                    onClick={() => setSelections(prev => ({
+                      ...prev,
+                      workType: 'full_production',
+                      includeProductionDays: true,
+                      productionDays: prev.productionDays || 1,
+                      postRequested: true,
+                      executionScopeId: 'directed_production'
+                    }))}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">🎬</div>
+                      <div className="font-semibold">Full Production</div>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                        Shoot + edit — turnkey delivery
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
+                {/* Production Days - only show if shooting */}
+                {selections.includeProductionDays && (
+                  <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)' }}>
+                    <div>
+                      <Label>Production Days</Label>
+                      <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                        How many days on set?
+                      </p>
+                    </div>
+                    <Input
+                      type="number"
+                      min="0.5"
+                      step="0.5"
+                      value={selections.productionDays}
+                      onChange={(e) => setSelections(prev => ({
+                        ...prev,
+                        productionDays: parseFloat(e.target.value) || 0
+                      }))}
+                      className="w-24 text-center"
+                    />
+                  </div>
+                )}
+
+                {/* Creative Direction Level - only show if shooting */}
+                {selections.includeProductionDays && (
+                  <div className="space-y-2">
+                    <Label>Creative Direction Level</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {catalogData.executionScopes.map(scope => {
+                        const isSelected = selections.executionScopeId === scope.id;
+                        return (
+                          <div 
+                            key={scope.id}
+                            className={`p-3 rounded-lg border cursor-pointer transition-all`}
+                            style={{ 
+                              background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'transparent',
+                              border: isSelected ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
+                            }}
+                            onClick={() => handleExecutionScopeChange(scope.id)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="font-medium">{scope.labelEstimate}</span>
+                                <span className="text-xs ml-2" style={{ color: 'var(--color-text-muted)' }}>
+                                  {scope.responsibilityLevel === "client-led" && "— Client directs"}
+                                  {scope.responsibilityLevel === "shared" && "— Collaborative"}
+                                  {scope.responsibilityLevel === "vendor-led" && "— You lead"}
+                                </span>
+                              </div>
+                              {isUnlocked && scope.perDayAdd > 0 && (
+                                <span className="text-sm font-medium" style={{ color: 'var(--color-accent-primary)' }}>
+                                  +${selections.customScopeRates?.[scope.id] ?? scope.perDayAdd}/day
+                                </span>
+                              )}
+                              {scope.perDayAdd === 0 && (
+                                <span className="text-xs" style={{ color: 'var(--color-success)' }}>Included</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
             {/* Layer 1: Production Category */}
             <Card>
               <CardHeader>
@@ -632,130 +791,6 @@ export default function DeliverableCalculator() {
               </CardContent>
             </Card>
             
-            {/* Layer 3: Execution Scope */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  Execution Scope (Required)
-                </CardTitle>
-                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                  How much creative direction and oversight are you providing?
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <RadioGroup value={selections.executionScopeId} onValueChange={handleExecutionScopeChange}>
-                  {catalogData.executionScopes.map(scope => {
-                    const isSelected = selections.executionScopeId === scope.id;
-                    const scopeDescriptions = {
-                      "capture_only": "You show up, shoot what the client directs, and deliver raw footage. Client handles all creative decisions, shot lists, and direction on set.",
-                      "directed_production": "You collaborate with the client on creative direction. You help plan shots, provide input on framing/lighting, and guide the production while client maintains final say.",
-                      "full_creative_direction": "You own the entire creative vision. You develop concepts, create shot lists, direct talent, and make all creative decisions. Client approves final deliverables."
-                    };
-                    
-                    return (
-                      <div 
-                        key={scope.id} 
-                        className={`p-4 rounded-lg border-2 transition-all ${isSelected ? 'border-[var(--color-accent-primary)]' : 'border-transparent'}`}
-                        style={{ 
-                          background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--color-bg-secondary)',
-                          border: isSelected ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)'
-                        }}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <RadioGroupItem value={scope.id} id={scope.id} className="mt-1" />
-                          <div className="flex-1">
-                            <Label htmlFor={scope.id} className="cursor-pointer font-semibold text-base">
-                              {scope.labelEstimate}
-                            </Label>
-                            <div className="text-xs font-medium mt-1 mb-2" style={{ color: 'var(--color-accent-primary)' }}>
-                              {scope.responsibilityLevel === "client-led" && "🎯 Client-Led"}
-                              {scope.responsibilityLevel === "shared" && "🤝 Shared Responsibility"}
-                              {scope.responsibilityLevel === "vendor-led" && "🎬 You Lead Everything"}
-                            </div>
-                            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                              {scopeDescriptions[scope.id] || ""}
-                            </p>
-                            {isUnlocked && scope.perDayAdd > 0 && (
-                              <div className="mt-3 flex items-center gap-2">
-                                <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                                  Rate: 
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>$</span>
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    step="50"
-                                    value={selections.customScopeRates?.[scope.id] ?? scope.perDayAdd}
-                                    onChange={(e) => {
-                                      const val = parseFloat(e.target.value) || 0;
-                                      setSelections(prev => ({
-                                        ...prev,
-                                        customScopeRates: {
-                                          ...prev.customScopeRates,
-                                          [scope.id]: val
-                                        }
-                                      }));
-                                    }}
-                                    className="w-24 h-8 text-sm text-center"
-                                    style={{ padding: '4px 8px' }}
-                                  />
-                                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>/day</span>
-                                </div>
-                              </div>
-                            )}
-                            {scope.perDayAdd === 0 && (
-                              <div className="mt-2 text-sm font-medium" style={{ color: 'var(--color-success)' }}>
-                                No additional fee
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </RadioGroup>
-              </CardContent>
-            </Card>
-            
-            {/* Production Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Production Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>Production Days</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={selections.productionDays}
-                    onChange={(e) => setSelections(prev => ({
-                      ...prev,
-                      productionDays: parseFloat(e.target.value) || 0
-                    }))}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Post-Production Required</Label>
-                    <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                      Enable editing and post-production services
-                    </p>
-                  </div>
-                  <Switch
-                    checked={selections.postRequested}
-                    onCheckedChange={(checked) => setSelections(prev => ({
-                      ...prev,
-                      postRequested: checked
-                    }))}
-                  />
-                </div>
-              </CardContent>
-            </Card>
             
             {/* Layer 4: Modifiers */}
             <Card>
