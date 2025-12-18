@@ -5,7 +5,7 @@
 
   "rules": {
     "baseDayRate": 1200,
-    "minimumProjectSubtotal": 2500,
+    "minimumProjectSubtotal": 1500,
     "minimumPostPerDeliverable": 350,
     "minimumEngagement": {
       "enabled": true,
