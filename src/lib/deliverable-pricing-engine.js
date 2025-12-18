@@ -8,6 +8,11 @@
  * Compute effective production days based on deliverable policies
  */
 function computeEffectiveProductionDays(selections, catalog) {
+  // If production days are not included (post-only mode), skip all production day logic
+  if (selections.includeProductionDays === false) {
+    return 0;
+  }
+  
   let effectiveProductionDays = selections.productionDays || 0;
   
   // Check for locked production days from deliverables
@@ -21,7 +26,7 @@ function computeEffectiveProductionDays(selections, catalog) {
     }
   });
   
-  // Enforce minimum from deliverable constraints
+  // Enforce minimum from deliverable constraints (only when production is included)
   const maxMinDays = Math.max(
     0,
     ...selections.deliverables.map(d => {
