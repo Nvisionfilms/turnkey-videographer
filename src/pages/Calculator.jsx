@@ -2036,19 +2036,17 @@ export default function Calculator() {
           </div>
 
           {!isUnlocked && (
-            <Alert className="mb-4 border" style={{
-              background: hasUsedFreeQuote ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-              borderColor: hasUsedFreeQuote ? 'var(--color-warning)' : 'var(--color-success)'
+            <div className="mb-4 px-3 py-2 rounded text-xs" style={{
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)'
             }}>
-              <Shield className="h-4 w-4" style={{ color: hasUsedFreeQuote ? 'var(--color-warning)' : 'var(--color-success)' }} />
-              <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
-                {hasUsedFreeQuote ? (
-                  <strong>Export limit reached. Enable recording to store exports and view history.</strong>
-                ) : (
-                  <><strong>Limited recording:</strong> 1 export available. Exports are not stored without full access.</>
-                )}
-              </AlertDescription>
-            </Alert>
+              {hasUsedFreeQuote ? (
+                <>Export limit reached. <a href={createPageUrl("Unlock")} className="underline" style={{ color: 'var(--color-text-secondary)' }}>Enable recording</a> to continue.</>
+              ) : (
+                <>Limited mode: 1 export available. Exports not stored.</>
+              )}
+            </div>
           )}
 
           {/* Negotiation Ticker - Only show when calculations exist */}
@@ -2068,23 +2066,14 @@ export default function Calculator() {
           )}
 
           {trialDaysLeft !== null && isTrialActive && (
-            <Alert className="mb-4 border" style={{
-              background: 'rgba(139, 92, 246, 0.1)',
-              borderColor: 'var(--color-accent-primary)'
+            <div className="mb-4 px-3 py-2 rounded text-xs" style={{
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)'
             }}>
-              <Clock className="h-4 w-4" style={{ color: 'var(--color-accent-primary)' }} />
-              <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
-                <strong>Temporary access active:</strong> {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
-              </AlertDescription>
-            </Alert>
+              Temporary access: {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
+            </div>
           )}
-
-          <Alert className="border" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
-            <Shield className="h-4 w-4" style={{ color: 'var(--color-accent-primary)' }} />
-            <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
-              <strong>Data storage:</strong> All data is stored locally in your browser. Clearing browser data removes history.
-            </AlertDescription>
-          </Alert>
 
           {/* Preset Templates */}
           <PresetTemplates 

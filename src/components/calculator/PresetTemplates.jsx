@@ -135,40 +135,34 @@ const PRESETS = {
 
 export default function PresetTemplates({ onApplyPreset }) {
   return (
-    <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)' }}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            Presets
-          </span>
-        </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {Object.entries(PRESETS).map(([key, preset]) => {
-            const Icon = preset.icon;
-            return (
-              <Button
-                key={key}
-                variant="outline"
-                className="h-auto flex-col gap-1 p-2 md:p-3 w-full"
-                style={{
-                  background: 'var(--color-bg-primary)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text-primary)'
-                }}
-                onClick={() => onApplyPreset(preset.config)}
-              >
-                <Icon className="w-4 h-4 md:w-5 md:h-5" style={{ color: preset.color }} />
-                <div className="text-center">
-                  <div className="text-[10px] md:text-xs font-semibold truncate">{preset.name}</div>
-                  <div className="text-[9px] md:text-[10px] mt-0.5 hidden md:block" style={{ color: 'var(--color-text-muted)' }}>
-                    {preset.description}
-                  </div>
-                </div>
-              </Button>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="mb-4">
+      <div className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>
+        Presets
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(PRESETS).map(([key, preset]) => (
+          <button
+            key={key}
+            className="px-3 py-1.5 rounded text-xs transition-colors"
+            style={{
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-secondary)'
+            }}
+            onClick={() => onApplyPreset(preset.config)}
+            onMouseEnter={(e) => {
+              e.target.style.borderColor = 'var(--color-border-dark)';
+              e.target.style.color = 'var(--color-text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.borderColor = 'var(--color-border)';
+              e.target.style.color = 'var(--color-text-secondary)';
+            }}
+          >
+            {preset.name}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

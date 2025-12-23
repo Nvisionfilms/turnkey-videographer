@@ -55,26 +55,27 @@ export default function Layout({ children }) {
     <SidebarProvider>
       <style>{`
         :root {
-          /* StudioBinder-inspired Light Theme */
-          --color-bg-primary: #ffffff;
-          --color-bg-secondary: #f9fafb;
-          --color-bg-tertiary: #f3f4f6;
-          --color-bg-card: #ffffff;
-          --color-accent-primary: #2563eb;
-          --color-accent-secondary: #3b82f6;
-          --color-accent-hover: #1d4ed8;
-          --color-text-primary: #111827;
-          --color-text-secondary: #6b7280;
-          --color-text-muted: #9ca3af;
-          --color-border: #e5e7eb;
-          --color-border-light: #f3f4f6;
-          --color-border-dark: #d1d5db;
-          --color-success: #10b981;
-          --color-warning: #f59e0b;
+          /* Dark Tool Theme - Minimal, Professional */
+          --color-bg-primary: #0a0a0b;
+          --color-bg-secondary: #111113;
+          --color-bg-tertiary: #18181b;
+          --color-bg-card: #111113;
+          --color-accent-primary: #3b82f6;
+          --color-accent-secondary: #60a5fa;
+          --color-accent-hover: #2563eb;
+          --color-text-primary: #fafafa;
+          --color-text-secondary: #a1a1aa;
+          --color-text-muted: #71717a;
+          --color-border: #27272a;
+          --color-border-light: #1f1f23;
+          --color-border-dark: #3f3f46;
+          --color-success: #22c55e;
+          --color-warning: #eab308;
+          --color-danger: #ef4444;
           --color-error: #ef4444;
-          --color-input-bg: #ffffff;
-          --color-input-border: #d1d5db;
-          --color-button-text: #ffffff;
+          --color-input-bg: #18181b;
+          --color-input-border: #27272a;
+          --color-button-text: #fafafa;
         }
 
         body {
@@ -83,39 +84,41 @@ export default function Layout({ children }) {
         }
         
         .nav-item-inactive {
-          color: #6b7280 !important;
+          color: var(--color-text-muted) !important;
         }
         
         .nav-item-inactive:hover {
-          color: #111827 !important;
-          background: rgba(37, 99, 235, 0.08) !important;
+          color: var(--color-text-primary) !important;
+          background: rgba(59, 130, 246, 0.1) !important;
         }
 
         [data-radix-popper-content-wrapper] {
           background: var(--color-bg-secondary) !important;
         }
 
-        /* Modern card styling - StudioBinder spacing */
+        /* Minimal card styling */
         [class*="Card"] {
-          border-radius: 12px !important;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+          border-radius: 8px !important;
+          box-shadow: none !important;
           border: 1px solid var(--color-border) !important;
-          padding: 24px !important;
-          margin-bottom: 24px !important;
+          padding: 16px !important;
+          margin-bottom: 16px !important;
+          background: var(--color-bg-card) !important;
         }
 
-        /* Card headers */
+        /* Card headers - minimal */
         [class*="CardHeader"] {
-          padding-bottom: 16px !important;
-          margin-bottom: 20px !important;
-          border-bottom: 2px solid var(--color-border-light) !important;
+          padding-bottom: 12px !important;
+          margin-bottom: 12px !important;
+          border-bottom: 1px solid var(--color-border) !important;
         }
 
         [class*="CardTitle"] {
-          font-size: 18px !important;
-          font-weight: 600 !important;
-          color: var(--color-text-primary) !important;
-          letter-spacing: -0.01em !important;
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          color: var(--color-text-secondary) !important;
+          letter-spacing: 0.02em !important;
+          text-transform: uppercase !important;
         }
 
         /* Card content spacing */
@@ -123,49 +126,50 @@ export default function Layout({ children }) {
           padding: 0 !important;
         }
 
-        /* Input styling */
+        /* Input styling - dark */
         input, select, textarea {
-          border-radius: 8px !important;
-          transition: all 0.2s ease !important;
+          border-radius: 6px !important;
+          transition: all 0.15s ease !important;
           color: var(--color-text-primary) !important;
-          padding: 10px 14px !important;
+          background: var(--color-input-bg) !important;
+          border: 1px solid var(--color-input-border) !important;
+          padding: 8px 12px !important;
           font-size: 14px !important;
         }
 
         input::placeholder, textarea::placeholder {
           color: var(--color-text-muted) !important;
-          opacity: 0.6;
         }
 
         input:focus, select:focus, textarea:focus {
           border-color: var(--color-accent-primary) !important;
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
           outline: none !important;
         }
 
         /* Dropdown/Select styling */
         [role="option"]:hover,
         [data-state="checked"] {
-          background: rgba(37, 99, 235, 0.1) !important;
+          background: rgba(59, 130, 246, 0.15) !important;
         }
 
         [role="option"][data-highlighted] {
-          background: rgba(37, 99, 235, 0.1) !important;
+          background: rgba(59, 130, 246, 0.15) !important;
         }
 
-        /* Button styling */
+        /* Button styling - minimal */
         button {
-          border-radius: 8px !important;
+          border-radius: 6px !important;
           font-weight: 500 !important;
-          transition: all 0.2s ease !important;
+          transition: all 0.15s ease !important;
         }
 
         button:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+          transform: none;
+          box-shadow: none !important;
         }
 
-        /* Primary button (gold) */
+        /* Primary button */
         button[style*="background: var(--color-accent-primary)"],
         button[style*="background-color: var(--color-accent-primary)"] {
           background: var(--color-accent-primary) !important;

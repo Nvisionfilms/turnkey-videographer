@@ -83,10 +83,10 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
   };
 
   return (
-    <div className="rounded-lg p-4" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-      {/* Consequence line - appears once, neutral */}
-      <div className="text-xs mb-4 text-center" style={{ color: 'var(--color-text-muted)' }}>
-        These boundaries were set before this quote existed.
+    <div className="rounded-lg p-4" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
+      {/* Minimal header */}
+      <div className="text-xs uppercase tracking-wide mb-3" style={{ color: 'var(--color-text-muted)' }}>
+        Price Range
       </div>
       
       {/* Three cards row - REACTIVE, responsive */}
