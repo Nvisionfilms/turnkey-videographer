@@ -364,7 +364,7 @@ export default function Unlock() {
                 Become a Founder
               </button>
               <p className="text-xs text-center mt-2" style={{ color: 'var(--color-text-muted)' }}>
-                100 spots only
+                98 spots only
               </p>
             </div>
           </div>

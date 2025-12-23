@@ -41,6 +41,6 @@ export const PRICING = {
     period: "one-time",
     tagline: "You believed early.",
     limited: true,
-    spots: 100
+    spots: 98
   }
 };
