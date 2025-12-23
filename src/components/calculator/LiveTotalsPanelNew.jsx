@@ -47,6 +47,10 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
       return 0;
     }
     
+    // Use settings-based hours or defaults
+    const fullDayHours = settings?.full_day_hours || 10;
+    const halfDayHours = settings?.half_day_hours || 6;
+    
     let totalHours = 0;
     
     formData.selected_roles.forEach(role => {
@@ -55,12 +59,11 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
       const halfDays = role.half_days || 0;
       
       if (formData.day_type === 'custom') {
-        const customHours = formData.custom_hours || 8;
+        const customHours = formData.custom_hours || fullDayHours;
         const totalDays = fullDays + halfDays;
         totalHours += crewQty * totalDays * customHours;
       } else {
-        // Full days: 10 hours each, Half days: 6 hours each
-        totalHours += crewQty * (fullDays * 10 + halfDays * 6);
+        totalHours += crewQty * (fullDays * fullDayHours + halfDays * halfDayHours);
       }
     });
     
@@ -154,6 +157,39 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
               </div>
             )}
           </div>
+          
+          {/* Calculation breakdown */}
+          {calc.laborSubtotal > 0 && (
+            <div className="text-[10px] space-y-0.5 mb-2" style={{ color: 'var(--color-text-muted)' }}>
+              <div className="flex justify-between">
+                <span>Crew Cost:</span>
+                <span>${calc.laborSubtotal?.toLocaleString() || '0'}</span>
+              </div>
+              {calc.operationsFee > 0 && (
+                <div className="flex justify-between">
+                  <span>+ Service Fee ({settings?.overhead_percent + settings?.profit_margin_percent || 30}%):</span>
+                  <span>${calc.operationsFee?.toLocaleString() || '0'}</span>
+                </div>
+              )}
+              {calc.gearAmortized > 0 && (
+                <div className="flex justify-between">
+                  <span>+ Gear:</span>
+                  <span>${calc.gearAmortized?.toFixed(2) || '0'}</span>
+                </div>
+              )}
+              {calc.tax > 0 && (
+                <div className="flex justify-between">
+                  <span>+ Tax:</span>
+                  <span>${calc.tax?.toFixed(2) || '0'}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-1 font-medium" style={{ borderTop: '1px dashed var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                <span>Minimum Price:</span>
+                <span>${calc.negotiationLow?.toLocaleString() || '0'}</span>
+              </div>
+            </div>
+          )}
+          
           <div className="text-4xl font-bold mt-2" style={{ color: 'var(--color-accent-primary)' }}>
             ${calc.total?.toLocaleString() || '0'}
           </div>
@@ -196,12 +232,41 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
               fontWeight: '600'
             }}
             onClick={() => {
-              navigator.clipboard.writeText(calc.total?.toFixed(2) || '0');
+              // Build full invoice text for copy/paste
+              const lines = [];
+              lines.push(`Quote Summary`);
+              lines.push(`Project: ${formData?.project_title || 'Untitled'}`);
+              if (formData?.client_name) lines.push(`Client: ${formData.client_name}`);
+              lines.push('');
+              lines.push('LINE ITEMS:');
+              
+              // Add line items
+              if (calc.lineItems && calc.lineItems.length > 0) {
+                calc.lineItems.forEach(item => {
+                  if (item.isSection) {
+                    lines.push(`\n${item.description}`);
+                  } else {
+                    const amount = Number(item.amount || 0);
+                    lines.push(`  ${item.description}: $${amount.toFixed(2)}`);
+                  }
+                });
+              }
+              
+              lines.push('');
+              lines.push(`TOTAL: $${(calc.total || 0).toFixed(2)}`);
+              
+              if (calc.depositDue > 0) {
+                lines.push(`Deposit Due: $${calc.depositDue.toFixed(2)}`);
+                lines.push(`Balance Due: $${calc.balanceDue.toFixed(2)}`);
+              }
+              
+              const fullText = lines.join('\n');
+              navigator.clipboard.writeText(fullText);
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
               toast({
                 title: "Copied!",
-                description: `$${calc.total?.toFixed(2)} copied to clipboard`,
+                description: "Full quote copied to clipboard",
               });
             }}
           >
@@ -297,6 +362,71 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
             </Button>
           ))}
         </div>
+
+        {/* Negotiation Range Buttons */}
+        {calc.negotiationLow && calc.negotiationHigh && (
+          <div className="mt-3 p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
+            <div className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              Negotiation Range
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 h-9"
+                style={{ 
+                  background: 'var(--color-bg-secondary)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text-primary)'
+                }}
+                onClick={() => {
+                  if (onUpdateCustomPrice) {
+                    onUpdateCustomPrice(calc.negotiationLow);
+                  }
+                  if (onUpdateDiscount) {
+                    onUpdateDiscount(0);
+                  }
+                  toast({
+                    title: "Low Price Applied",
+                    description: `Set to $${calc.negotiationLow.toLocaleString()} (Junior rate)`,
+                  });
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Low</div>
+                  <div className="font-semibold">${calc.negotiationLow.toLocaleString()}</div>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 h-9"
+                style={{ 
+                  background: 'var(--color-bg-secondary)',
+                  borderColor: 'var(--color-accent-primary)',
+                  color: 'var(--color-accent-primary)'
+                }}
+                onClick={() => {
+                  if (onUpdateCustomPrice) {
+                    onUpdateCustomPrice(calc.negotiationHigh);
+                  }
+                  if (onUpdateDiscount) {
+                    onUpdateDiscount(0);
+                  }
+                  toast({
+                    title: "High Price Applied",
+                    description: `Set to $${calc.negotiationHigh.toLocaleString()} (Premium rate)`,
+                  });
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>High</div>
+                  <div className="font-semibold">${calc.negotiationHigh.toLocaleString()}</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Deposit Info (if enabled) */}
         {settings?.deposit_enabled !== false && calc.depositDue > 0 && (

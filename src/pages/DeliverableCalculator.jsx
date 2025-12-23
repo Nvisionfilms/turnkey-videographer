@@ -441,15 +441,15 @@ export default function DeliverableCalculator() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            Deliverable-Based Quote Calculator
+            Freelancer Calculator
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            Professional video production pricing based on deliverables, scope, and responsibility
+            Quick pricing for solo videographers and small crews - deliverable-based estimates
           </p>
           <Alert className="mt-4" style={{ background: 'var(--color-bg-tertiary)', borderColor: 'var(--color-border-light)' }}>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
-              <strong>Quick Estimate Tool:</strong> This calculator provides general rate estimates. When you proceed to the Crew Calculator, you'll use your own custom rates and pricing - not the deliverable calculator's estimates.
+              <strong>Quick Estimate Tool:</strong> This calculator provides general rate estimates. When you proceed to the Crew Calculator, you'll use your own custom rates and pricing.
             </AlertDescription>
           </Alert>
         </div>

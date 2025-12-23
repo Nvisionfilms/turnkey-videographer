@@ -26,6 +26,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 1200,
     full_day_rate: 2000,
     active: true,
+    category: "btl", // Below-the-line: technical crew
     notes: ""
   },
   {
@@ -35,6 +36,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 3000,
     full_day_rate: 5000,
     active: true,
+    category: "btl",
     notes: ""
   },
   {
@@ -44,6 +46,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 1200,
     full_day_rate: 2000,
     active: true,
+    category: "atl", // Above-the-line: creative leadership
     notes: ""
   },
   {
@@ -53,6 +56,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 3000,
     full_day_rate: 5000,
     active: true,
+    category: "atl",
     notes: ""
   },
   {
@@ -62,6 +66,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 300,
     full_day_rate: 600,
     active: true,
+    category: "btl",
     notes: "For short-form content (reels, TikToks, social posts)"
   },
   {
@@ -71,6 +76,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 500,
     full_day_rate: 1000,
     active: true,
+    category: "btl",
     notes: "For 2-10 min videos (explainers, promos, etc)"
   },
   {
@@ -80,6 +86,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 50,
     full_day_rate: 100,
     active: true,
+    category: "btl",
     notes: ""
   },
   {
@@ -89,6 +96,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 750,
     full_day_rate: 2200,
     active: true,
+    category: "btl",
     notes: ""
   },
   {
@@ -98,6 +106,7 @@ export const DEFAULT_DAY_RATES = [
     half_day_rate: 800,
     full_day_rate: 1500,
     active: true,
+    category: "btl",
     notes: ""
   }
 ];
@@ -202,9 +211,11 @@ export const DEFAULT_SETTINGS = {
   gear_amortization_days: 180,
   mileage_rate: 0.67,
   tax_travel: false,
-  overhead_percent: 20,
-  profit_margin_percent: 25,
+  overhead_percent: 15,
+  profit_margin_percent: 15,
   desired_profit_margin_percent: 60,
+  full_day_hours: 10,
+  half_day_hours: 6,
   experience_levels: {
     Junior: 0.65,
     Standard: 1.0,
@@ -215,6 +226,8 @@ export const DEFAULT_SETTINGS = {
   pdf_theme: "modern",
   show_signature_field: true,
   show_payment_schedule: true,
+  simplified_invoice: false, // If true, show "Production Cost" instead of detailed line items
+  show_service_fee_on_invoice: true, // If true, show service fee as separate line item; if false, bake into crew rates
   last_updated: new Date().toISOString()
 };
 

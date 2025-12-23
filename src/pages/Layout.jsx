@@ -24,12 +24,12 @@ import { useUnlockStatus } from "@/components/hooks/useUnlockStatus";
 
 const navigationItems = [
   {
-    title: "Calculator",
+    title: "Crew Calculator",
     url: createPageUrl("Calculator"),
     icon: Calculator,
   },
   {
-    title: "Deliverable Calculator",
+    title: "Freelancer Calculator",
     url: createPageUrl("DeliverableCalculator"),
     icon: Video,
   },

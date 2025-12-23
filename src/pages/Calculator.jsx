@@ -841,29 +841,25 @@ export default function Calculator() {
     result.originalTotal = result.total;
     
     // Apply custom price override if set (from round/discount buttons)
+    // Disperse the adjustment proportionally into service line items so rates stay coherent
     if (formData.custom_price_override !== null && formData.custom_price_override > 0) {
       const round2 = (num) => Math.round((Number(num) || 0) * 100) / 100;
 
       const targetTotal = Number(formData.custom_price_override || 0);
       const originalTotal = Number(result.originalTotal || 0);
       const discountPercent = Number(formData.custom_discount_percent || 0);
+      const taxRate = (settings?.tax_rate_percent || 0) / 100;
 
-      // If it's a percent discount, we keep line items intact and let exports render a Discount row.
-      // If it's rounding/manual override (no percent discount), we disperse the delta into service line items
-      // so no extra "Custom Price"/"Service Fee" rows appear in exports.
-      const isPercentDiscount = discountPercent > 0;
+      // Compute required pre-tax delta so that after tax the total hits the target
+      const deltaTotal = targetTotal - originalTotal;
+      const deltaPreTax = taxRate > 0 ? round2(deltaTotal / (1 + taxRate)) : deltaTotal;
 
-      if (!isPercentDiscount && Array.isArray(result?.lineItems)) {
-        const taxRate = (settings?.tax_rate_percent || 0) / 100;
+      if (Math.abs(deltaPreTax) >= 0.01 && Array.isArray(result?.lineItems)) {
         const baseTaxableAmount = Number(result.taxableAmount || 0);
 
-        // Compute required pre-tax delta so that after tax the total hits the target.
-        // Assumes the rounding delta is applied to taxable service work (most common case).
-        const deltaTotal = targetTotal - originalTotal;
-        const deltaPreTax = taxRate > 0 ? (deltaTotal / (1 + taxRate)) : deltaTotal;
-
+        // Identify service line items to adjust (exclude gear, travel, rentals, etc.)
         const isNonSection = (li) => li && !li.isSection;
-        const isExcludedForRounding = (li) => {
+        const isExcludedForAdjustment = (li) => {
           const desc = String(li?.description || '');
           if (!desc) return true;
           if (desc === 'Equipment & Gear') return true;
@@ -874,12 +870,13 @@ export default function Calculator() {
           if (desc.startsWith('Rush Fee')) return true;
           if (desc.startsWith('Nonprofit Discount')) return true;
           if (desc.startsWith('Tax (')) return true;
+          if (desc.startsWith('Discount')) return true;
           return false;
         };
 
         const candidateIndexes = result.lineItems
           .map((li, idx) => ({ li, idx }))
-          .filter(({ li }) => isNonSection(li) && !isExcludedForRounding(li) && Number(li?.amount || 0) > 0)
+          .filter(({ li }) => isNonSection(li) && !isExcludedForAdjustment(li) && Number(li?.amount || 0) > 0)
           .map(({ idx }) => idx);
 
         const indexesToAdjust = candidateIndexes.length > 0
@@ -890,25 +887,27 @@ export default function Calculator() {
               .map(({ idx }) => idx)
               .slice(0, 1);
 
-        if (indexesToAdjust.length > 0 && Math.abs(deltaPreTax) >= 0.01) {
+        if (indexesToAdjust.length > 0) {
+          // Calculate total of service items to distribute adjustment proportionally
           const serviceTotal = indexesToAdjust
             .reduce((sum, idx) => sum + Number(result.lineItems[idx]?.amount || 0), 0);
 
           let remaining = deltaPreTax;
           let lastAdjustedIdx = indexesToAdjust[indexesToAdjust.length - 1];
+          
           indexesToAdjust.forEach((idx, i) => {
             const li = result.lineItems[idx];
             const base = Number(li?.amount || 0);
             const qty = typeof li?.quantity === 'number' ? li.quantity : null;
 
+            // Last item gets remaining to avoid rounding drift
             const add = (i === indexesToAdjust.length - 1)
               ? remaining
-              : (serviceTotal > 0 ? (deltaPreTax * (base / serviceTotal)) : 0);
+              : (serviceTotal > 0 ? round2(deltaPreTax * (base / serviceTotal)) : 0);
 
-            const roundedAdd = (i === indexesToAdjust.length - 1) ? add : round2(add);
-            remaining = round2(remaining - roundedAdd);
+            remaining = round2(remaining - add);
 
-            const nextAmount = round2(base + roundedAdd);
+            const nextAmount = round2(base + add);
             li.amount = nextAmount;
             if (qty && qty > 0) {
               li.unitPrice = round2(nextAmount / qty);
@@ -917,7 +916,7 @@ export default function Calculator() {
             lastAdjustedIdx = idx;
           });
 
-          // Keep the derived totals internally consistent for display (subtotal/tax/total).
+          // Update derived totals
           result.subtotal = round2(Number(result.subtotal || 0) + deltaPreTax);
           result.laborWithOverheadProfit = round2(Number(result.laborWithOverheadProfit || 0) + deltaPreTax);
 
@@ -926,7 +925,7 @@ export default function Calculator() {
           let tax = round2(taxableAmount * taxRate);
           let total = round2(subtotal2 + tax);
 
-          // Fix rounding drift so we hit the exact target total.
+          // Fix rounding drift to hit exact target
           const drift = round2(targetTotal - total);
           if (Math.abs(drift) >= 0.01) {
             if (taxRate > 0) {
@@ -947,7 +946,7 @@ export default function Calculator() {
           result.tax = tax;
           result.total = total;
 
-          // Update the Tax line item amount to match.
+          // Update the Tax line item amount
           const taxIdx = result.lineItems.findIndex(li => !li?.isSection && String(li?.description || '').startsWith('Tax ('));
           if (taxIdx !== -1) {
             result.lineItems[taxIdx].amount = round2(tax);
@@ -955,13 +954,10 @@ export default function Calculator() {
         }
       }
 
-      // Always force total to the target for percent discount, and for any remaining cases.
-      if (isPercentDiscount) {
-        result.total = targetTotal;
-      }
-
-      result.depositDue = result.total * ((settings?.deposit_percent || 50) / 100);
-      result.balanceDue = result.total - result.depositDue;
+      // Ensure total matches target
+      result.total = targetTotal;
+      result.depositDue = round2(result.total * ((settings?.deposit_percent || 50) / 100));
+      result.balanceDue = round2(result.total - result.depositDue);
     }
     
     console.log('Calculation result:', result);
@@ -2001,7 +1997,7 @@ export default function Calculator() {
                 Export Invoice
               </Button>
               <Button
-                onClick={handlePrintReceipt}
+                onClick={handlePrint}
                 variant="outline"
                 size="sm"
                 disabled={!calculations}
@@ -2349,7 +2345,15 @@ export default function Calculator() {
                         ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
                         : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
-                    onClick={() => setFormData({...formData, day_type: "half", single_price_enabled: false})}
+                    onClick={() => {
+                      // Update all selected roles to use half day
+                      const updatedRoles = (formData.selected_roles || []).map(role => ({
+                        ...role,
+                        half_days: role.half_days || role.full_days || 1,
+                        full_days: 0
+                      }));
+                      setFormData({...formData, day_type: "half", single_price_enabled: false, selected_roles: updatedRoles});
+                    }}
                   >
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       formData.day_type === "half" && !formData.single_price_enabled
@@ -2362,7 +2366,7 @@ export default function Calculator() {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                        Half Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to 6 hours)</span>
+                        Half Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to {settings?.half_day_hours || 6} hours)</span>
                       </div>
                     </div>
                   </button>
@@ -2375,7 +2379,15 @@ export default function Calculator() {
                         ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
                         : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
-                    onClick={() => setFormData({...formData, day_type: "full", single_price_enabled: false})}
+                    onClick={() => {
+                      // Update all selected roles to use full day
+                      const updatedRoles = (formData.selected_roles || []).map(role => ({
+                        ...role,
+                        full_days: role.full_days || role.half_days || 1,
+                        half_days: 0
+                      }));
+                      setFormData({...formData, day_type: "full", single_price_enabled: false, selected_roles: updatedRoles});
+                    }}
                   >
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       formData.day_type === "full" && !formData.single_price_enabled
@@ -2388,7 +2400,7 @@ export default function Calculator() {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                        Full Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to 10 hours)</span>
+                        Full Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to {settings?.full_day_hours || 10} hours)</span>
                       </div>
                     </div>
                   </button>

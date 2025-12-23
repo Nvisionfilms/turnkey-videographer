@@ -14,7 +14,10 @@ const STORAGE_KEYS = {
 };
 
 export function useUnlockStatus() {
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  // TEMPORARY: Force unlocked for development testing
+  const DEV_FORCE_UNLOCKED = true;
+  
+  const [isUnlocked, setIsUnlocked] = useState(DEV_FORCE_UNLOCKED);
   const [hasUsedFreeQuote, setHasUsedFreeQuote] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(null);
   const [isTrialActive, setIsTrialActive] = useState(false);
@@ -64,7 +67,7 @@ export function useUnlockStatus() {
       }
     }
     
-    setIsUnlocked(legacyUnlocked || directUnlock || hasActiveSubscription || trialActive);
+    setIsUnlocked(DEV_FORCE_UNLOCKED || legacyUnlocked || directUnlock || hasActiveSubscription || trialActive);
     setIsTrialActive(trialActive);
     setTrialDaysLeft(daysLeft);
     setHasUsedFreeQuote(usedFree);

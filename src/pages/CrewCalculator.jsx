@@ -126,28 +126,66 @@ export default function CrewCalculator() {
           selected_roles: prev.selected_roles.filter(r => r.role_id !== roleId)
         };
       } else {
-        // Add role with default values
+        // Add role with default values based on day_type
+        const role = dayRates.find(r => r.id === roleId);
+        const isFullDay = prev.day_type === 'full';
+        const isHalfDay = prev.day_type === 'half';
+        
         return {
           ...prev,
           selected_roles: [...prev.selected_roles, { 
-            role_id: roleId, 
+            role_id: roleId,
+            role_name: role?.role || '',
+            unit_type: role?.unit_type || 'day',
             quantity: 1,
+            crew_qty: 1,
+            full_days: isFullDay ? 1 : 0,
+            half_days: isHalfDay ? 1 : 0,
             minutes_output: 0,
-            requests: 0
+            requests: 0,
+            deliverable_count: 1
           }]
         };
       }
     });
   };
 
-  // Handle role quantity change
+  // Handle role crew quantity change
   const handleRoleQuantityChange = (roleId, delta) => {
     setFormData(prev => ({
       ...prev,
       selected_roles: prev.selected_roles.map(r => {
         if (r.role_id === roleId) {
-          const newQty = Math.max(1, r.quantity + delta);
-          return { ...r, quantity: newQty };
+          const newQty = Math.max(1, (r.crew_qty || r.quantity || 1) + delta);
+          return { ...r, quantity: newQty, crew_qty: newQty };
+        }
+        return r;
+      })
+    }));
+  };
+
+  // Handle role days change
+  const handleRoleDaysChange = (roleId, field, delta) => {
+    setFormData(prev => ({
+      ...prev,
+      selected_roles: prev.selected_roles.map(r => {
+        if (r.role_id === roleId) {
+          const currentValue = r[field] || 0;
+          const newValue = Math.max(0, currentValue + delta);
+          return { ...r, [field]: newValue };
+        }
+        return r;
+      })
+    }));
+  };
+
+  // Handle role field change (for minutes_output, requests, deliverable_count)
+  const handleRoleFieldChange = (roleId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      selected_roles: prev.selected_roles.map(r => {
+        if (r.role_id === roleId) {
+          return { ...r, [field]: value };
         }
         return r;
       })
@@ -337,11 +375,11 @@ export default function CrewCalculator() {
                   <RadioGroup value={formData.day_type} onValueChange={(value) => setFormData(prev => ({ ...prev, day_type: value }))}>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="half" id="half" />
-                      <Label htmlFor="half">Half Day (6 hours)</Label>
+                      <Label htmlFor="half">Half Day ({settings?.half_day_hours || 6} hours)</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="full" id="full" />
-                      <Label htmlFor="full">Full Day (10 hours)</Label>
+                      <Label htmlFor="full">Full Day ({settings?.full_day_hours || 10} hours)</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="custom" id="custom" />

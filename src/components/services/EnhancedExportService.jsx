@@ -95,35 +95,18 @@ export class EnhancedExportService {
       return out;
     })();
 
-    const discountPercent = Number(this.formData?.custom_discount_percent || 0);
-    const originalTotal = Number(this.calc?.originalTotal || 0);
     const targetTotal = Number(this.calc?.total || 0);
-    const discountAmount = discountPercent > 0
-      ? Math.max(0, originalTotal - targetTotal)
-      : 0;
 
-    const baseDisplayLineItems = (() => {
-      if (!(discountPercent > 0 && discountAmount > 0)) return combinedLineItems;
-      const next = [...combinedLineItems];
-      next.push({
-        description: `Discount (${discountPercent}%)`,
-        quantity: 1,
-        unitPrice: -discountAmount,
-        amount: -discountAmount,
-      });
-      return next;
-    })();
-
-    const tableSum = baseDisplayLineItems
+    // Line items already include any discounts/adjustments from the calculation engine
+    // Only add a reconciliation row if there's a significant mismatch (>$1)
+    const tableSum = combinedLineItems
       .filter(i => !i?.isSection)
       .reduce((s, i) => s + (Number(i?.amount || 0)), 0);
     const diff = targetTotal - tableSum;
 
-    // Only add an adjustment row if there's a significant difference (>$1).
-    // We avoid "Custom Price" wording in client-facing exports.
     const displayLineItems = (() => {
-      if (!Number.isFinite(diff) || Math.abs(diff) < 1.00) return baseDisplayLineItems;
-      const next = [...baseDisplayLineItems];
+      if (!Number.isFinite(diff) || Math.abs(diff) < 1.00) return combinedLineItems;
+      const next = [...combinedLineItems];
       const label = diff < 0 ? 'Discount' : 'Service Fee';
       next.push({ description: label, amount: diff, quantity: 1, unitPrice: diff });
       return next;

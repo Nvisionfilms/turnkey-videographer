@@ -57,12 +57,12 @@ export default function LiveTotalsPanel({ calculations, settings }) {
           </div>
         )}
 
-        {/* Operations Fee (Overhead & Profit Combined) */}
+        {/* Service Fee (Overhead & Profit Combined) */}
         {(calc.overhead > 0 || calc.profitMargin > 0) && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span style={{ color: 'var(--color-text-secondary)' }}>
-                Operations Fee ({((settings?.overhead_percent || 0) + (settings?.profit_margin_percent || 0))}%)
+                Service Fee ({((settings?.overhead_percent || 0) + (settings?.profit_margin_percent || 0))}%)
               </span>
               <span className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
                 ${((calc.overhead || 0) + (calc.profitMargin || 0)).toFixed(2)}

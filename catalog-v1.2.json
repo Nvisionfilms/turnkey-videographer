@@ -33,17 +33,17 @@
     {
       "id": "directed_production",
       "labelEstimate": "Directed Production",
-      "labelInvoice": "Creative Direction & Production Oversight",
+      "labelInvoice": "Production Services (Directed)",
       "responsibilityLevel": "shared",
-      "perDayAdd": 750,
+      "perDayAdd": 0,
       "required": true
     },
     {
       "id": "full_creative_direction",
       "labelEstimate": "Full Creative Direction",
-      "labelInvoice": "Full Creative Direction & Production Oversight",
+      "labelInvoice": "Full Creative Direction & Production Management",
       "responsibilityLevel": "vendor-led",
-      "perDayAdd": 1500,
+      "perDayAdd": 500,
       "required": true
     }
   ],

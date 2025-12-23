@@ -246,7 +246,7 @@ export default function RoleSelector({
                                 <Input
                                   type="number"
                                   min="0"
-                                  step="0.5"
+                                  step="1"
                                   value={selectedRole?.half_days ?? 0}
                                   onChange={(e) => handleQuantityChange(rate.id, 'half_days', e.target.value)}
                                   className="h-10"
@@ -264,7 +264,7 @@ export default function RoleSelector({
                                 <Input
                                   type="number"
                                   min="0"
-                                  step="0.5"
+                                  step="1"
                                   value={selectedRole?.full_days ?? 0}
                                   onChange={(e) => handleQuantityChange(rate.id, 'full_days', e.target.value)}
                                   className="h-10"
@@ -284,7 +284,7 @@ export default function RoleSelector({
                               <Input
                                 type="number"
                                 min="0"
-                                step="0.5"
+                                step="1"
                                 value={selectedRole?.quantity || 0}
                                 onChange={(e) => handleQuantityChange(rate.id, 'quantity', e.target.value)}
                                 className="h-10"

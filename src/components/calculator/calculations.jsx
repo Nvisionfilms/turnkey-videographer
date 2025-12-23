@@ -2,8 +2,9 @@
 // Follows specification from CALCULATION RULES
 // Pure function - no side effects
 
-const FULL_DAY_HOURS = 10;
-const HALF_DAY_HOURS = 6;
+// Default hours (can be overridden by settings)
+const DEFAULT_FULL_DAY_HOURS = 10;
+const DEFAULT_HALF_DAY_HOURS = 6;
 
 function round2(num) {
   return Math.round(num * 100) / 100;
@@ -18,6 +19,9 @@ function calculateRoleCost(role, rateRow, dayType, customHours, settings) {
   const baseFull = rateRow.full_day_rate || 0;
   const baseHalf = rateRow.half_day_rate || 0;
   const overtimeMultiplier = settings?.overtime_multiplier || 1.5;
+  
+  // Use customizable hours from settings, fallback to defaults
+  const FULL_DAY_HOURS = settings?.full_day_hours || DEFAULT_FULL_DAY_HOURS;
 
   let cost = 0;
 
@@ -107,6 +111,9 @@ function calculateRoleCost(role, rateRow, dayType, customHours, settings) {
  * Calculate gear amortization cost
  */
 function calculateGearCost(formData, gearCosts, settings) {
+  const FULL_DAY_HOURS = settings?.full_day_hours || DEFAULT_FULL_DAY_HOURS;
+  const HALF_DAY_HOURS = settings?.half_day_hours || DEFAULT_HALF_DAY_HOURS;
+  
   let gearAmortized = 0;
   if (formData.gear_enabled && Array.isArray(formData.selected_gear_items) && formData.selected_gear_items.length > 0) {
     const totalInvestment = gearCosts
@@ -114,7 +121,18 @@ function calculateGearCost(formData, gearCosts, settings) {
       .reduce((sum, g) => sum + (g.total_investment || 0), 0);
 
     const amortizationDays = settings?.gear_amortization_days || 180;
-    const hours = formData.custom_hours || FULL_DAY_HOURS;
+    
+    // Determine hours based on day type
+    const dayType = formData.day_type || "full";
+    let hours;
+    if (dayType === "half") {
+      hours = HALF_DAY_HOURS;
+    } else if (dayType === "custom") {
+      hours = formData.custom_hours || FULL_DAY_HOURS;
+    } else {
+      hours = FULL_DAY_HOURS;
+    }
+    
     gearAmortized = (totalInvestment / amortizationDays) * (hours / FULL_DAY_HOURS);
   }
   return round2(gearAmortized);
@@ -138,8 +156,22 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     return null;
   }
 
+  // Use customizable hours from settings
+  const FULL_DAY_HOURS = settings?.full_day_hours || DEFAULT_FULL_DAY_HOURS;
+  const HALF_DAY_HOURS = settings?.half_day_hours || DEFAULT_HALF_DAY_HOURS;
+
   const dayType = formData.day_type || "full";
-  const customHours = formData.custom_hours || FULL_DAY_HOURS;
+  
+  // Determine actual hours based on day type
+  let hours;
+  if (dayType === "half") {
+    hours = HALF_DAY_HOURS;
+  } else if (dayType === "custom") {
+    hours = formData.custom_hours || FULL_DAY_HOURS;
+  } else {
+    hours = FULL_DAY_HOURS;
+  }
+  const customHours = hours;
   const experienceLevel = formData.experience_level || "Standard";
   // Use custom_multiplier if available, otherwise fall back to preset from experience_levels
   const experienceMultiplier = formData.custom_multiplier || settings?.experience_levels?.[experienceLevel] || 1.0;
@@ -224,12 +256,13 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
   // === LABOR COSTS ===
   const lineItems = [];
   let laborRaw = 0;
+  let laborBase = 0; // Base cost before experience/region multipliers (actual cost you pay)
 
   // Separate production crew from post-production
   const productionCrewItems = [];
   const postProductionItems = [];
 
-  if (Array.isArray(formData.selected_roles)) {
+  if (Array.isArray(formData.selected_roles) && formData.selected_roles.length > 0) {
     formData.selected_roles.forEach(selectedRole => {
       const rate = dayRates.find(r => r.id === selectedRole.role_id);
       if (!rate) return;
@@ -247,6 +280,7 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
 
       if (adjustedCost > 0) {
         laborRaw += adjustedCost;
+        laborBase += roleCost; // Track base cost (before multipliers)
 
         let desc = rate.role;
         if (rate.unit_type === "day") {
@@ -284,6 +318,9 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
           lineItem = { description: desc, amount: adjustedCost };
         }
         
+        // Add category info to line item
+        lineItem.category = rate.category || 'btl';
+        
         // Categorize: post-production vs production crew
         const isPostProduction = rate.unit_type === "per_5_min" || 
                                  rate.unit_type === "per_deliverable" ||
@@ -312,33 +349,32 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     }
   }
 
-  // === OVERHEAD & PROFIT (applied to labor only) ===
+  // === OVERHEAD & PROFIT (shown as separate line item) ===
+  // Base rates are your COST, service fee is your MARKUP for management/coordination
   const overheadPercent = settings?.overhead_percent || 0;
   const profitMarginPercent = settings?.profit_margin_percent || 0;
-  const operationsFeeMultiplier = 1 + ((overheadPercent + profitMarginPercent) / 100);
+  const totalOperationsFeePercent = overheadPercent + profitMarginPercent;
 
-  // Apply operations fee multiplier to each line item (bake it into the price)
-  const productionCrewItemsWithFee = productionCrewItems.map(item => ({
-    ...item,
-    amount: round2(item.amount * operationsFeeMultiplier),
-    unitPrice: item.unitPrice ? round2(item.unitPrice * operationsFeeMultiplier) : undefined
-  }));
-
-  const postProductionItemsWithFee = postProductionItems.map(item => ({
-    ...item,
-    amount: round2(item.amount * operationsFeeMultiplier),
-    unitPrice: item.unitPrice ? round2(item.unitPrice * operationsFeeMultiplier) : undefined
-  }));
-
-  // Build final line items with sections (no separate operations fee lines)
-  if (productionCrewItemsWithFee.length > 0) {
+  // Build final line items with sections (base rates shown)
+  if (productionCrewItems.length > 0) {
     lineItems.push({ description: "Production & Crew", amount: 0, isSection: true });
-    lineItems.push(...productionCrewItemsWithFee);
+    lineItems.push(...productionCrewItems);
   }
   
-  if (postProductionItemsWithFee.length > 0) {
+  if (postProductionItems.length > 0) {
     lineItems.push({ description: "Post-Production", amount: 0, isSection: true });
-    lineItems.push(...postProductionItemsWithFee);
+    lineItems.push(...postProductionItems);
+  }
+  
+  // Add service fee as separate line item (your markup for scouting, hiring, coordination)
+  // Only show as separate line if show_service_fee_on_invoice is true
+  const operationsFee = totalOperationsFeePercent > 0 ? round2(laborRaw * (totalOperationsFeePercent / 100)) : 0;
+  const showServiceFeeOnInvoice = settings?.show_service_fee_on_invoice !== false;
+  if (operationsFee > 0 && showServiceFeeOnInvoice) {
+    lineItems.push({ 
+      description: `Service Fee (${totalOperationsFeePercent}%)`, 
+      amount: operationsFee 
+    });
   }
 
   // === CALCULATE GEAR AMORTIZATION ===
@@ -371,11 +407,11 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     talentFees = primaryTalent + extraTalent;
   }
 
-  // Calculate overhead and profit from labor
+  // Calculate overhead and profit from labor (for internal tracking)
   const overhead = laborRaw * (overheadPercent / 100);
   const profitMargin = laborRaw * (profitMarginPercent / 100);
   
-  // Add overhead and profit to labor
+  // Labor with overhead/profit = base labor + service fee
   const laborWithOverheadProfit = laborRaw + overhead + profitMargin;
 
   // === SUBTOTAL ===
@@ -450,9 +486,49 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
   const depositDue = round2(total * (depositPercent / 100));
   const balanceDue = round2(total - depositDue);
 
+  // === NEGOTIATION RANGE ===
+  // Floor = Max of (base costs) or (scaled floor based on experience)
+  // This ensures floor never goes below actual costs, but scales up with premium rates
+  // High = Desired profit margin applied to total
+  const juniorOpsMultiplier = settings?.experience_levels?.Junior || 0.65;
+  const desiredProfitPercent = settings?.desired_profit_margin_percent || 60;
+  
+  // Calculate ABSOLUTE MINIMUM floor (base costs + minimal markup)
+  // This is the break-even point - can never go below this
+  const minimalOpsFeeBase = round2(laborBase * (totalOperationsFeePercent / 100) * juniorOpsMultiplier);
+  const absoluteFloorSubtotal = laborBase + gearAmortized + minimalOpsFeeBase + travelCost + rentalCosts + usageRightsCost + talentFees;
+  const absoluteFloorWithFees = absoluteFloorSubtotal + (formData.apply_rush_fee ? absoluteFloorSubtotal * (rushFeePercent / 100) : 0) 
+                                - (formData.apply_nonprofit_discount ? absoluteFloorSubtotal * (nonprofitDiscountPercent / 100) : 0);
+  const absoluteFloorTax = taxRatePercent > 0 ? round2(absoluteFloorWithFees * (taxRatePercent / 100)) : 0;
+  const absoluteFloor = round2(absoluteFloorWithFees + absoluteFloorTax);
+  
+  // Calculate SCALED floor (proportional to current experience level)
+  // When charging premium rates, floor should also be higher
+  // Scaled floor = current total * (1 - discount%) where discount is ~10% below current
+  const floorDiscountPercent = 10; // Floor is 10% below current quote
+  const scaledFloor = round2(total * (1 - floorDiscountPercent / 100));
+  
+  // Final floor = whichever is higher (never below absolute minimum)
+  const negotiationLow = Math.max(absoluteFloor, scaledFloor);
+  
+  // Calculate negotiation high (desired profit margin on top of current total)
+  const negotiationHigh = round2(total * (1 + desiredProfitPercent / 100));
+
+  // === PRODUCTION COST SUMMARY (for simplified invoices) ===
+  // Group all labor into single "Production Cost" line
+  const productionCost = round2(laborWithOverheadProfit);
+  
+  // Separate ATL and BTL totals
+  const atlItems = lineItems.filter(li => li.category === 'atl' && !li.isSection);
+  const btlItems = lineItems.filter(li => li.category === 'btl' && !li.isSection);
+  const atlTotal = round2(atlItems.reduce((sum, li) => sum + (li.amount || 0), 0));
+  const btlTotal = round2(btlItems.reduce((sum, li) => sum + (li.amount || 0), 0));
+
   return {
     lineItems,
     laborSubtotal: round2(laborRaw),
+    laborBase: round2(laborBase), // Base cost before experience multiplier
+    operationsFee: round2(operationsFee), // Operations fee (overhead + profit margin)
     overhead: round2(overhead),
     profitMargin: round2(profitMargin),
     laborWithOverheadProfit: round2(laborWithOverheadProfit),
@@ -476,6 +552,13 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
       experience: experienceMultiplier,
       industry: industryIndex,
       region: regionMultiplier
-    }
+    },
+    // Negotiation range
+    negotiationLow,
+    negotiationHigh,
+    // Production summary for simplified invoices
+    productionCost,
+    atlTotal,
+    btlTotal
   };
 }

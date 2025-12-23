@@ -1492,6 +1492,84 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                   </div>
                 </div>
 
+                {/* Pricing Model Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                    Pricing Model Settings
+                  </h3>
+                  
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="half_day_hours" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                        Half Day Hours
+                      </Label>
+                      <Input
+                        id="half_day_hours"
+                        type="number"
+                        min="1"
+                        max="12"
+                        step="1"
+                        value={localSettings?.half_day_hours || 6}
+                        onChange={(e) => handleSettingsUpdate('half_day_hours', parseInt(e.target.value) || 6)}
+                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        Maximum hours for half-day rate (default: 6)
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="full_day_hours" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                        Full Day Hours
+                      </Label>
+                      <Input
+                        id="full_day_hours"
+                        type="number"
+                        min="1"
+                        max="16"
+                        step="1"
+                        value={localSettings?.full_day_hours || 10}
+                        onChange={(e) => handleSettingsUpdate('full_day_hours', parseInt(e.target.value) || 10)}
+                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        Maximum hours for full-day rate before overtime (default: 10)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)' }}>
+                    <Checkbox
+                      id="show_service_fee_on_invoice"
+                      checked={localSettings?.show_service_fee_on_invoice !== false}
+                      onCheckedChange={(checked) => handleSettingsUpdate('show_service_fee_on_invoice', checked)}
+                    />
+                    <div>
+                      <Label htmlFor="show_service_fee_on_invoice" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
+                        Show Service Fee on Invoice
+                      </Label>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        When enabled, service fee appears as separate line item. When disabled, it's baked into crew rates.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)' }}>
+                    <Checkbox
+                      id="simplified_invoice"
+                      checked={localSettings?.simplified_invoice || false}
+                      onCheckedChange={(checked) => handleSettingsUpdate('simplified_invoice', checked)}
+                    />
+                    <div>
+                      <Label htmlFor="simplified_invoice" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
+                        Simplified Invoice Mode
+                      </Label>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        Show single "Production Cost" line instead of detailed crew breakdown
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Operational Settings */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
