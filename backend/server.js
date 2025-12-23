@@ -11,8 +11,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Middleware - CORS with explicit origins
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'https://turnkeyvideographer.com', 'https://www.turnkeyvideographer.com', 'https://turnkey-videographer.netlify.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // Stripe webhook must come BEFORE express.json() (needs raw body)
 app.use('/api/stripe', stripeWebhook);

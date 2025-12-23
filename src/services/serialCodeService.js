@@ -95,13 +95,13 @@ export function verifyCodeChecksum(code) {
 /**
  * Activate a subscription code
  * @param {string} code - The unlock code to activate
- * @param {string} email - Optional email for tracking
+ * @param {string} email - Email for tracking/verification
  * @returns {Object} - Result object with success status and message
  */
 export async function activateSubscriptionCode(code, email = '') {
   const normalizedCode = code.trim().toUpperCase();
   
-  // Check if already activated
+  // Check if already activated on this device
   const existingCode = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_CODE);
   const isActivated = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED) === 'true';
   
@@ -113,13 +113,40 @@ export async function activateSubscriptionCode(code, email = '') {
     };
   }
   
-  // Validate against backend API
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-backend-c520.up.railway.app';
+  
+  // First, try to verify if this is an existing subscription (for multi-device use)
+  if (email) {
+    try {
+      const statusResponse = await fetch(`${API_BASE_URL}/api/unlock/status/${encodeURIComponent(email)}`);
+      const statusData = await statusResponse.json();
+      
+      if (statusResponse.ok && statusData.isActive && statusData.unlockCode === normalizedCode) {
+        // Existing valid subscription - activate locally
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_CODE, normalizedCode);
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED, 'true');
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED_DATE, new Date().toISOString());
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_EMAIL, email);
+        
+        return {
+          success: true,
+          message: 'Recording enabled. Subscription verified.',
+          code: 'VERIFIED'
+        };
+      }
+    } catch (e) {
+      // Status check failed, continue to try activation
+      console.log('Status check failed, trying activation:', e);
+    }
+  }
+  
+  // Try to activate as new code
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-backend-c520.up.railway.app';
+    const userEmail = email || `device_${Date.now()}@local`;
     const response = await fetch(`${API_BASE_URL}/api/unlock/activate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: normalizedCode, email })
+      body: JSON.stringify({ code: normalizedCode, email: userEmail })
     });
     
     const data = await response.json();
@@ -140,6 +167,14 @@ export async function activateSubscriptionCode(code, email = '') {
         code: 'ACTIVATED'
       };
     } else {
+      // Check if code was already used - might be trying to use on another device
+      if (data.error && data.error.includes('already been used')) {
+        return {
+          success: false,
+          message: 'This code is registered to a different email. Enter the email used during purchase.',
+          code: 'CODE_USED'
+        };
+      }
       return {
         success: false,
         message: data.error || data.message || 'Invalid access code.',

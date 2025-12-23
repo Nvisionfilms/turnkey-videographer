@@ -1742,28 +1742,41 @@ export default function Calculator() {
             </div>
 
             {/* Access Code Input */}
-            <div className="mb-6">
-              <label className="text-xs uppercase tracking-wide mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
-                Have an access code?
-              </label>
-              <div className="flex gap-2">
+            <div className="mb-6 space-y-3">
+              <div>
+                <label className="text-xs uppercase tracking-wide mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                  Access code
+                </label>
                 <Input
                   type="text"
-                  placeholder="XXXX-XXXX-XXXX"
+                  placeholder="NV-XXXX-XXXX-XXXX-XXXX"
                   value={unlockCode}
                   onChange={(e) => setUnlockCode(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleUnlockSubmit()}
-                  className="flex-1 font-mono"
+                  className="font-mono"
                   style={{ background: 'var(--color-input-bg)', borderColor: 'var(--color-input-border)', color: 'var(--color-text-primary)' }}
                 />
-                <Button
-                  onClick={handleUnlockSubmit}
-                  disabled={!unlockCode.trim()}
-                  style={{ background: 'var(--color-accent-primary)', color: 'white' }}
-                >
-                  Activate
-                </Button>
               </div>
+              <div>
+                <label className="text-xs uppercase tracking-wide mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={unlockEmail}
+                  onChange={(e) => setUnlockEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUnlockSubmit()}
+                  style={{ background: 'var(--color-input-bg)', borderColor: 'var(--color-input-border)', color: 'var(--color-text-primary)' }}
+                />
+              </div>
+              <Button
+                onClick={handleUnlockSubmit}
+                disabled={!unlockCode.trim() || !unlockEmail.trim()}
+                className="w-full"
+                style={{ background: 'var(--color-accent-primary)', color: 'white' }}
+              >
+                Activate
+              </Button>
             </div>
 
             <div className="border-t pt-6 mb-4" style={{ borderColor: 'var(--color-border)' }}>
