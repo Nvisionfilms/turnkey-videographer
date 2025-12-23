@@ -98,7 +98,7 @@ export function verifyCodeChecksum(code) {
  * @param {string} email - Optional email for tracking
  * @returns {Object} - Result object with success status and message
  */
-export function activateSubscriptionCode(code, email = '') {
+export async function activateSubscriptionCode(code, email = '') {
   const normalizedCode = code.trim().toUpperCase();
   
   // Check if already activated
@@ -113,48 +113,45 @@ export function activateSubscriptionCode(code, email = '') {
     };
   }
   
-  // Validate format
-  if (!validateCodeFormat(normalizedCode)) {
-    return {
-      success: false,
-      message: 'Invalid code format. Code should be in format: NV-XXXX-XXXX-XXXX-XXXX',
-      code: 'INVALID_FORMAT'
-    };
-  }
-  
-  // Verify checksum (demo codes removed for security)
-  // In production, validate against server-side database
-  const isValid = verifyCodeChecksum(normalizedCode);
-  
-  if (!isValid) {
-    return {
-      success: false,
-      message: 'Invalid unlock code. Please check your code and try again.',
-      code: 'INVALID_CODE'
-    };
-  }
-  
-  // Activate the subscription
+  // Validate against backend API
   try {
-    localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_CODE, normalizedCode);
-    localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED, 'true');
-    localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED_DATE, new Date().toISOString());
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-backend-c520.up.railway.app';
+    const response = await fetch(`${API_BASE_URL}/api/unlock/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: normalizedCode, email })
+    });
     
-    if (email) {
-      localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_EMAIL, email);
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      // Store activation locally
+      localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_CODE, normalizedCode);
+      localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED, 'true');
+      localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED_DATE, new Date().toISOString());
+      
+      if (email) {
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_EMAIL, email);
+      }
+      
+      return {
+        success: true,
+        message: 'Recording enabled. Your pricing decisions will now be stored.',
+        code: 'ACTIVATED'
+      };
+    } else {
+      return {
+        success: false,
+        message: data.error || data.message || 'Invalid access code.',
+        code: 'INVALID_CODE'
+      };
     }
-    
-    return {
-      success: true,
-      message: 'Subscription activated successfully! You now have unlimited access.',
-      code: 'ACTIVATED'
-    };
   } catch (error) {
     console.error('Error activating subscription:', error);
     return {
       success: false,
-      message: 'Failed to activate subscription. Please try again.',
-      code: 'ACTIVATION_ERROR'
+      message: 'Unable to verify code. Check your connection and try again.',
+      code: 'NETWORK_ERROR'
     };
   }
 }

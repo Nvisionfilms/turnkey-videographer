@@ -511,8 +511,8 @@ app.post('/api/unlock/activate', async (req, res) => {
   try {
     const { code, email, affiliateCode } = req.body;
 
-    if (!code || !email) {
-      return res.status(400).json({ error: 'Code and email are required' });
+    if (!code) {
+      return res.status(400).json({ error: 'Code is required' });
     }
 
     const client = await pool.connect();
@@ -536,14 +536,19 @@ app.post('/api/unlock/activate', async (req, res) => {
         return res.status(400).json({ error: 'This code has already been used' });
       }
 
-      // Check if user already has an active subscription
-      const existingUser = await client.query(
-        'SELECT * FROM users WHERE email = $1 AND status = $2',
-        [email.toLowerCase(), 'active']
-      );
+      // Use email if provided, otherwise generate a placeholder
+      const userEmail = email ? email.toLowerCase() : `device_${Date.now()}@local`;
 
-      if (existingUser.rows.length > 0) {
-        return res.status(400).json({ error: 'This email already has an active subscription' });
+      // Check if user already has an active subscription (only if real email provided)
+      if (email) {
+        const existingUser = await client.query(
+          'SELECT * FROM users WHERE email = $1 AND status = $2',
+          [userEmail, 'active']
+        );
+
+        if (existingUser.rows.length > 0) {
+          return res.status(400).json({ error: 'This email already has an active subscription' });
+        }
       }
 
       // Calculate expiration (1 year from now)
@@ -555,7 +560,7 @@ app.post('/api/unlock/activate', async (req, res) => {
         `UPDATE unlock_codes 
          SET status = $1, user_email = $2, affiliate_code = $3, activated_at = NOW()
          WHERE code = $4`,
-        ['used', email.toLowerCase(), affiliateCode, code.toUpperCase()]
+        ['used', userEmail, affiliateCode, code.toUpperCase()]
       );
 
       // Create user account
@@ -563,7 +568,7 @@ app.post('/api/unlock/activate', async (req, res) => {
         `INSERT INTO users (email, unlock_code, subscription_type, expires_at, status)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [email.toLowerCase(), code.toUpperCase(), 'one-time', expiresAt, 'active']
+        [userEmail, code.toUpperCase(), 'one-time', expiresAt, 'active']
       );
 
       // Track conversion if affiliate code provided

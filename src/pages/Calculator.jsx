@@ -1368,7 +1368,7 @@ export default function Calculator() {
     return `${format(new Date(sortedDates[0]), "MMM d")} - ${format(new Date(sortedDates[sortedDates.length - 1]), "MMM d, yyyy")} (${sortedDates.length} days)`;
   };
 
-  const handleUnlockSubmit = () => {
+  const handleUnlockSubmit = async () => {
     const code = unlockCode.trim().toUpperCase();
     
     // Check for trial code
@@ -1377,7 +1377,7 @@ export default function Calculator() {
       
       if (result.success) {
         toast({
-          title: "3-Day Trial Activated!",
+          title: "Temporary recording enabled",
           description: result.message,
         });
         setUnlockDialogOpen(false);
@@ -1385,7 +1385,7 @@ export default function Calculator() {
         setUnlockEmail('');
       } else {
         toast({
-          title: "Trial Already Used",
+          title: "Temporary access unavailable",
           description: result.message,
           variant: "destructive"
         });
@@ -1393,12 +1393,12 @@ export default function Calculator() {
       return;
     }
     
-    // Check for permanent unlock code
-    const result = activateSubscription(code, unlockEmail);
+    // Check for permanent unlock code via backend API
+    const result = await activateSubscription(code, unlockEmail);
     
     if (result.success) {
       toast({
-        title: "Unlocked!",
+        title: "Recording enabled",
         description: result.message,
       });
       setUnlockDialogOpen(false);
@@ -1406,7 +1406,7 @@ export default function Calculator() {
       setUnlockEmail('');
     } else {
       toast({
-        title: "Invalid Code",
+        title: "Invalid access code",
         description: result.message,
         variant: "destructive"
       });
