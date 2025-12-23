@@ -243,11 +243,11 @@ export default function Unlock() {
             {/* FOUNDING OPERATOR */}
             <div className="rounded-lg p-5 relative" style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(244, 208, 63, 0.05) 100%)', border: '2px solid #D4AF37' }}>
               <div className="absolute -top-2 right-2 px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#D4AF37', color: '#000' }}>
-                Limited
+                98 left
               </div>
               <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Founding</h3>
               <div className="text-2xl font-bold mb-1" style={{ color: '#D4AF37' }}>$299</div>
-              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>one-time</p>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>one-time, lifetime</p>
               <ul className="space-y-1 mb-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                 <li>- Lifetime access</li>
                 <li>- Priority support</li>

@@ -14,10 +14,10 @@ const STORAGE_KEYS = {
 };
 
 export function useUnlockStatus() {
-  // TEMPORARY: Force unlocked for development testing
-  const DEV_FORCE_UNLOCKED = true;
+  // Production mode - requires valid access code
+  const DEV_FORCE_UNLOCKED = false;
   
-  const [isUnlocked, setIsUnlocked] = useState(DEV_FORCE_UNLOCKED);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [hasUsedFreeQuote, setHasUsedFreeQuote] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(null);
   const [isTrialActive, setIsTrialActive] = useState(false);
