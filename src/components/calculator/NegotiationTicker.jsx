@@ -22,10 +22,13 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
 
   const minimum = calculations.negotiationLow || 0;
   const baseQuote = calculations.total;
-  const desired = calculations.negotiationHigh || 0;
+  const desired = calculations.negotiationHigh || baseQuote;
+  const range = desired - minimum;
   
   // Use custom override if set, otherwise use base quote
-  const current = customPriceOverride ?? baseQuote;
+  const current = customPriceOverride || baseQuote;
+
+  const sliderPct = range > 0 ? ((Math.max(minimum, Math.min(current, desired)) - minimum) / range) * 100 : 0;
   const hasOverride = customPriceOverride !== null && customPriceOverride !== undefined;
   
   const isBelowMinimum = current < minimum;
@@ -66,7 +69,6 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
   };
 
   // Calculate position for range bar (0-1)
-  const range = desired - minimum;
   const currentPos = range > 0 ? Math.max(0, Math.min(1, (current - minimum) / range)) : 0.5;
 
   const handleSliderChange = (e) => {
@@ -207,14 +209,12 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             className="w-full rounded-full cursor-pointer negotiation-slider"
             style={{
               height: '16px',
-              background: `linear-gradient(to right, 
-                #b84a4a 0%, 
-                #10b981 50%, 
-                #3b82f6 100%)`,
               WebkitAppearance: 'none',
-              MozAppearance: 'none',
+              appearance: 'none',
               borderRadius: '9999px',
-              outline: 'none'
+              outline: 'none',
+              background: 'transparent',
+              '--turnkeyPct': sliderPct
             }}
           />
 
@@ -236,35 +236,45 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             .negotiation-slider::-webkit-slider-runnable-track {
               height: 16px;
               border-radius: 9999px;
+              background:
+                linear-gradient(to right,
+                  #b84a4a 0%,
+                  #10b981 50%,
+                  #3b82f6 100%
+                ) 0 0 / calc(var(--turnkeyPct) * 1%) 100% no-repeat,
+                rgba(255, 255, 255, 0.10);
+              box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
             }
             .negotiation-slider::-webkit-slider-thumb {
               -webkit-appearance: none;
               appearance: none;
-              width: 36px;
-              height: 24px;
+              width: 18px;
+              height: 18px;
               border-radius: 9999px;
               background: #fff;
-              cursor: grab;
-              border: 2px solid #333;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-              margin-top: -4px;
+              border: 2px solid rgba(0,0,0,0.55);
+              margin-top: -1px;
             }
-            .negotiation-slider::-webkit-slider-thumb:active {
-              cursor: grabbing;
-              transform: scale(1.1);
-            }
+
             .negotiation-slider::-moz-range-track {
               height: 16px;
               border-radius: 9999px;
-              background: transparent;
+              background:
+                linear-gradient(to right,
+                  #b84a4a 0%,
+                  #10b981 50%,
+                  #3b82f6 100%
+                ) 0 0 / calc(var(--turnkeyPct) * 1%) 100% no-repeat,
+                rgba(255, 255, 255, 0.10);
+              box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
             }
             .negotiation-slider::-moz-range-thumb {
-              width: 36px;
-              height: 24px;
+              width: 18px;
+              height: 18px;
               border-radius: 9999px;
               background: #fff;
               cursor: grab;
-              border: 2px solid #333;
+              border: 2px solid rgba(0,0,0,0.55);
               box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             }
             .negotiation-slider::-moz-range-thumb:active {
