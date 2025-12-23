@@ -19,6 +19,8 @@ import { setReferralCookie, getReferralCookie } from "../utils/affiliateUtils";
 import { getDeviceId } from "@/utils/deviceFingerprint";
 
 import LiveTotalsPanel from "../components/calculator/LiveTotalsPanelNew";
+import BehaviorSummaryCard from "../components/calculator/BehaviorSummaryCard";
+import PostExportReflection, { getReflectionCopy } from "../components/calculator/PostExportReflection";
 import RoleSelector from "../components/calculator/RoleSelector";
 import GearSelector from "../components/calculator/GearSelector";
 import CameraSelector from "../components/calculator/CameraSelector";
@@ -35,6 +37,7 @@ import { ExportService } from "../components/services/ExportService";
 import { EnhancedExportService } from "../components/services/EnhancedExportService";
 import { STORAGE_KEYS, DEFAULT_DAY_RATES, DEFAULT_GEAR_COSTS, DEFAULT_CAMERAS, DEFAULT_SETTINGS } from "../components/data/defaults";
 import { useUnlockStatus } from "../components/hooks/useUnlockStatus";
+import { recordFinalizedQuote } from "../utils/behaviorRecorder";
 
 export default function Calculator() {
   const { toast } = useToast();
@@ -86,6 +89,9 @@ export default function Calculator() {
 
   const [deliverableEstimate, setDeliverableEstimate] = useState(null);
   const [suggestedCrewPreset, setSuggestedCrewPreset] = useState(null);
+  
+  // Post-export reflection modal state
+  const [reflectionText, setReflectionText] = useState(null);
   
   // Ref for debounced save timeout
   const saveTimeoutRef = React.useRef(null);
@@ -1591,6 +1597,10 @@ export default function Calculator() {
       }
       
       saveToQuoteHistory(formData, calculations.total);
+      
+      // Record behavior for reflection layer
+      const finalPrice = formData.custom_price_override || calculations.total;
+      recordFinalizedQuote({ calculations, formData, finalPrice });
 
       let exportCalculations = calculations;
       if (includeDeliverablesInExport) {
@@ -1621,6 +1631,15 @@ export default function Calculator() {
         title: "Quote Generated!",
         description: isUnlocked ? "Professional quote ready to print or save as PDF" : "Free quote generated! Upgrade for unlimited quotes.",
       });
+      
+      // Show post-export reflection modal after brief delay
+      setTimeout(() => {
+        const text = getReflectionCopy({
+          finalPrice,
+          minimumPrice: calculations.negotiationLow
+        });
+        setReflectionText(text);
+      }, 400);
     });
   };
 
@@ -1634,6 +1653,10 @@ export default function Calculator() {
       }
       
       saveToQuoteHistory(formData, calculations.total);
+      
+      // Record behavior for reflection layer
+      const finalPrice = formData.custom_price_override || calculations.total;
+      recordFinalizedQuote({ calculations, formData, finalPrice });
 
       let exportCalculations = calculations;
       if (includeDeliverablesInExport) {
@@ -1664,6 +1687,15 @@ export default function Calculator() {
         title: "Invoice Generated!",
         description: isUnlocked ? "Professional invoice ready to print or save as PDF" : "Free invoice generated! Upgrade for unlimited invoices.",
       });
+      
+      // Show post-export reflection modal after brief delay
+      setTimeout(() => {
+        const text = getReflectionCopy({
+          finalPrice,
+          minimumPrice: calculations.negotiationLow
+        });
+        setReflectionText(text);
+      }, 400);
     });
   };
 
@@ -1688,6 +1720,14 @@ export default function Calculator() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
+      {/* Post-Export Reflection Modal */}
+      {reflectionText && (
+        <PostExportReflection 
+          text={reflectionText} 
+          onClose={() => setReflectionText(null)} 
+        />
+      )}
+      
       {/* Locked Screen Overlay - Shows after free quote is used */}
       {!canUseCalculator && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
@@ -1760,68 +1800,64 @@ export default function Calculator() {
 
       {/* Landing Hero Section */}
       <section className="py-16 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-                You already have the talent —
-                <span style={{ color: 'var(--color-accent-primary)' }}> now get the clarity to match.</span>
-              </h1>
-              
-              <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                Charge what you're worth. Send quotes with confidence. Run your creative business like a pro.
-              </p>
-              
-              <div className="flex gap-4">
-                <a href="#calculator" className="inline-block">
-                  <Button 
-                    size="lg"
-                    className="px-8 py-4 text-lg font-semibold hover:scale-105 transition-transform"
-                    style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
-                  >
-                    Start Calculating
-                  </Button>
-                </a>
-              </div>
-            </div>
-            
-            <div>
-              <CalculatorCarousel />
-            </div>
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+            Every quote you send is a decision about your business.
+          </h1>
+          
+          <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+            TurnKey shows you what that decision actually costs—before you make it, and after.
+          </p>
+          
+          <div className="flex gap-4 justify-center">
+            <a href="#calculator" className="inline-block">
+              <Button 
+                size="lg"
+                className="px-8 py-4 text-lg font-semibold hover:scale-105 transition-transform"
+                style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+              >
+                See Your First Quote
+              </Button>
+            </a>
           </div>
         </div>
       </section>
 
-      {/* Problem Section */}
+      {/* What This Is Section */}
       <section className="py-16 px-6" style={{ background: 'var(--color-bg-card)' }}>
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-8 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-            The struggle isn't your talent.
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: 'var(--color-text-primary)' }}>
+            This is not a calculator.
           </h2>
           
-          <div className="space-y-4 text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-lg mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+            TurnKey is pricing infrastructure. It does three things:
+          </p>
+          
+          <div className="space-y-4 text-lg" style={{ color: 'var(--color-text-secondary)' }}>
             <p>
-              It's the <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>anxiety before you hit send</span> on a quote.
+              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>1. Shows your minimum</span> — the price below which you lose money.
             </p>
-            
             <p>
-              It's wondering if you're <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>charging too much</span> or <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>leaving money on the table</span>.
+              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>2. Tracks your decisions</span> — every quote you export is recorded.
             </p>
-            
             <p>
-              It's being <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>busy but not profitable</span>.
-            </p>
-            
-            <p className="text-xl font-bold pt-6" style={{ color: 'var(--color-accent-primary)' }}>
-              Confidence doesn't come from talent — it comes from clarity.
+              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>3. Surfaces your patterns</span> — over time, you see what you've actually been doing.
             </p>
           </div>
+          
+          <p className="text-lg mt-8" style={{ color: 'var(--color-text-muted)' }}>
+            The system doesn't coach you. It shows you. What you do with that is yours.
+          </p>
         </div>
       </section>
 
       {/* Calculator Section */}
       <div id="calculator" className="p-6 scroll-mt-6">
       <div className="max-w-7xl mx-auto p-6">
+        {/* Behavior Summary Card - Top of calculator, before any inputs */}
+        <BehaviorSummaryCard className="mb-6" />
+        
         {suggestedCrewPreset && (
           <div className="mb-4 p-4 rounded-xl" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -1844,8 +1880,8 @@ export default function Calculator() {
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Crew Calculator</h2>
-              <p style={{ color: 'var(--color-text-secondary)' }}>Build your crew and calculate project costs with custom rates</p>
+              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Crew Pricing</h2>
+              <p style={{ color: 'var(--color-text-secondary)' }}>Build your crew and see what your decisions cost</p>
             </div>
             <div className="flex flex-wrap gap-2 w-full justify-between md:justify-end">
               {!isUnlocked && (
@@ -3047,7 +3083,7 @@ export default function Calculator() {
           </div>
 
           {/* Right Column - Live Totals */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
             <LiveTotalsPanel 
               calculations={calculations} 
               settings={settings} 

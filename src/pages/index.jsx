@@ -28,6 +28,8 @@ import DeliverableCalculator from "./DeliverableCalculator";
 
 import ContentPlaybook from "./ContentPlaybook";
 
+import QuoteHistory from "./QuoteHistory";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -104,6 +106,8 @@ function PagesContent() {
                 <Route path="/DeliverableCalculator" element={<DeliverableCalculator />} />
                 
                 <Route path="/ContentPlaybook" element={<ContentPlaybook />} />
+                
+                <Route path="/QuoteHistory" element={<QuoteHistory />} />
                 
             </Routes>
         </Layout>

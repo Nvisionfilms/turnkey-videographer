@@ -9,7 +9,11 @@ const COOKIE_DURATION_DAYS = 30;
 // Commission settings
 export const AFFILIATE_CONFIG = {
   commissionPercent: 15,
-  unlockPrice: 39.99,
+  // Pricing tiers
+  monthlyPrice: 9.99,
+  yearlyPrice: 79.99,
+  lifetimePrice: 149.99,
+  unlockPrice: 79.99, // Default for commission calc (yearly as baseline)
   minimumPayout: 25,
   cookieDurationDays: 30,
   paypalEmail: 'nvisionmg@gmail.com'

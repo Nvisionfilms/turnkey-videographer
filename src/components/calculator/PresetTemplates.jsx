@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Briefcase, PartyPopper, Camera, Video } from "lucide-react";
+import { Sparkles, Briefcase, PartyPopper, Camera, Video, Music } from "lucide-react";
 
 const PRESETS = {
   wedding: {
@@ -109,6 +109,27 @@ const PRESETS = {
       apply_nonprofit_discount: false,
       apply_rush_fee: false
     }
+  },
+  musicVideo: {
+    name: "Music Video",
+    icon: Music,
+    color: "#ef4444",
+    description: "Creative music video production",
+    config: {
+      client_name: "",
+      project_title: "Music Video",
+      day_type: "full",
+      custom_hours: 12,
+      experience_level: "Standard",
+      selected_roles: [
+        { role_id: "rate_2", role_name: "Camera Operator (no camera)", quantity: 1 }
+      ],
+      include_audio_pre_post: false,
+      gear_enabled: true,
+      apply_nonprofit_discount: false,
+      apply_rush_fee: false,
+      custom_price_override: null
+    }
   }
 };
 
@@ -122,14 +143,14 @@ export default function PresetTemplates({ onApplyPreset }) {
             Quick Start Templates
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="grid grid-cols-6 gap-2">
           {Object.entries(PRESETS).map(([key, preset]) => {
             const Icon = preset.icon;
             return (
               <Button
                 key={key}
                 variant="outline"
-                className="h-auto flex-col gap-2 p-3"
+                className="h-auto flex-col gap-2 p-3 w-full"
                 style={{
                   background: 'var(--color-bg-primary)',
                   borderColor: 'var(--color-border)',

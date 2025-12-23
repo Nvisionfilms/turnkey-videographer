@@ -24,12 +24,12 @@ import { useUnlockStatus } from "@/components/hooks/useUnlockStatus";
 
 const navigationItems = [
   {
-    title: "Crew Calculator",
+    title: "Crew Pricing",
     url: createPageUrl("Calculator"),
     icon: Calculator,
   },
   {
-    title: "Freelancer Calculator",
+    title: "Deliverables Pricing",
     url: createPageUrl("DeliverableCalculator"),
     icon: Video,
   },
@@ -260,8 +260,8 @@ export default function Layout({ children }) {
                 className="w-12 h-12 object-contain"
               />
               <div>
-                <h2 className="font-bold text-xl" style={{ color: 'var(--color-text-primary)' }}>Vision Capitalist</h2>
-                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Videographer Calculator</p>
+                <h2 className="font-bold text-xl" style={{ color: 'var(--color-text-primary)' }}>TurnKey</h2>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Pricing Infrastructure</p>
               </div>
             </div>
           </SidebarHeader>
@@ -352,7 +352,7 @@ export default function Layout({ children }) {
                 alt="Vision Capitalist"
                 className="w-8 h-8 object-contain"
               />
-              <h1 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Vision Capitalist</h1>
+              <h1 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>TurnKey</h1>
               {!isUnlocked && hasUsedFreeQuote && (
                 <Button
                   onClick={() => navigate(createPageUrl("Unlock"))}
