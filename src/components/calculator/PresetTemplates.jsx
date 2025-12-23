@@ -142,14 +142,14 @@ export default function PresetTemplates({ onApplyPreset }) {
             Presets
           </span>
         </div>
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {Object.entries(PRESETS).map(([key, preset]) => {
             const Icon = preset.icon;
             return (
               <Button
                 key={key}
                 variant="outline"
-                className="h-auto flex-col gap-2 p-3 w-full"
+                className="h-auto flex-col gap-1 p-2 md:p-3 w-full"
                 style={{
                   background: 'var(--color-bg-primary)',
                   borderColor: 'var(--color-border)',
@@ -157,10 +157,10 @@ export default function PresetTemplates({ onApplyPreset }) {
                 }}
                 onClick={() => onApplyPreset(preset.config)}
               >
-                <Icon className="w-5 h-5" style={{ color: preset.color }} />
+                <Icon className="w-4 h-4 md:w-5 md:h-5" style={{ color: preset.color }} />
                 <div className="text-center">
-                  <div className="text-xs font-semibold">{preset.name}</div>
-                  <div className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                  <div className="text-[10px] md:text-xs font-semibold truncate">{preset.name}</div>
+                  <div className="text-[9px] md:text-[10px] mt-0.5 hidden md:block" style={{ color: 'var(--color-text-muted)' }}>
                     {preset.description}
                   </div>
                 </div>

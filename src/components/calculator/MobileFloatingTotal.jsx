@@ -9,8 +9,11 @@ export default function MobileFloatingTotal({ total, onExpand }) {
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
       <div 
-        className="bg-gradient-to-r from-[#1a2332] to-[#0f1419] border-t-2 shadow-2xl"
-        style={{ borderColor: 'var(--color-accent-primary)' }}
+        className="border-t-2 shadow-2xl"
+        style={{ 
+          background: 'var(--color-bg-secondary)', 
+          borderColor: 'var(--color-accent-primary)' 
+        }}
       >
         <button
           onClick={() => {
@@ -27,7 +30,7 @@ export default function MobileFloatingTotal({ total, onExpand }) {
               <DollarSign className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
             </div>
             <div className="text-left">
-              <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                 Quote Total
               </div>
               <div className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>

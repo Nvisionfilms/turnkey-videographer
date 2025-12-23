@@ -89,11 +89,11 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
         These boundaries were set before this quote existed.
       </div>
       
-      {/* Three cards row - REACTIVE */}
-      <div className="grid grid-cols-3 gap-4 mb-4" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      {/* Three cards row - REACTIVE, responsive */}
+      <div className="flex flex-row gap-2 md:gap-4 mb-4 overflow-x-auto" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {/* FLOOR Card - Reactive to threshold crossing */}
         <div 
-          className="p-4 rounded-lg text-center transition-all duration-150"
+          className="flex-1 min-w-0 p-3 md:p-4 rounded-lg text-center transition-all duration-150"
           style={{ 
             background: floorPulse ? 'rgba(184, 74, 74, 0.3)' : 'rgba(184, 74, 74, 0.1)', 
             border: isBelowMinimum ? '2px solid #b84a4a' : '1px solid rgba(184, 74, 74, 0.3)',
@@ -106,11 +106,11 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
           >
             FLOOR
           </div>
-          <div className="text-2xl font-bold mb-1" style={{ color: '#b84a4a' }}>
+          <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#b84a4a' }}>
             {formatMoney(minimum)}
           </div>
           <div 
-            className="text-xs font-medium transition-all duration-150" 
+            className="text-xs font-medium transition-all duration-150 hidden md:block" 
             style={{ color: isBelowMinimum ? '#b84a4a' : 'rgba(184, 74, 74, 0.7)' }}
           >
             {getFloorText()}
@@ -119,7 +119,7 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
 
         {/* DECISION Card - Red/Green/Blue based on position */}
         <div 
-          className="p-4 rounded-lg text-center transition-all duration-150" 
+          className="flex-1 min-w-0 p-3 md:p-4 rounded-lg text-center transition-all duration-150" 
           style={{ 
             background: isBelowMinimum ? 'rgba(184, 74, 74, 0.15)' : isAboveDesired ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
             border: isBelowMinimum ? '2px solid #b84a4a' : isAboveDesired ? '2px solid #3b82f6' : '2px solid #10b981'
@@ -132,13 +132,13 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             DECISION
           </div>
           <div 
-            className="text-2xl font-bold mb-1" 
+            className="text-lg md:text-2xl font-bold mb-1" 
             style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
           >
             {formatMoney(current)}
           </div>
           <div 
-            className="text-xs font-medium" 
+            className="text-xs font-medium hidden md:block" 
             style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
           >
             {getDecisionText()}
@@ -147,7 +147,7 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
 
         {/* INTENT Card - Blue, dims when abandoned */}
         <div 
-          className="p-4 rounded-lg text-center transition-all duration-300" 
+          className="flex-1 min-w-0 p-3 md:p-4 rounded-lg text-center transition-all duration-300" 
           style={{ 
             background: isAboveDesired ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)', 
             border: isAboveDesired ? '2px solid #3b82f6' : '1px solid rgba(59, 130, 246, 0.3)',
@@ -160,10 +160,10 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
           >
             INTENT
           </div>
-          <div className="text-2xl font-bold mb-1" style={{ color: '#3b82f6' }}>
+          <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#3b82f6' }}>
             {formatMoney(desired)}
           </div>
-          <div className="text-xs" style={{ color: 'rgba(59, 130, 246, 0.8)' }}>
+          <div className="text-xs hidden md:block" style={{ color: 'rgba(59, 130, 246, 0.8)' }}>
             What you decided was worth pursuing.
           </div>
         </div>
