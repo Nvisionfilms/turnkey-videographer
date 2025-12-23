@@ -138,9 +138,8 @@ export default function PresetTemplates({ onApplyPreset }) {
     <Card className="shadow-md" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)' }}>
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4" style={{ color: 'var(--color-accent-primary)' }} />
-          <span className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-            Quick Start Templates
+          <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            Presets
           </span>
         </div>
         <div className="grid grid-cols-6 gap-2">

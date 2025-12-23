@@ -1,101 +1,285 @@
-import React from 'react';
-import { TrendingDown, TrendingUp, Zap, AlertTriangle } from 'lucide-react';
+// NEGOTIATION TICKER - Behavioral Self-Confrontation
+// Cards are REACTIVE, not informative. Slider creates tension.
+// Psychology: The system reacts, it doesn't explain.
 
-export default function NegotiationTicker({ calculations, settings }) {
+import React, { useState, useEffect, useRef } from 'react';
+
+export default function NegotiationTicker({ calculations, settings, customPriceOverride, onPriceChange }) {
+  const [floorPulse, setFloorPulse] = useState(false);
+  const [desiredDim, setDesiredDim] = useState(false);
+  const prevCurrentRef = useRef(null);
+  
   if (!calculations || !calculations.total) {
     return null;
   }
 
-  // Use the pre-calculated negotiation range from calculations.jsx
-  // This ensures consistency between the ticker and the negotiation buttons
-  const lowTier = calculations.negotiationLow || 0;
-  const midTier = calculations.total;
-  const highTier = calculations.negotiationHigh || 0;
+  const minimum = calculations.negotiationLow || 0;
+  const baseQuote = calculations.total;
+  const desired = calculations.negotiationHigh || 0;
   
-  const desiredProfitPercent = settings?.desired_profit_margin_percent || 60;
-  const isBelowFloor = midTier < lowTier;
+  // Use custom override if set, otherwise use base quote
+  const current = customPriceOverride ?? baseQuote;
+  const hasOverride = customPriceOverride !== null && customPriceOverride !== undefined;
+  
+  const isBelowMinimum = current < minimum;
+  const isAboveDesired = current >= desired;
+  const isCompromised = current > minimum && current < desired;
+  
+  // Detect threshold crossings for visual feedback
+  useEffect(() => {
+    if (prevCurrentRef.current !== null) {
+      const prev = prevCurrentRef.current;
+      // Crossed below minimum - pulse the floor card
+      if (prev >= minimum && current < minimum) {
+        setFloorPulse(true);
+        setTimeout(() => setFloorPulse(false), 300);
+      }
+      // Moving away from desired - dim it
+      if (current < desired * 0.9) {
+        setDesiredDim(true);
+      } else {
+        setDesiredDim(false);
+      }
+    }
+    prevCurrentRef.current = current;
+  }, [current, minimum, desired]);
+  
+  // Dynamic consequence text for DECISION card - no emotional adjectives
+  const getDecisionText = () => {
+    return 'What you are choosing to send.';
+  };
+
+  const formatMoney = (n) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(n);
+  };
+
+  // Calculate position for range bar (0-1)
+  const range = desired - minimum;
+  const currentPos = range > 0 ? Math.max(0, Math.min(1, (current - minimum) / range)) : 0.5;
+
+  const handleSliderChange = (e) => {
+    const value = Number(e.target.value);
+    // Floor is the hard stop - can't go below minimum
+    const clampedValue = Math.max(minimum, value);
+    if (onPriceChange) {
+      onPriceChange(clampedValue);
+    }
+  };
+
+  const clearOverride = () => {
+    if (onPriceChange) {
+      onPriceChange(null);
+    }
+  };
+
+  // Dynamic text for FLOOR card - consequence framing only
+  const getFloorText = () => {
+    return 'Below this, the work costs you money.';
+  };
 
   return (
-    <div className="w-full overflow-hidden" style={{ background: 'var(--color-bg-card)', borderBottom: '2px solid var(--color-accent-primary)' }}>
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        {/* Warning banner when below floor */}
-        {isBelowFloor && (
-          <div className="mb-4 p-3 rounded-lg flex items-center gap-3" style={{ background: 'rgba(245, 158, 11, 0.2)', border: '2px solid #f59e0b' }}>
-            <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0" />
-            <div>
-              <div className="font-bold text-amber-500">Warning: Below Cost!</div>
-              <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                Your current quote (${midTier.toFixed(2)}) is below your floor price (${lowTier.toFixed(2)}). 
-                You will lose money at this rate.
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="grid grid-cols-3 gap-4">
-          {/* Low Tier - Minimum Price (Costs + minimal markup) */}
-          <div className="text-center p-4 rounded-lg" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '2px solid #ef4444' }}>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <TrendingDown className="w-5 h-5 text-red-500" />
-              <span className="text-sm font-bold text-red-500">Minimum Price</span>
-            </div>
-            <div className="text-3xl font-bold mb-1" style={{ color: '#ef4444' }}>
-              ${lowTier.toFixed(2)}
-            </div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Costs + minimal markup
-            </div>
-            <div className="mt-2 text-xs font-semibold text-red-400">
-              Break-even floor<br />Never go below this
-            </div>
-          </div>
-
-          {/* Mid Tier - Invoice number (Current calculation) */}
+    <div className="rounded-lg p-4" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+      {/* Consequence line - appears once, neutral */}
+      <div className="text-xs mb-4 text-center" style={{ color: 'var(--color-text-muted)' }}>
+        These boundaries were set before this quote existed.
+      </div>
+      
+      {/* Three cards row - REACTIVE */}
+      <div className="grid grid-cols-3 gap-4 mb-4" style={{ fontVariantNumeric: 'tabular-nums' }}>
+        {/* FLOOR Card - Reactive to threshold crossing */}
+        <div 
+          className="p-4 rounded-lg text-center transition-all duration-150"
+          style={{ 
+            background: floorPulse ? 'rgba(184, 74, 74, 0.3)' : 'rgba(184, 74, 74, 0.1)', 
+            border: isBelowMinimum ? '2px solid #b84a4a' : '1px solid rgba(184, 74, 74, 0.3)',
+            transform: floorPulse ? 'scale(1.02)' : 'scale(1)'
+          }}
+        >
           <div 
-            className="text-center p-4 rounded-lg" 
-            style={{ 
-              background: isBelowFloor ? 'rgba(245, 158, 11, 0.2)' : 'rgba(34, 197, 94, 0.1)', 
-              border: isBelowFloor ? '2px solid #f59e0b' : '2px solid #22c55e' 
-            }}
+            className="text-xs font-semibold uppercase tracking-wide mb-1"
+            style={{ color: '#b84a4a' }}
           >
-            <div className="flex items-center justify-center gap-2 mb-2">
-              {isBelowFloor ? (
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
-              ) : (
-                <Zap className="w-5 h-5 text-green-500" />
-              )}
-              <span className={`text-sm font-bold ${isBelowFloor ? 'text-amber-500' : 'text-green-500'}`}>
-                Current Quote
-              </span>
-            </div>
-            <div className="text-3xl font-bold mb-1" style={{ color: isBelowFloor ? '#f59e0b' : '#22c55e' }}>
-              ${midTier.toFixed(2)}
-            </div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              {isBelowFloor ? 'BELOW FLOOR!' : 'Your calculated total'}
-            </div>
-            <div className={`mt-2 text-xs font-semibold ${isBelowFloor ? 'text-amber-400' : 'text-green-400'}`}>
-              {isBelowFloor ? 'Increase rate or\nadjust experience level' : 'Standard pricing\nBased on your selections'}
-            </div>
+            FLOOR
           </div>
+          <div className="text-2xl font-bold mb-1" style={{ color: '#b84a4a' }}>
+            {formatMoney(minimum)}
+          </div>
+          <div 
+            className="text-xs font-medium transition-all duration-150" 
+            style={{ color: isBelowMinimum ? '#b84a4a' : 'rgba(184, 74, 74, 0.7)' }}
+          >
+            {getFloorText()}
+          </div>
+        </div>
 
-          {/* High Tier - Desired profit (Premium) */}
-          <div className="text-center p-4 rounded-lg" style={{ background: 'rgba(59, 130, 246, 0.1)', border: '2px solid #3b82f6' }}>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-blue-500" />
-              <span className="text-sm font-bold text-blue-500">Negotiation High</span>
-            </div>
-            <div className="text-3xl font-bold mb-1" style={{ color: '#3b82f6' }}>
-              ${highTier.toFixed(2)}
-            </div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              +{Math.round(desiredProfitPercent)}% premium
-            </div>
-            <div className="mt-2 text-xs font-semibold text-blue-400">
-              Premium pricing<br />For high-value clients
-            </div>
+        {/* DECISION Card - Red/Green/Blue based on position */}
+        <div 
+          className="p-4 rounded-lg text-center transition-all duration-150" 
+          style={{ 
+            background: isBelowMinimum ? 'rgba(184, 74, 74, 0.15)' : isAboveDesired ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
+            border: isBelowMinimum ? '2px solid #b84a4a' : isAboveDesired ? '2px solid #3b82f6' : '2px solid #10b981'
+          }}
+        >
+          <div 
+            className="text-xs font-semibold uppercase tracking-wide mb-1"
+            style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
+          >
+            DECISION
+          </div>
+          <div 
+            className="text-2xl font-bold mb-1" 
+            style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
+          >
+            {formatMoney(current)}
+          </div>
+          <div 
+            className="text-xs font-medium" 
+            style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
+          >
+            {getDecisionText()}
+          </div>
+        </div>
+
+        {/* INTENT Card - Blue, dims when abandoned */}
+        <div 
+          className="p-4 rounded-lg text-center transition-all duration-300" 
+          style={{ 
+            background: isAboveDesired ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)', 
+            border: isAboveDesired ? '2px solid #3b82f6' : '1px solid rgba(59, 130, 246, 0.3)',
+            opacity: desiredDim ? 0.5 : 1
+          }}
+        >
+          <div 
+            className="text-xs font-semibold uppercase tracking-wide mb-1"
+            style={{ color: '#3b82f6' }}
+          >
+            INTENT
+          </div>
+          <div className="text-2xl font-bold mb-1" style={{ color: '#3b82f6' }}>
+            {formatMoney(desired)}
+          </div>
+          <div className="text-xs" style={{ color: 'rgba(59, 130, 246, 0.8)' }}>
+            What you decided was worth pursuing.
           </div>
         </div>
       </div>
+
+      {/* Interactive Slider - Pill shape, red-green-blue gradient */}
+      {range > 0 && onPriceChange && (
+        <div className="mb-3 py-4">
+          <input
+            type="range"
+            min={minimum}
+            max={desired}
+            step={Math.max(1, Math.floor(range / 100))}
+            value={Math.max(minimum, current)}
+            onChange={handleSliderChange}
+            onInput={handleSliderChange}
+            className="w-full rounded-full cursor-pointer negotiation-slider"
+            style={{
+              height: '16px',
+              background: `linear-gradient(to right, 
+                #b84a4a 0%, 
+                #10b981 50%, 
+                #3b82f6 100%)`,
+              WebkitAppearance: 'none',
+              MozAppearance: 'none',
+              borderRadius: '9999px',
+              outline: 'none'
+            }}
+          />
+          <style>{`
+            .negotiation-slider {
+              -webkit-appearance: none;
+              appearance: none;
+            }
+            .negotiation-slider::-webkit-slider-runnable-track {
+              height: 16px;
+              border-radius: 9999px;
+            }
+            .negotiation-slider::-webkit-slider-thumb {
+              -webkit-appearance: none;
+              appearance: none;
+              width: 36px;
+              height: 24px;
+              border-radius: 9999px;
+              background: #fff;
+              cursor: grab;
+              border: 2px solid #333;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              margin-top: -4px;
+            }
+            .negotiation-slider::-webkit-slider-thumb:active {
+              cursor: grabbing;
+              transform: scale(1.1);
+            }
+            .negotiation-slider::-moz-range-track {
+              height: 16px;
+              border-radius: 9999px;
+              background: transparent;
+            }
+            .negotiation-slider::-moz-range-thumb {
+              width: 36px;
+              height: 24px;
+              border-radius: 9999px;
+              background: #fff;
+              cursor: grab;
+              border: 2px solid #333;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+            .negotiation-slider::-moz-range-thumb:active {
+              cursor: grabbing;
+              transform: scale(1.1);
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Range bar visual (when no slider) */}
+      {range > 0 && !onPriceChange && (
+        <div className="relative h-2 mb-3" style={{ background: 'var(--color-border)', borderRadius: '2px' }}>
+          <div 
+            className="absolute top-0 bottom-0 w-0.5"
+            style={{ left: '0%', background: '#b84a4a' }}
+          />
+          <div 
+            className="absolute top-1/2 w-3 h-3 rounded-full"
+            style={{ 
+              left: `${currentPos * 100}%`,
+              transform: 'translate(-50%, -50%)',
+              background: isBelowMinimum ? '#b84a4a' : 'var(--color-text-primary)',
+              border: '2px solid var(--color-border)'
+            }}
+          />
+          <div 
+            className="absolute top-0 bottom-0 w-0.5"
+            style={{ right: '0%', background: 'var(--color-text-muted)' }}
+          />
+        </div>
+      )}
+
+      {/* Clear override link */}
+      {hasOverride && onPriceChange && (
+        <button 
+          onClick={clearOverride}
+          className="text-xs hover:underline"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          Reset to calculated price
+        </button>
+      )}
+
+      {/* Warning text - only if below minimum, no icons */}
+      {isBelowMinimum && (
+        <div className="mt-3 text-sm" style={{ color: '#b84a4a' }}>
+          Current quote is below your minimum. This is visible now.
+        </div>
+      )}
     </div>
   );
 }

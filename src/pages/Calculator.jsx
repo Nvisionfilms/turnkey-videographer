@@ -1798,75 +1798,27 @@ export default function Calculator() {
         </div>
       )}
 
-      {/* Landing Hero Section */}
-      <section className="py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-            Every quote you send is a decision about your business.
-          </h1>
-          
-          <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-            TurnKey shows you what that decision actually costs—before you make it, and after.
-          </p>
-          
-          <div className="flex gap-4 justify-center">
-            <a href="#calculator" className="inline-block">
-              <Button 
-                size="lg"
-                className="px-8 py-4 text-lg font-semibold hover:scale-105 transition-transform"
-                style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
-              >
-                See Your First Quote
-              </Button>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* What This Is Section */}
-      <section className="py-16 px-6" style={{ background: 'var(--color-bg-card)' }}>
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: 'var(--color-text-primary)' }}>
-            This is not a calculator.
-          </h2>
-          
-          <p className="text-lg mb-6" style={{ color: 'var(--color-text-secondary)' }}>
-            TurnKey is pricing infrastructure. It does three things:
-          </p>
-          
-          <div className="space-y-4 text-lg" style={{ color: 'var(--color-text-secondary)' }}>
-            <p>
-              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>1. Shows your minimum</span> — the price below which you lose money.
-            </p>
-            <p>
-              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>2. Tracks your decisions</span> — every quote you export is recorded.
-            </p>
-            <p>
-              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>3. Surfaces your patterns</span> — over time, you see what you've actually been doing.
-            </p>
-          </div>
-          
-          <p className="text-lg mt-8" style={{ color: 'var(--color-text-muted)' }}>
-            The system doesn't coach you. It shows you. What you do with that is yours.
-          </p>
-        </div>
-      </section>
-
       {/* Calculator Section */}
       <div id="calculator" className="p-6 scroll-mt-6">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Behavior Summary Card - Top of calculator, before any inputs */}
+        {/* Pricing Ledger Header - System label, not marketing */}
+        <div className="mb-6 pb-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
+          <h1 className="text-2xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>Pricing Ledger</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>Recorded pricing decisions and outcomes.</p>
+        </div>
+
+        {/* Behavior Summary Card - Record of decisions */}
         <BehaviorSummaryCard className="mb-6" />
         
         {suggestedCrewPreset && (
           <div className="mb-4 p-4 rounded-xl" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div>
-                <div className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  Deliverables Estimator detected
+                <div className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                  Deliverables estimator detected.
                 </div>
                 <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                  Apply suggested crew roles + gear based on your deliverables/scope.
+                  Suggested roles and equipment are based on the current scope.
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1880,8 +1832,8 @@ export default function Calculator() {
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Crew Pricing</h2>
-              <p style={{ color: 'var(--color-text-secondary)' }}>Build your crew and see what your decisions cost</p>
+              <h2 className="text-2xl font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>New Quote Entry</h2>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Record a pricing decision</p>
             </div>
             <div className="flex flex-wrap gap-2 w-full justify-between md:justify-end">
               {!isUnlocked && (
@@ -1890,25 +1842,25 @@ export default function Calculator() {
                     <Button
                       variant="outline"
                       size="sm"
-                      style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)', borderColor: 'var(--color-accent-primary)', boxShadow: '0 0 10px rgba(212, 175, 55, 0.4)' }}
+                      style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border)' }}
                     >
                       <KeyIcon className="w-4 h-4 mr-2" />
-                      Enter Unlock Code
+                      Enter access code
                     </Button>
                   </DialogTrigger>
                   <DialogContent style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-dark)' }}>
                     <DialogHeader>
-                      <DialogTitle style={{ color: 'var(--color-text-primary)' }}>Enter Your Unlock Code</DialogTitle>
+                      <DialogTitle style={{ color: 'var(--color-text-primary)' }}>Enter access code</DialogTitle>
                       <DialogDescription style={{ color: 'var(--color-text-secondary)' }}>
-                        Enter your unlock code or trial code to activate unlimited access
+                        Recording pricing decisions requires an access code.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div>
-                        <Label htmlFor="unlock-code" style={{ color: 'var(--color-text-secondary)' }}>Unlock Code</Label>
+                        <Label htmlFor="unlock-code" style={{ color: 'var(--color-text-secondary)' }}>Access code</Label>
                         <Input
                           id="unlock-code"
-                          placeholder="NV-XXXX-XXXX-XXXX-XXXX or TRIAL3DAY"
+                          placeholder="XXXX-XXXX-XXXX"
                           value={unlockCode}
                           onChange={(e) => setUnlockCode(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleUnlockSubmit()}
@@ -1916,7 +1868,7 @@ export default function Calculator() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="unlock-email" style={{ color: 'var(--color-text-secondary)' }}>Email (Optional)</Label>
+                        <Label htmlFor="unlock-email" style={{ color: 'var(--color-text-secondary)' }}>Email (optional)</Label>
                         <Input
                           id="unlock-email"
                           type="email"
@@ -1930,24 +1882,17 @@ export default function Calculator() {
                       <Button 
                         onClick={handleUnlockSubmit}
                         className="w-full"
-                        style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+                        style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
                       >
-                        Activate Code
+                        Activate recording
                       </Button>
-                      <div className="mt-4 p-4 rounded-lg text-center" style={{ background: 'rgba(255, 193, 7, 0.1)', border: '2px solid var(--color-accent-primary)' }}>
-                        <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-                          Don't have a code?
-                        </p>
+                      <div className="mt-2 text-center">
                         <a 
                           href={createPageUrl("Unlock") + (searchParams.get('ref') ? `?ref=${searchParams.get('ref')}` : '')} 
-                          className="inline-block px-6 py-3 rounded-lg font-bold text-lg transition-all hover:scale-105"
-                          style={{ 
-                            background: 'var(--color-accent-primary)', 
-                            color: '#000',
-                            boxShadow: '0 4px 12px rgba(255, 193, 7, 0.4)'
-                          }}
+                          className="text-sm hover:underline"
+                          style={{ color: 'var(--color-text-muted)' }}
                         >
-                          🎉 Get Unlimited Access Now!
+                          Need an access code?
                         </a>
                       </div>
                     </div>
@@ -2090,71 +2035,6 @@ export default function Calculator() {
             </div>
           </div>
 
-          {/* Affiliate Banner */}
-          <Card className="mb-6 border-2 overflow-hidden" style={{ 
-            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%)',
-            borderColor: 'var(--color-accent-primary)'
-          }}>
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex-1 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                    <DollarSign className="w-6 h-6" style={{ color: 'var(--color-accent-primary)' }} />
-                    <h3 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                      Earn $6 Per Referral!
-                    </h3>
-                  </div>
-                  <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>
-                    Join our affiliate program and earn 15% commission on every sale you refer. 
-                    Get your unique link, share it, and start earning today!
-                  </p>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    <span className="flex items-center gap-1">
-                      <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
-                      30-day cookie tracking
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
-                      $25 minimum payout
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
-                      PayPal payments
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    onClick={() => navigate('/affiliate/signup')}
-                    size="lg"
-                    className="whitespace-nowrap font-semibold shadow-lg hover:shadow-xl transition-shadow"
-                    style={{ 
-                      background: 'var(--color-accent-primary)', 
-                      color: '#000',
-                      border: 'none'
-                    }}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Join Affiliate Program
-                  </Button>
-                  <Button
-                    onClick={() => navigate('/affiliate/login')}
-                    variant="outline"
-                    size="lg"
-                    className="whitespace-nowrap"
-                    style={{ 
-                      borderColor: 'var(--color-accent-primary)',
-                      color: 'var(--color-accent-primary)',
-                      background: 'transparent'
-                    }}
-                  >
-                    Affiliate Login
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {!isUnlocked && (
             <Alert className="mb-4 border" style={{
               background: hasUsedFreeQuote ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
@@ -2163,27 +2043,27 @@ export default function Calculator() {
               <Shield className="h-4 w-4" style={{ color: hasUsedFreeQuote ? 'var(--color-warning)' : 'var(--color-success)' }} />
               <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
                 {hasUsedFreeQuote ? (
-                  <strong>Free quote used. Unlock unlimited access or try a 3-day trial.</strong>
+                  <strong>Export limit reached. Enable recording to store exports and view history.</strong>
                 ) : (
-                  <><strong>Free Trial:</strong> You have 1 complimentary quote. Copying, downloading, or printing will use your free quote.</>
+                  <><strong>Limited recording:</strong> 1 export available. Exports are not stored without full access.</>
                 )}
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="mb-6">
-            <LiveUpdatesTicker
-              kickerText="Live quotes"
-              eventPrefix="just sent a"
-              eventSuffix="quote"
-              Icon={FileText}
-            />
-          </div>
-
           {/* Negotiation Ticker - Only show when calculations exist */}
           {calculations && calculations.total > 0 && (
             <div className="mb-6">
-              <NegotiationTicker calculations={calculations} settings={settings} />
+              <NegotiationTicker 
+                calculations={calculations} 
+                settings={settings}
+                customPriceOverride={formData.custom_price_override}
+                onPriceChange={(price) => setFormData(prev => ({
+                  ...prev, 
+                  custom_price_override: price,
+                  custom_discount_percent: 0
+                }))}
+              />
             </div>
           )}
 
@@ -2194,7 +2074,7 @@ export default function Calculator() {
             }}>
               <Clock className="h-4 w-4" style={{ color: 'var(--color-accent-primary)' }} />
               <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
-                <strong>Trial Active:</strong> {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining of your 3-day trial
+                <strong>Temporary access active:</strong> {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
               </AlertDescription>
             </Alert>
           )}
@@ -2202,7 +2082,7 @@ export default function Calculator() {
           <Alert className="border" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
             <Shield className="h-4 w-4" style={{ color: 'var(--color-accent-primary)' }} />
             <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
-              <strong>Privacy First:</strong> All data is stored locally in your browser. Your quotes and settings are automatically saved and will persist even after closing the browser.
+              <strong>Data storage:</strong> All data is stored locally in your browser. Clearing browser data removes history.
             </AlertDescription>
           </Alert>
 

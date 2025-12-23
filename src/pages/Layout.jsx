@@ -375,10 +375,10 @@ export default function Layout({ children }) {
                   onClick={() => navigate(createPageUrl("Unlock"))}
                   variant="outline"
                   size="sm"
-                  style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)', borderColor: 'var(--color-accent-primary)', boxShadow: '0 0 10px rgba(212, 175, 55, 0.4)' }}
+                  style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border)' }}
                 >
                   <Lock className="w-4 h-4 mr-2" />
-                  Unlock or Try Trial
+                  Enable recording
                 </Button>
               )}
             </div>

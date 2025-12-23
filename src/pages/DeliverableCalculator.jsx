@@ -87,8 +87,8 @@ export default function DeliverableCalculator() {
   const checkAccessAndProceed = (action) => {
     if (!isUnlocked) {
       toast({
-        title: "Unlock Required",
-        description: "Unlock to view Deliverables pricing and export quotes.",
+        title: "Ledger access required",
+        description: "This action records pricing decisions. Enable recording to continue.",
         variant: "destructive",
       });
       navigate(createPageUrl("Unlock"));
@@ -847,14 +847,14 @@ export default function DeliverableCalculator() {
               {!isUnlocked && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Unlock to Continue</CardTitle>
+                    <CardTitle>Ledger access required</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                      Purchase/unlock to view deliverables pricing and export quotes.
+                      Recording pricing decisions requires access.
                     </div>
                     <Button className="w-full" onClick={() => navigate(createPageUrl("Unlock"))}>
-                      Unlock / Purchase
+                      Enable recording
                     </Button>
                   </CardContent>
                 </Card>

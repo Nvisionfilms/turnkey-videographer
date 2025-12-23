@@ -74,6 +74,7 @@ function PagesContent() {
     const location = useLocation();
     const currentPage = _getCurrentPage(location.pathname);
     
+    
     return (
         <Layout currentPageName={currentPage}>
             <Routes>            
