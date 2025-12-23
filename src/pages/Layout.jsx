@@ -337,9 +337,26 @@ export default function Layout({ children }) {
             <Alert className="border" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
               <Shield className="h-4 w-4" style={{ color: 'var(--color-accent-primary)' }} />
               <AlertDescription className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                <strong>Privacy First:</strong> All data is stored locally in your browser. Your quotes and settings are automatically saved and will persist even after closing the browser.
+                <strong>Privacy First:</strong> All data is stored locally in your browser.
               </AlertDescription>
             </Alert>
+            
+            <div className="flex gap-4 justify-center pt-2">
+              <a 
+                href="/#/Terms" 
+                className="text-xs hover:underline"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Terms
+              </a>
+              <a 
+                href="/#/Privacy" 
+                className="text-xs hover:underline"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Privacy
+              </a>
+            </div>
           </SidebarFooter>
         </Sidebar>
 

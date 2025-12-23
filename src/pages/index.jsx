@@ -30,6 +30,12 @@ import ContentPlaybook from "./ContentPlaybook";
 
 import QuoteHistory from "./QuoteHistory";
 
+import Terms from "./Terms";
+
+import Privacy from "./Privacy";
+
+import AmIReady from "./AmIReady";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -108,6 +114,12 @@ function PagesContent() {
                 <Route path="/ContentPlaybook" element={<ContentPlaybook />} />
                 
                 <Route path="/QuoteHistory" element={<QuoteHistory />} />
+                
+                <Route path="/Terms" element={<Terms />} />
+                
+                <Route path="/Privacy" element={<Privacy />} />
+                
+                <Route path="/AmIReady" element={<AmIReady />} />
                 
             </Routes>
         </Layout>
