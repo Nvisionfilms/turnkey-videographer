@@ -1154,8 +1154,8 @@ export default function Calculator() {
       action();
     } else if (hasUsedFreeQuote) {
       toast({
-        title: "Unlock Required",
-        description: "You've used your complimentary quote. Please unlock or start a 3-day trial.",
+        title: "Export limit reached",
+        description: "Enable recording to continue exporting.",
         variant: "destructive",
       });
       navigate(createPageUrl("Unlock"));
@@ -1163,8 +1163,8 @@ export default function Calculator() {
       markFreeQuoteUsed();
       action();
       toast({
-        title: "Free Quote Used",
-        description: "This was your complimentary quote. Unlock or try 3-day trial for unlimited access.",
+        title: "Export complete",
+        description: "This export was not recorded. Enable recording for history.",
       });
       setTimeout(() => {
         navigate(createPageUrl("Unlock"));
@@ -1730,68 +1730,52 @@ export default function Calculator() {
       
       {/* Locked Screen Overlay - Shows after free quote is used */}
       {!canUseCalculator && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0, 0, 0, 0.8)' }}>
-          <div className="max-w-2xl w-full rounded-2xl p-12 text-center" style={{ background: 'var(--color-bg-card)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6" style={{ background: 'rgba(0, 0, 0, 0.9)' }}>
+          <div className="max-w-md w-full rounded-lg p-8" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
             <div className="mb-6">
-              <Lock className="w-20 h-20 mx-auto mb-4" style={{ color: 'var(--color-accent-primary)' }} />
-              <h2 className="text-4xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
-                Free Quote Used
+              <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                Export limit reached
               </h2>
-              <p className="text-xl mb-8" style={{ color: 'var(--color-text-secondary)' }}>
-                You've created your free quote! Upgrade to Pro for unlimited access to all features.
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                Enable recording to continue exporting quotes.
               </p>
             </div>
 
-            <div className="space-y-4 mb-8">
-              <div className="flex items-center gap-3 justify-center" style={{ color: 'var(--color-text-secondary)' }}>
-                <Check className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                <span>Unlimited quotes & invoices</span>
-              </div>
-              <div className="flex items-center gap-3 justify-center" style={{ color: 'var(--color-text-secondary)' }}>
-                <Check className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                <span>No watermark on PDFs</span>
-              </div>
-              <div className="flex items-center gap-3 justify-center" style={{ color: 'var(--color-text-secondary)' }}>
-                <Check className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                <span>Custom branding & templates</span>
+            {/* Access Code Input */}
+            <div className="mb-6">
+              <label className="text-xs uppercase tracking-wide mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                Have an access code?
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="XXXX-XXXX-XXXX"
+                  value={unlockCode}
+                  onChange={(e) => setUnlockCode(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUnlockSubmit()}
+                  className="flex-1 font-mono"
+                  style={{ background: 'var(--color-input-bg)', borderColor: 'var(--color-input-border)', color: 'var(--color-text-primary)' }}
+                />
+                <Button
+                  onClick={handleUnlockSubmit}
+                  disabled={!unlockCode.trim()}
+                  style={{ background: 'var(--color-accent-primary)', color: 'white' }}
+                >
+                  Activate
+                </Button>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="border-t pt-6 mb-4" style={{ borderColor: 'var(--color-border)' }}>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                Need access? View pricing options.
+              </p>
               <Button
-                size="lg"
-                onClick={async () => {
-                  const deviceId = await getDeviceId();
-                  const currentUrl = window.location.origin;
-                  const refCookie = getReferralCookie();
-                  const affiliateCode = refCookie?.code || searchParams.get('ref');
-                  const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
-                  const cancelUrl = `${currentUrl}/#/calculator`;
-                  let stripeUrl = `https://buy.stripe.com/prod_TIClNwXomLEhtB?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
-                  window.location.href = stripeUrl;
-                }}
-                className="px-8 py-4 text-lg font-semibold"
-                style={{ background: 'var(--color-accent-primary)', color: 'white' }}
+                className="w-full"
+                onClick={() => navigate(createPageUrl("Unlock"))}
+                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
               >
-                Upgrade to Pro - $9.99/mo
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={async () => {
-                  const deviceId = await getDeviceId();
-                  const currentUrl = window.location.origin;
-                  const refCookie = getReferralCookie();
-                  const affiliateCode = refCookie?.code || searchParams.get('ref');
-                  const successUrl = `${currentUrl}/#/unlock?payment=success&device_id=${deviceId}`;
-                  const cancelUrl = `${currentUrl}/#/calculator`;
-                  let stripeUrl = `https://buy.stripe.com/prod_TXroVmftASHoID?client_reference_id=${affiliateCode || deviceId}&success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
-                  window.location.href = stripeUrl;
-                }}
-                className="px-8 py-4 text-lg font-semibold"
-                style={{ borderColor: 'var(--color-accent-primary)', color: 'var(--color-accent-primary)' }}
-              >
-                Get Lifetime - $199
+                View access options
               </Button>
             </div>
           </div>
