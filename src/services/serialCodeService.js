@@ -115,38 +115,51 @@ export async function activateSubscriptionCode(code, email = '') {
   
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-backend-c520.up.railway.app';
   
-  // First, try to verify if this is an existing subscription (for multi-device use)
-  if (email) {
-    try {
-      const statusResponse = await fetch(`${API_BASE_URL}/api/unlock/status/${encodeURIComponent(email)}`);
-      const statusData = await statusResponse.json();
-      
-      if (statusResponse.ok && statusData.isActive && statusData.unlockCode === normalizedCode) {
-        // Existing valid subscription - activate locally
+  if (!email) {
+    return {
+      success: false,
+      message: 'Email is required to verify or claim an access code.',
+      code: 'EMAIL_REQUIRED'
+    };
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedCodeKey = normalizedCode.replace(/\s+/g, '');
+
+  // 1) Verify (multi-device login)
+  try {
+    const verifyResponse = await fetch(`${API_BASE_URL}/api/unlock/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: normalizedCode, email: normalizedEmail })
+    });
+
+    const verifyData = await verifyResponse.json();
+
+    if (verifyResponse.ok && verifyData.success && verifyData.user?.unlockCode) {
+      const dbCodeKey = String(verifyData.user.unlockCode).replace(/\s+/g, '').toUpperCase();
+      if (dbCodeKey === normalizedCodeKey) {
         localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_CODE, normalizedCode);
         localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED, 'true');
         localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED_DATE, new Date().toISOString());
-        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_EMAIL, email);
-        
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_EMAIL, normalizedEmail);
         return {
           success: true,
           message: 'Recording enabled. Subscription verified.',
           code: 'VERIFIED'
         };
       }
-    } catch (e) {
-      // Status check failed, continue to try activation
-      console.log('Status check failed, trying activation:', e);
     }
+  } catch (error) {
+    // Continue to claim attempt
   }
   
-  // Try to activate as new code
+  // 2) Claim (first-claim wins)
   try {
-    const userEmail = email || `device_${Date.now()}@local`;
     const response = await fetch(`${API_BASE_URL}/api/unlock/activate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: normalizedCode, email: userEmail })
+      body: JSON.stringify({ code: normalizedCode, email: normalizedEmail })
     });
     
     const data = await response.json();
@@ -167,12 +180,12 @@ export async function activateSubscriptionCode(code, email = '') {
         code: 'ACTIVATED'
       };
     } else {
-      // Check if code was already used - might be trying to use on another device
-      if (data.error && data.error.includes('already been used')) {
+      // Code already claimed by someone else
+      if (data.code === 'CODE_CLAIMED' || (data.error && String(data.error).toLowerCase().includes('claimed'))) {
         return {
           success: false,
-          message: 'This code is registered to a different email. Enter the email used during purchase.',
-          code: 'CODE_USED'
+          message: data.message || 'Code claimed. Purchase a new code or use the email that claimed it.',
+          code: 'CODE_CLAIMED'
         };
       }
       return {

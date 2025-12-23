@@ -11,13 +11,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware - CORS with explicit origins
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'https://turnkeyvideographer.com', 'https://www.turnkeyvideographer.com', 'https://turnkey-videographer.netlify.app'],
+// Middleware - CORS
+// Important: browsers enforce CORS (PowerShell/curl do not). We reflect the request Origin so
+// Netlify previews, custom domains, and localhost can call the API.
+// We do not use cookie-based auth here, so credentials are intentionally disabled.
+const corsOptions = {
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+  credentials: false,
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Stripe webhook must come BEFORE express.json() (needs raw body)
 app.use('/api/stripe', stripeWebhook);
@@ -511,13 +516,69 @@ app.get('/api/conversions/affiliate/:code', async (req, res) => {
 
 // ==================== UNLOCK CODE ROUTES ====================
 
+// Verify unlock (email + code) for multi-device use
+app.post('/api/unlock/verify', async (req, res) => {
+  try {
+    const { code, email } = req.body;
+
+    if (!code || !email) {
+      return res.status(400).json({ error: 'Code and email are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    const normalizedCode = code.toUpperCase();
+
+    const result = await pool.query(
+      `SELECT email, unlock_code, subscription_type, activated_at, expires_at, status
+       FROM users
+       WHERE email = $1 AND unlock_code = $2
+       LIMIT 1`,
+      [normalizedEmail, normalizedCode]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No matching subscription found' });
+    }
+
+    const user = result.rows[0];
+
+    // Check if expired
+    if (user.expires_at && new Date(user.expires_at) < new Date()) {
+      await pool.query(
+        'UPDATE users SET status = $1 WHERE email = $2 AND unlock_code = $3',
+        ['expired', normalizedEmail, normalizedCode]
+      );
+      return res.status(403).json({ error: 'Subscription expired' });
+    }
+
+    if (user.status !== 'active') {
+      return res.status(403).json({ error: 'Subscription not active' });
+    }
+
+    return res.json({
+      success: true,
+      user: {
+        email: user.email,
+        unlockCode: user.unlock_code,
+        subscriptionType: user.subscription_type,
+        activatedAt: user.activated_at,
+        expiresAt: user.expires_at,
+        status: user.status,
+      },
+    });
+  } catch (error) {
+    console.error('Verify code error:', error);
+    res.status(500).json({ error: 'Failed to verify code' });
+  }
+});
+
 // Validate and activate unlock code
 app.post('/api/unlock/activate', async (req, res) => {
   try {
     const { code, email, affiliateCode } = req.body;
 
-    if (!code) {
-      return res.status(400).json({ error: 'Code is required' });
+    if (!code || !email) {
+      return res.status(400).json({ error: 'Code and email are required' });
     }
 
     const client = await pool.connect();
@@ -525,7 +586,7 @@ app.post('/api/unlock/activate', async (req, res) => {
     try {
       await client.query('BEGIN');
 
-      // Check if code exists and is available
+      // Check if code exists
       const codeResult = await client.query(
         'SELECT * FROM unlock_codes WHERE code = $1',
         [code.toUpperCase()]
@@ -537,35 +598,97 @@ app.post('/api/unlock/activate', async (req, res) => {
 
       const unlockCode = codeResult.rows[0];
 
-      if (unlockCode.status !== 'available') {
-        return res.status(400).json({ error: 'This code has already been used' });
-      }
+      const normalizedEmail = email.toLowerCase();
+      const normalizedCode = code.toUpperCase();
 
-      // Use email if provided, otherwise generate a placeholder
-      const userEmail = email ? email.toLowerCase() : `device_${Date.now()}@local`;
+      const isClaimed = unlockCode.status !== 'available';
+      const claimedByEmail = (unlockCode.user_email || '').toLowerCase();
 
-      // Check if user already has an active subscription (only if real email provided)
-      if (email) {
-        const existingUser = await client.query(
-          'SELECT * FROM users WHERE email = $1 AND status = $2',
-          [userEmail, 'active']
+      // If claimed (including legacy status 'used'), only allow the same email
+      if (isClaimed) {
+        if (claimedByEmail && claimedByEmail !== normalizedEmail) {
+          return res.status(409).json({
+            error: 'Code already claimed',
+            code: 'CODE_CLAIMED',
+            message: 'This access code has already been claimed. Purchase a new code or use the email that originally claimed it.',
+          });
+        }
+
+        // Idempotent: ensure user record exists and is active for this email+code
+        const existingUserForCode = await client.query(
+          'SELECT * FROM users WHERE email = $1 AND unlock_code = $2 LIMIT 1',
+          [normalizedEmail, normalizedCode]
         );
 
-        if (existingUser.rows.length > 0) {
-          return res.status(400).json({ error: 'This email already has an active subscription' });
+        if (existingUserForCode.rows.length > 0) {
+          const user = existingUserForCode.rows[0];
+          await client.query('COMMIT');
+          return res.json({
+            success: true,
+            user: {
+              email: user.email,
+              unlockCode: user.unlock_code,
+              subscriptionType: user.subscription_type,
+              activatedAt: user.activated_at,
+              expiresAt: user.expires_at,
+              status: user.status,
+            },
+          });
         }
+
+        // If code is claimed by this email but users row missing, create it.
+        // Calculate expiration (1 year from now)
+        const expiresAt = new Date();
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+        const userResult = await client.query(
+          `INSERT INTO users (email, unlock_code, subscription_type, expires_at, status)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING *`,
+          [normalizedEmail, normalizedCode, 'one-time', expiresAt, 'active']
+        );
+
+        const user = userResult.rows[0];
+        await client.query('COMMIT');
+        return res.json({
+          success: true,
+          user: {
+            email: user.email,
+            unlockCode: user.unlock_code,
+            subscriptionType: user.subscription_type,
+            activatedAt: user.activated_at,
+            expiresAt: user.expires_at,
+            status: user.status,
+          },
+        });
+      }
+
+      // Claim path: code is available, first email wins
+
+      // Optional: prevent one email from claiming multiple codes
+      const existingUser = await client.query(
+        'SELECT * FROM users WHERE email = $1 AND status = $2',
+        [normalizedEmail, 'active']
+      );
+
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({
+          error: 'Email already has access',
+          code: 'EMAIL_ALREADY_ACTIVE',
+          message: 'This email already has an active subscription.',
+        });
       }
 
       // Calculate expiration (1 year from now)
       const expiresAt = new Date();
       expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
-      // Mark code as used
+      // Mark code as taken (claimed)
       await client.query(
         `UPDATE unlock_codes 
          SET status = $1, user_email = $2, affiliate_code = $3, activated_at = NOW()
          WHERE code = $4`,
-        ['used', userEmail, affiliateCode, code.toUpperCase()]
+        ['taken', normalizedEmail, affiliateCode, normalizedCode]
       );
 
       // Create user account
@@ -573,7 +696,7 @@ app.post('/api/unlock/activate', async (req, res) => {
         `INSERT INTO users (email, unlock_code, subscription_type, expires_at, status)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [userEmail, code.toUpperCase(), 'one-time', expiresAt, 'active']
+        [normalizedEmail, normalizedCode, 'one-time', expiresAt, 'active']
       );
 
       // Track conversion if affiliate code provided
