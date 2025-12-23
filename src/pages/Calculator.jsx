@@ -19,14 +19,13 @@ import { setReferralCookie, getReferralCookie } from "../utils/affiliateUtils";
 import { getDeviceId } from "@/utils/deviceFingerprint";
 
 import LiveTotalsPanel from "../components/calculator/LiveTotalsPanelNew";
-import BehaviorSummaryCard from "../components/calculator/BehaviorSummaryCard";
-import PostExportReflection, { getReflectionCopy } from "../components/calculator/PostExportReflection";
 import RoleSelector from "../components/calculator/RoleSelector";
 import GearSelector from "../components/calculator/GearSelector";
 import CameraSelector from "../components/calculator/CameraSelector";
 import ExperienceLevelSelector from "../components/calculator/ExperienceLevelSelector";
 import NegotiationTicker from "../components/calculator/NegotiationTicker";
 import PresetTemplates from "../components/calculator/PresetTemplates";
+import BehavioralPricingSection from "../components/calculator/BehavioralPricingSection";
 import CollapsibleSection from "../components/calculator/CollapsibleSection";
 import QuoteHistory, { saveToQuoteHistory } from "../components/calculator/QuoteHistory";
 import MobileFloatingTotal from "../components/calculator/MobileFloatingTotal";
@@ -38,6 +37,7 @@ import { EnhancedExportService } from "../components/services/EnhancedExportServ
 import { STORAGE_KEYS, DEFAULT_DAY_RATES, DEFAULT_GEAR_COSTS, DEFAULT_CAMERAS, DEFAULT_SETTINGS } from "../components/data/defaults";
 import { useUnlockStatus } from "../components/hooks/useUnlockStatus";
 import { recordFinalizedQuote } from "../utils/behaviorRecorder";
+import { recordExportedDecision } from "../utils/exportedDecisionStore";
 
 export default function Calculator() {
   const { toast } = useToast();
@@ -1602,6 +1602,13 @@ export default function Calculator() {
       const finalPrice = formData.custom_price_override || calculations.total;
       recordFinalizedQuote({ calculations, formData, finalPrice });
 
+      recordExportedDecision({
+        formData,
+        calculations,
+        exportType: 'quote',
+        finalPrice
+      });
+
       let exportCalculations = calculations;
       if (includeDeliverablesInExport) {
         try {
@@ -1657,6 +1664,13 @@ export default function Calculator() {
       // Record behavior for reflection layer
       const finalPrice = formData.custom_price_override || calculations.total;
       recordFinalizedQuote({ calculations, formData, finalPrice });
+
+      recordExportedDecision({
+        formData,
+        calculations,
+        exportType: 'invoice',
+        finalPrice
+      });
 
       let exportCalculations = calculations;
       if (includeDeliverablesInExport) {
@@ -1802,10 +1816,22 @@ export default function Calculator() {
         <div className="mb-6 pb-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
           <h1 className="text-2xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>Pricing Ledger</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>Recorded pricing decisions and outcomes.</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>This page records what you send — not what you intended.</p>
         </div>
 
-        {/* Behavior Summary Card - Record of decisions */}
-        <BehaviorSummaryCard className="mb-6" />
+        <BehavioralPricingSection
+          onRestoreDecisionState={(savedFormData) => {
+            if (!savedFormData) return;
+            setFormData({
+              ...savedFormData,
+              shoot_dates: Array.isArray(savedFormData.shoot_dates) ? savedFormData.shoot_dates : [],
+            });
+            toast({
+              title: "Decision restored",
+              description: "Selecting an entry restores its decision state.",
+            });
+          }}
+        />
         
         {suggestedCrewPreset && (
           <div className="mb-4 p-4 rounded-xl" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
@@ -1829,8 +1855,8 @@ export default function Calculator() {
         <div className="mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             <div>
-              <h2 className="text-2xl font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>New Quote Entry</h2>
-              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Record a pricing decision</p>
+              <h2 className="text-2xl font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>New Pricing Decision</h2>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>This decision will be recorded when exported.</p>
             </div>
             <div className="flex flex-wrap gap-2 w-full justify-between md:justify-end">
               {!isUnlocked && (
@@ -1849,7 +1875,7 @@ export default function Calculator() {
                     <DialogHeader>
                       <DialogTitle style={{ color: 'var(--color-text-primary)' }}>Enter access code</DialogTitle>
                       <DialogDescription style={{ color: 'var(--color-text-secondary)' }}>
-                        Recording pricing decisions requires an access code.
+                        Recording requires an access code.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -2030,6 +2056,10 @@ export default function Calculator() {
                 Duplicate
               </Button>
             </div>
+          </div>
+
+          <div className="mt-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Exporting records this decision in your ledger.
           </div>
 
           {!isUnlocked && (
@@ -2978,18 +3008,24 @@ export default function Calculator() {
       />
       </div>
 
-      {/* Final CTA */}
-      <section className="py-20 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <Heart className="w-12 h-12 mx-auto mb-6" style={{ color: 'var(--color-accent-primary)' }} />
-          
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-            You deserve to be paid what you're worth.
-          </h2>
-          
-          <p className="text-lg mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-            This tool just makes it easier to figure out what that is.
-          </p>
+      <section className="py-16 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>
+            Local Ledger Storage
+          </div>
+          <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            All data is stored locally in your browser.
+          </div>
+          <div className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+            No accounts. No cloud sync.
+          </div>
+          <div className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+            Clearing your browser clears the ledger.
+          </div>
+
+          <div className="mt-10 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Over time, this page shows you who you are under pressure.
+          </div>
         </div>
       </section>
     </div>

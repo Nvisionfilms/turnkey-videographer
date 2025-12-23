@@ -5,6 +5,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function NegotiationTicker({ calculations, settings, customPriceOverride, onPriceChange }) {
+  const [showSliderMicroTip, setShowSliderMicroTip] = useState(() => {
+    try {
+      return sessionStorage.getItem('turnkey_slider_tip_dismissed_v1') !== '1';
+    } catch {
+      return false;
+    }
+  });
   const [floorPulse, setFloorPulse] = useState(false);
   const [desiredDim, setDesiredDim] = useState(false);
   const prevCurrentRef = useRef(null);
@@ -82,11 +89,15 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
     return 'Below this, the work costs you money.';
   };
 
+  const getIntentText = () => {
+    return 'What you believed the work was worth.';
+  };
+
   return (
     <div className="rounded-lg p-4" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
       {/* Minimal header */}
       <div className="text-xs uppercase tracking-wide mb-3" style={{ color: 'var(--color-text-muted)' }}>
-        Price Range
+        Decision Boundaries
       </div>
       
       {/* Three cards row - REACTIVE, responsive */}
@@ -164,7 +175,7 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             {formatMoney(desired)}
           </div>
           <div className="text-xs hidden md:block" style={{ color: 'rgba(59, 130, 246, 0.8)' }}>
-            What you decided was worth pursuing.
+            {getIntentText()}
           </div>
         </div>
       </div>
@@ -172,6 +183,9 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
       {/* Interactive Slider - Pill shape, red-green-blue gradient */}
       {range > 0 && onPriceChange && (
         <div className="mb-3 py-4">
+          <div className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>
+            Negotiation Range
+          </div>
           <input
             type="range"
             min={minimum}
@@ -179,7 +193,17 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             step={Math.max(1, Math.floor(range / 100))}
             value={Math.max(minimum, current)}
             onChange={handleSliderChange}
-            onInput={handleSliderChange}
+            onInput={(e) => {
+              if (showSliderMicroTip) {
+                setShowSliderMicroTip(false);
+                try {
+                  sessionStorage.setItem('turnkey_slider_tip_dismissed_v1', '1');
+                } catch {
+                  // ignore
+                }
+              }
+              handleSliderChange(e);
+            }}
             className="w-full rounded-full cursor-pointer negotiation-slider"
             style={{
               height: '16px',
@@ -193,6 +217,17 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
               outline: 'none'
             }}
           />
+
+          <div className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+            This slider adjusts what you send, not what the work is worth.
+          </div>
+
+          {showSliderMicroTip && (
+            <div className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+              You can move this. Your decision is recorded when exported.
+            </div>
+          )}
+
           <style>{`
             .negotiation-slider {
               -webkit-appearance: none;

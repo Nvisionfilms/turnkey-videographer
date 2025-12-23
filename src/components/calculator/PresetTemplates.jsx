@@ -137,7 +137,10 @@ export default function PresetTemplates({ onApplyPreset }) {
   return (
     <div className="mb-4">
       <div className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>
-        Presets
+        Starting Points
+      </div>
+      <div className="text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+        Templates prefill structure. They do not decide pricing.
       </div>
       <div className="flex flex-wrap gap-2">
         {Object.entries(PRESETS).map(([key, preset]) => (

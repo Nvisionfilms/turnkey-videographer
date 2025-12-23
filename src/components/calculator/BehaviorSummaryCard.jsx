@@ -29,10 +29,13 @@ export default function BehaviorSummaryCard({ className = "" }) {
           className="text-xs font-semibold uppercase tracking-wide mb-2"
           style={{ color: 'var(--color-text-primary)', letterSpacing: '0.05em' }}
         >
-          RECORDED DECISIONS — THIS MONTH
+          RECENT PRICING BEHAVIOR — THIS MONTH
         </div>
         <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           No exports recorded.
+        </div>
+        <div className="text-xs mt-2" style={{ color: 'var(--color-text-secondary)' }}>
+          This is a record, not an evaluation.
         </div>
       </div>
     );
@@ -60,7 +63,7 @@ export default function BehaviorSummaryCard({ className = "" }) {
         className="text-xs font-semibold uppercase tracking-wide mb-3"
         style={{ color: 'var(--color-text-primary)', letterSpacing: '0.05em' }}
       >
-        RECORDED DECISIONS — THIS MONTH
+        RECENT PRICING BEHAVIOR — THIS MONTH
       </div>
 
       {/* Metrics row - horizontal with dividers, tabular numbers */}
@@ -100,6 +103,10 @@ export default function BehaviorSummaryCard({ className = "" }) {
         >
           View History →
         </button>
+      </div>
+
+      <div className="text-xs mt-3" style={{ color: 'var(--color-text-secondary)' }}>
+        This is a record, not an evaluation.
       </div>
     </div>
   );
