@@ -38,6 +38,8 @@ import Privacy from "./Privacy";
 
 import AmIReady from "./AmIReady";
 
+import DeleteAccount from "./DeleteAccount";
+
 import { BrowserRouter as Router, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { setReferralCookie, getReferralCookie } from '../utils/affiliateUtils';
@@ -157,6 +159,8 @@ function PagesContent() {
                 <Route path="/Privacy" element={<Privacy />} />
                 
                 <Route path="/AmIReady" element={<AmIReady />} />
+                
+                <Route path="/delete-account" element={<DeleteAccount />} />
                 
             </Routes>
         </Layout>

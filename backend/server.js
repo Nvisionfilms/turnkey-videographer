@@ -270,6 +270,52 @@ app.post('/api/affiliates/signup', async (req, res) => {
   }
 });
 
+// Delete Account - Permanently delete affiliate account (for Google Play compliance)
+app.post('/api/affiliates/delete-account', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Find affiliate
+    const result = await pool.query(
+      'SELECT * FROM affiliates WHERE email = $1',
+      [email.toLowerCase()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const affiliate = result.rows[0];
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, affiliate.password);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Delete all conversions for this affiliate
+    await pool.query('DELETE FROM conversions WHERE affiliate_code = $1', [affiliate.code]);
+
+    // Delete the affiliate account
+    await pool.query('DELETE FROM affiliates WHERE id = $1', [affiliate.id]);
+
+    console.log(`Account deleted: ${email}`);
+
+    res.json({
+      success: true,
+      message: 'Account and all associated data have been permanently deleted'
+    });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
 // Login - Authenticate affiliate
 app.post('/api/affiliates/login', async (req, res) => {
   try {
