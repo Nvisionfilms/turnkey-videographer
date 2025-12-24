@@ -897,6 +897,54 @@ app.post('/api/unlock/validate-enhanced', async (req, res) => {
   }
 });
 
+// Admin: Delete user account (for refunded/deleted accounts)
+app.delete('/api/admin/delete-user', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Delete from users table
+      const userResult = await client.query(
+        'DELETE FROM users WHERE email = $1 RETURNING *',
+        [email.toLowerCase()]
+      );
+      
+      // Delete from unlock_codes table (if code was used)
+      const codeResult = await client.query(
+        'DELETE FROM unlock_codes WHERE user_email = $1 RETURNING *',
+        [email.toLowerCase()]
+      );
+      
+      await client.query('COMMIT');
+      
+      res.json({
+        success: true,
+        message: `User ${email} deleted successfully`,
+        deletedUser: userResult.rows[0],
+        deletedCodes: codeResult.rows
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 // Check user subscription status
 app.get('/api/unlock/status/:email', async (req, res) => {
   try {
