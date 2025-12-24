@@ -120,22 +120,25 @@ export function useUnlockStatus() {
   };
 
   useEffect(() => {
-    // Initial check from localStorage
-    checkStatus();
+    // IMMEDIATELY clear all localStorage access on app load
+    localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+    localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+    localStorage.removeItem(STORAGE_KEYS.TRIAL_STARTED);
+    localStorage.removeItem(STORAGE_KEYS.TRIAL_END_DATE);
+    setIsUnlocked(false);
     
-    // Validate with server on mount (async)
+    // Always validate with server on mount (async)
     const validateOnMount = async () => {
       const storedEmail = localStorage.getItem('userEmail');
       const storedCode = localStorage.getItem('unlockCode');
       
       if (storedEmail && storedCode) {
         const isValid = await validateWithServer();
-        if (!isValid) {
-          // Server says invalid - update state
-          setIsUnlocked(false);
-          localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
-          localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
-        }
+        // Only set unlocked if server validates successfully
+        setIsUnlocked(isValid);
+      } else {
+        // No credentials - ensure locked
+        setIsUnlocked(false);
       }
     };
     
