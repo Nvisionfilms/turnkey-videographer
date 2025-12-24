@@ -40,7 +40,7 @@ const navigationItems = [
   },
   {
     title: "Affiliates",
-    url: "/admin/dashboard",
+    url: "/affiliate",
     icon: Users,
   },
 ];
