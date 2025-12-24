@@ -93,16 +93,28 @@ async function handleCheckoutCompleted(session, eventId) {
       [unlockCode, 'used', customerEmail.toLowerCase(), affiliateCode]
     );
 
-    // 3. Create user account
-    await client.query(
-      `INSERT INTO users (email, unlock_code, subscription_type, expires_at, status, stripe_session_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT (email) DO UPDATE 
-       SET unlock_code = $2, expires_at = $4, status = $5, stripe_session_id = $6`,
-      [customerEmail.toLowerCase(), unlockCode, 'one-time', expiresAt, 'active', sessionId]
+    // 3. Check if user has an affiliate account with same email (auto-link)
+    const userAffiliateCheck = await client.query(
+      'SELECT id, code FROM affiliates WHERE email = $1',
+      [customerEmail.toLowerCase()]
     );
+    const userAffiliateId = userAffiliateCheck.rows[0]?.id || null;
+    const userAffiliateCode = userAffiliateCheck.rows[0]?.code || null;
 
-    // 4. Track conversion for affiliate (if affiliate code provided)
+    // 4. Create user account (with affiliate link if they have one)
+    await client.query(
+      `INSERT INTO users (email, unlock_code, subscription_type, expires_at, status, stripe_session_id, affiliate_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (email) DO UPDATE 
+       SET unlock_code = $2, expires_at = $4, status = $5, stripe_session_id = $6, affiliate_id = COALESCE(users.affiliate_id, $7)`,
+      [customerEmail.toLowerCase(), unlockCode, 'one-time', expiresAt, 'active', sessionId, userAffiliateId]
+    );
+    
+    if (userAffiliateId) {
+      console.log(`✅ User auto-linked to their affiliate account: ${userAffiliateCode}`);
+    }
+
+    // 5. Track conversion for affiliate (if affiliate code provided)
     if (affiliateCode) {
       // Block self-referral: check if customer email matches affiliate email
       const affiliateCheck = await client.query(
@@ -166,17 +178,26 @@ async function handleCheckoutCompleted(session, eventId) {
 
     await client.query('COMMIT');
 
-    // 6. Send email with unlock code via Resend
+    // 7. Send email with unlock code via Resend
+    // Include affiliate info if user has an affiliate account
+    const affiliateSection = userAffiliateCode ? `
+      <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
+        <p style="margin: 0 0 10px 0; font-weight: bold; color: #166534;">You're also an affiliate!</p>
+        <p style="margin: 0; color: #166534;">Your referral code: <strong>${userAffiliateCode}</strong></p>
+        <p style="margin: 10px 0 0 0; font-size: 14px; color: #166534;">Share your link to earn commissions: <a href="https://helpmefilm.com?ref=${userAffiliateCode}">helpmefilm.com?ref=${userAffiliateCode}</a></p>
+      </div>
+    ` : '';
+    
     try {
       await resend.emails.send({
         from: 'noreply@helpmefilm.com',
         to: [customerEmail],
-        subject: 'Your NVision Unlock Code',
+        subject: 'Your TurnKey Access Code',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #1a1a1a;">Payment Successful!</h2>
             <p>Hi ${customerName},</p>
-            <p>Thank you for your payment of $${amountPaid}. Your unlock code is ready:</p>
+            <p>Thank you for your payment of $${amountPaid}. Your access code is ready:</p>
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p style="font-size: 24px; font-weight: bold; color: #2563eb; letter-spacing: 2px; text-align: center;">
                 ${unlockCode}
@@ -184,13 +205,14 @@ async function handleCheckoutCompleted(session, eventId) {
             </div>
             <p>To activate your access:</p>
             <ol>
-              <li>Go to <a href="https://www.helpmefilm.com/#/Unlock">https://www.helpmefilm.com/#/Unlock</a></li>
+              <li>Go to <a href="https://helpmefilm.com/#/Unlock">helpmefilm.com/#/Unlock</a></li>
               <li>Enter your email: ${customerEmail}</li>
-              <li>Enter your unlock code: ${unlockCode}</li>
+              <li>Enter your access code: ${unlockCode}</li>
               <li>Click "Activate"</li>
             </ol>
+            ${affiliateSection}
             <p style="color: #666; font-size: 14px;">This code is valid for one year from activation.</p>
-            <p>Best regards,<br>The NVision Team</p>
+            <p>Best regards,<br>The TurnKey Team</p>
           </div>
         `
       });

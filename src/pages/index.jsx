@@ -38,7 +38,40 @@ import Privacy from "./Privacy";
 
 import AmIReady from "./AmIReady";
 
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { setReferralCookie, getReferralCookie } from '../utils/affiliateUtils';
+
+// Global ref code persistence - captures ?ref= and stores it for the entire session
+function RefCodePersistence() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
+    
+    useEffect(() => {
+        const refCode = searchParams.get('ref');
+        
+        if (refCode) {
+            // Store ref code in cookie (30 days) and localStorage
+            setReferralCookie(refCode);
+            localStorage.setItem('persistent_ref_code', refCode);
+            console.log('[Affiliate] Ref code captured:', refCode);
+        } else {
+            // Check if we have a stored ref code and add it to URL if missing
+            const storedRef = localStorage.getItem('persistent_ref_code');
+            const cookieRef = getReferralCookie();
+            const persistedRef = storedRef || cookieRef?.code;
+            
+            if (persistedRef && !searchParams.get('ref')) {
+                // Add ref back to URL without triggering navigation
+                const newParams = new URLSearchParams(searchParams);
+                newParams.set('ref', persistedRef);
+                setSearchParams(newParams, { replace: true });
+            }
+        }
+    }, [location.pathname, searchParams, setSearchParams]);
+    
+    return null;
+}
 
 const PAGES = {
     
@@ -79,6 +112,7 @@ function PagesContent() {
     
     return (
         <Layout currentPageName={currentPage}>
+            <RefCodePersistence />
             <Routes>            
                 
                     <Route path="/" element={<Calculator />} />
