@@ -25,11 +25,16 @@ export function useUnlockStatus() {
   const [subscriptionDetails, setSubscriptionDetails] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
 
-  // Validate stored credentials and Stripe session against Railway API
+  // STRICT: Only allow access through Railway database validation
   const validateWithServer = useCallback(async () => {
     const storedEmail = localStorage.getItem('userEmail');
     const storedCode = localStorage.getItem('unlockCode');
-    const storedSessionId = localStorage.getItem('stripeSessionId');
+    
+    // Clear any legacy localStorage-only access immediately
+    localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+    localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+    localStorage.removeItem(STORAGE_KEYS.TRIAL_STARTED);
+    localStorage.removeItem(STORAGE_KEYS.TRIAL_END_DATE);
     
     if (!storedEmail || !storedCode) {
       return false;
@@ -37,38 +42,6 @@ export function useUnlockStatus() {
     
     try {
       setIsValidating(true);
-      
-      // Always try to validate the session if we have it
-      if (storedSessionId) {
-        try {
-          const sessionResponse = await apiCall('/api/unlock/validate-session', {
-            method: 'POST',
-            body: JSON.stringify({
-              email: storedEmail,
-              sessionId: storedSessionId
-            })
-          });
-          
-          if (sessionResponse.status === 'revoked') {
-            // Payment was refunded - clear all access
-            localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
-            localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('unlockCode');
-            localStorage.removeItem('stripeSessionId');
-            return false;
-          }
-          
-          if (sessionResponse.isActive) {
-            // Valid session - update localStorage flags
-            localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
-            localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
-            return true;
-          }
-        } catch (sessionError) {
-          console.warn('Session validation failed, falling back to code validation:', sessionError);
-        }
-      }
       
       // Use enhanced validation that checks Stripe session from database
       const response = await apiCall('/api/unlock/validate-enhanced', {
@@ -81,8 +54,6 @@ export function useUnlockStatus() {
       
       if (response.status === 'revoked') {
         // Payment was refunded - clear all access
-        localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
-        localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
         localStorage.removeItem('userEmail');
         localStorage.removeItem('unlockCode');
         localStorage.removeItem('stripeSessionId');
@@ -90,54 +61,42 @@ export function useUnlockStatus() {
       }
       
       if (response.isActive) {
-        // Valid subscription - update localStorage flags
+        // Valid subscription - ONLY set minimal flags for session
         localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
         localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
         return true;
       } else {
-        // Invalid or expired - clear localStorage
-        localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
-        localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+        // Invalid or expired - clear all localStorage
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('unlockCode');
+        localStorage.removeItem('stripeSessionId');
         return false;
       }
     } catch (error) {
-      // API error - fall back to localStorage (offline mode)
-      console.warn('Server validation failed, using cached status:', error.message);
-      return localStorage.getItem(STORAGE_KEYS.DIRECT_UNLOCK) === 'true';
+      // API error - NO FALLBACK to localStorage, require server validation
+      console.warn('Server validation failed, access denied:', error.message);
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('unlockCode');
+      localStorage.removeItem('stripeSessionId');
+      return false;
     } finally {
       setIsValidating(false);
     }
   }, []);
 
   const checkStatus = () => {
-    // Check if permanently unlocked (legacy or subscription)
-    const legacyUnlocked = localStorage.getItem(STORAGE_KEYS.UNLOCKED) === 'true';
+    // STRICT: No localStorage checks - only server validation
+    // All legacy localStorage access is cleared in validateWithServer
+    const legacyUnlocked = false;
+    const directUnlock = false;
+    const hasActiveSubscription = false;
+    const subDetails = null;
+    const trialActive = false;
+    const daysLeft = null;
     
-    // Check direct unlock (payment-based, no serial code needed)
-    const directUnlock = localStorage.getItem(STORAGE_KEYS.DIRECT_UNLOCK) === 'true';
-    
-    // Check subscription status (new serial code system)
-    const hasActiveSubscription = isSubscriptionActive();
-    const subDetails = hasActiveSubscription ? getSubscriptionDetails() : null;
-    
-    // Check trial status
-    const trialEnd = localStorage.getItem(STORAGE_KEYS.TRIAL_END);
-    let trialActive = false;
-    let daysLeft = null;
-    
-    if (trialEnd) {
-      const endTime = parseInt(trialEnd, 10);
-      const now = Date.now();
-      if (now < endTime) {
-        trialActive = true;
-        const timeLeft = endTime - now;
-        daysLeft = Math.ceil(timeLeft / (24 * 60 * 60 * 1000));
-      } else {
-        // Trial expired, clean up
-        localStorage.removeItem(STORAGE_KEYS.TRIAL_START);
-        localStorage.removeItem(STORAGE_KEYS.TRIAL_END);
-      }
-    }
+    // Clear any remaining trial data
+    localStorage.removeItem(STORAGE_KEYS.TRIAL_START);
+    localStorage.removeItem(STORAGE_KEYS.TRIAL_END);
     
     // Check free quote usage (check both localStorage and sessionStorage)
     const usedFreeLocal = localStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
