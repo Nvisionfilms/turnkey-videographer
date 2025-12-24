@@ -352,13 +352,6 @@ export default function Layout({ children }) {
               </Button>
             </div>
             
-            <Alert className="border" style={{ background: 'var(--color-bg-tertiary)', borderColor: 'var(--color-border)' }}>
-              <Shield className="h-4 w-4" style={{ color: 'var(--color-text-muted)' }} />
-              <AlertDescription className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                <strong>Privacy First:</strong> All data is stored locally in your browser.
-              </AlertDescription>
-            </Alert>
-            
             <div className="flex gap-4 justify-center pt-2">
               <a 
                 href="/#/Terms" 
