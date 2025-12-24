@@ -1,6 +1,10 @@
 // STRIPE PAYMENT LINKS - Centralized for auditability
 // Do not inline these in components
 
+// Founding Operator sold out threshold (buffer: show SOLD OUT at 90-95 to honor "100 spots" claim)
+export const FOUNDING_SOLD_OUT_THRESHOLD = 90;
+export const FOUNDING_SOLD_OUT = true; // Set to true when threshold reached; disables Founding CTA
+
 export const STRIPE_LINKS = {
   operatorMonthly: "https://buy.stripe.com/00w3cvh1l8eIanf2hccIE05",
   operatorAnnual: "https://buy.stripe.com/7sY3cvaCXeD666ZaNIcIE06",
@@ -41,6 +45,7 @@ export const PRICING = {
     period: "one-time",
     tagline: "You believed early.",
     limited: true,
-    spots: 98
+    soldOut: true, // Founding access capped - no longer available
+    soldOutMessage: "Early access is no longer available."
   }
 };
