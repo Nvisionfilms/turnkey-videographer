@@ -252,6 +252,16 @@ export default function Unlock() {
         </div>
       </section>
 
+      {/* POSITIONING STATEMENT */}
+      <section className="px-6 pb-6">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            TurnKey is a pricing ledger.<br />
+            It records pricing decisions so they can't be forgotten.
+          </p>
+        </div>
+      </section>
+
       {/* PRICING OPTIONS */}
       <section id="pricing" className="px-6 py-8">
         <div className="max-w-4xl mx-auto">
@@ -406,6 +416,21 @@ export default function Unlock() {
               Activate recording
             </Button>
           </div>
+        </div>
+      </section>
+
+      {/* CONSTRAINT BLOCK */}
+      <section className="px-6 py-8">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-medium mb-3" style={{ color: 'var(--color-text-muted)' }}>
+            What TurnKey is not
+          </p>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            It is not a calculator.<br />
+            It does not suggest prices.<br />
+            It does not motivate or reassure.<br /><br />
+            It records decisions.
+          </p>
         </div>
       </section>
 
