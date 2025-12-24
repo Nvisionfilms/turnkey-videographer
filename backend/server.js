@@ -1797,9 +1797,38 @@ app.post('/api/admin/run-migration', async (req, res) => {
   }
 });
 
+// ==================== AUTOMATED CRON JOBS ====================
+
+// Auto-clear commissions: runs every 24 hours
+// Moves pending -> cleared after 14 days
+async function runAutoClear() {
+  try {
+    const result = await pool.query(
+      `UPDATE affiliate_commissions
+       SET status = 'cleared'
+       WHERE status = 'pending'
+       AND eligible_at <= NOW()
+       RETURNING id, affiliate_code, commission_cents`
+    );
+    
+    if (result.rows.length > 0) {
+      console.log(`✅ [CRON] Auto-cleared ${result.rows.length} commissions`);
+    }
+  } catch (error) {
+    console.error('❌ [CRON] Auto-clear error:', error.message);
+  }
+}
+
+// Run auto-clear every 24 hours (86400000 ms)
+setInterval(runAutoClear, 24 * 60 * 60 * 1000);
+
+// Also run once on server start (after 10 seconds to let DB connect)
+setTimeout(runAutoClear, 10000);
+
 // ==================== START SERVER ====================
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`⏰ Auto-clear cron: Running every 24 hours`);
 });
