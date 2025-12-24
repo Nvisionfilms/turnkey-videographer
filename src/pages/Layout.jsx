@@ -353,20 +353,20 @@ export default function Layout({ children }) {
             </div>
             
             <div className="flex gap-4 justify-center pt-2">
-              <a 
-                href="/#/Terms" 
+              <Link 
+                to="/Terms" 
                 className="text-xs hover:underline"
                 style={{ color: 'var(--color-text-muted)' }}
               >
                 Terms
-              </a>
-              <a 
-                href="/#/Privacy" 
+              </Link>
+              <Link 
+                to="/Privacy" 
                 className="text-xs hover:underline"
                 style={{ color: 'var(--color-text-muted)' }}
               >
                 Privacy
-              </a>
+              </Link>
             </div>
           </SidebarFooter>
         </Sidebar>
