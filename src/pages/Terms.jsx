@@ -76,16 +76,6 @@ export default function Terms() {
 
           <section>
             <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-              Founding Operator
-            </h2>
-            <p>
-              Founding Operator is limited to 98 spots. If the cap is exceeded, purchases beyond 
-              the limit are refunded in full.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--color-text-primary)' }}>
               No Guarantees
             </h2>
             <p>

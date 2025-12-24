@@ -215,7 +215,7 @@ export default function ContentPlaybook() {
                 This approach works especially well for:
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 text-sm" style={{ color: "var(--color-text-primary)" }}>
-                {["Service-based businesses", "Founders and operators", "Companies that rely on trust and long-term relationships"].map((t) => (
+                {["Service-based businesses", "Operators and owners", "Companies that rely on trust and long-term relationships"].map((t) => (
                   <div
                     key={t}
                     className="rounded-lg border px-3 py-2"

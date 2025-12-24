@@ -1,20 +1,14 @@
 // STRIPE PAYMENT LINKS - Centralized for auditability
 // Do not inline these in components
 
-// Founding Operator sold out threshold (buffer: show SOLD OUT at 90-95 to honor "100 spots" claim)
-export const FOUNDING_SOLD_OUT_THRESHOLD = 90;
-export const FOUNDING_SOLD_OUT = true; // Set to true when threshold reached; disables Founding CTA
-
 export const STRIPE_LINKS = {
-  operatorMonthly: "https://buy.stripe.com/00w3cvh1l8eIanf2hccIE05",
-  operatorAnnual: "https://buy.stripe.com/7sY3cvaCXeD666ZaNIcIE06",
-  foundingOperator: "https://buy.stripe.com/bJebJ17qL2Uo2UNbRMcIE07"
+  operatorMonthly: "https://buy.stripe.com/test_5kQ28qfwd7sP3wu47A8IU01",
+  operatorAnnual: "https://buy.stripe.com/test_28E9AS3NvfZl0ki47A8IU00"
 };
 
 export const STRIPE_PRODUCTS = {
   operatorMonthly: "prod_TehfhDouskoIkz",
-  operatorAnnual: "prod_TehhXkCkSiXDaj",
-  foundingOperator: "prod_TehiV9xE4EoS7B"
+  operatorAnnual: "prod_TehhXkCkSiXDaj"
 };
 
 // Pricing display values (keep in sync with Stripe)
@@ -38,14 +32,5 @@ export const PRICING = {
     monthlyEquivalent: 12.42,
     savings: "35%",
     tagline: "A year of discipline."
-  },
-  foundingOperator: {
-    name: "Founding Operator",
-    price: 299,
-    period: "one-time",
-    tagline: "You believed early.",
-    limited: true,
-    soldOut: true, // Founding access capped - no longer available
-    soldOutMessage: "Early access is no longer available."
   }
 };

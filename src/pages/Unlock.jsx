@@ -13,7 +13,7 @@ import { getDeviceId } from "@/utils/deviceFingerprint";
 import { getReferralCookie } from "../utils/affiliateUtils";
 import { trackConversion } from "../utils/affiliateUtils";
 import { apiCall, API_ENDPOINTS } from "../config/api";
-import { STRIPE_LINKS, PRICING, FOUNDING_SOLD_OUT } from "../utils/stripeLinks";
+import { STRIPE_LINKS, PRICING } from "../utils/stripeLinks";
 
 export default function Unlock() {
   const navigate = useNavigate();
@@ -179,7 +179,7 @@ export default function Unlock() {
       {/* PRICING OPTIONS */}
       <section id="pricing" className="px-6 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             {/* FREE */}
             <div className="rounded-lg p-5" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
               <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Limited</h3>
@@ -238,43 +238,6 @@ export default function Unlock() {
               >
                 Activate
               </button>
-            </div>
-
-            {/* FOUNDING OPERATOR */}
-            <div className="rounded-lg p-5 relative" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)', opacity: FOUNDING_SOLD_OUT ? 0.7 : 1 }}>
-              <div className="absolute -top-2 right-2 px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
-                {FOUNDING_SOLD_OUT ? 'SOLD OUT' : '98 left'}
-              </div>
-              <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Founding</h3>
-              <div className="text-2xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>$299</div>
-              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>one time</p>
-              <ul className="space-y-1 mb-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                <li>- Lifetime access</li>
-                <li>- Unlimited exports</li>
-                <li>- Full recording</li>
-                <li>- History + patterns</li>
-              </ul>
-              {FOUNDING_SOLD_OUT ? (
-                <div 
-                  className="w-full py-2 rounded text-xs text-center"
-                  style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
-                >
-                  SOLD OUT
-                </div>
-              ) : (
-                <button
-                  onClick={() => window.location.href = STRIPE_LINKS.foundingOperator}
-                  className="w-full py-2 rounded text-xs"
-                  style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
-                >
-                  Activate
-                </button>
-              )}
-              {FOUNDING_SOLD_OUT && (
-                <p className="text-xs mt-2 text-center" style={{ color: 'var(--color-text-muted)' }}>
-                  Early access is no longer available.
-                </p>
-              )}
             </div>
           </div>
         </div>
