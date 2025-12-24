@@ -897,6 +897,119 @@ app.post('/api/unlock/validate-enhanced', async (req, res) => {
   }
 });
 
+// Sync: Create user records for accounts with codes but missing from users table
+app.post('/api/sync-users-from-codes', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Find all codes that have user_email but no corresponding user record
+      const orphanedCodes = await client.query(`
+        SELECT DISTINCT uc.user_email, uc.code
+        FROM unlock_codes uc
+        LEFT JOIN users u ON uc.user_email = u.email
+        WHERE uc.user_email IS NOT NULL 
+        AND uc.user_email != ''
+        AND u.email IS NULL
+      `);
+      
+      let createdUsers = [];
+      
+      for (const codeInfo of orphanedCodes.rows) {
+        // Create user record for each orphaned code
+        const expiresAt = new Date();
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        
+        const userResult = await client.query(`
+          INSERT INTO users (email, unlock_code, subscription_type, expires_at, status)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING *
+        `, [
+          codeInfo.user_email.toLowerCase(),
+          codeInfo.code,
+          'one-time',
+          expiresAt,
+          'active'
+        ]);
+        
+        createdUsers.push(userResult.rows[0]);
+      }
+      
+      await client.query('COMMIT');
+      
+      res.json({
+        success: true,
+        message: `Created ${createdUsers.length} user records`,
+        createdUsers: createdUsers
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('Sync users error:', error);
+    res.status(500).json({ error: 'Failed to sync users' });
+  }
+});
+
+// Sync: Update affiliate records for conversions
+app.post('/api/sync-affiliate-conversions', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Find all conversions that need affiliate records created
+      const orphanedConversions = await client.query(`
+        SELECT DISTINCT c.affiliate_code
+        FROM conversions c
+        LEFT JOIN affiliates a ON c.affiliate_code = a.code
+        WHERE c.affiliate_code IS NOT NULL 
+        AND c.affiliate_code != ''
+        AND a.code IS NULL
+      `);
+      
+      let createdAffiliates = [];
+      
+      for (const conv of orphanedConversions.rows) {
+        // Create affiliate record for each orphaned conversion
+        const affiliateResult = await client.query(`
+          INSERT INTO affiliates (code, total_conversions, total_earnings, pending_payout)
+          VALUES ($1, 0, 0, 0)
+          RETURNING *
+        `, [conv.affiliate_code.toUpperCase()]);
+        
+        createdAffiliates.push(affiliateResult.rows[0]);
+      }
+      
+      await client.query('COMMIT');
+      
+      res.json({
+        success: true,
+        message: `Created ${createdAffiliates.length} affiliate records`,
+        createdAffiliates: createdAffiliates
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('Sync affiliates error:', error);
+    res.status(500).json({ error: 'Failed to sync affiliates' });
+  }
+});
+
 // Temporary: Delete specific refunded account
 app.delete('/api/delete-refunded-account', async (req, res) => {
   try {
