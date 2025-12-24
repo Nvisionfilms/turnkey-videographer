@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { isSubscriptionActive, activateSubscriptionCode, getSubscriptionDetails } from '@/services/serialCodeService';
+import { apiCall, API_ENDPOINTS } from '../../config/api';
 
 const STORAGE_KEYS = {
   UNLOCKED: 'nvision_is_unlocked',
@@ -22,6 +23,46 @@ export function useUnlockStatus() {
   const [trialDaysLeft, setTrialDaysLeft] = useState(null);
   const [isTrialActive, setIsTrialActive] = useState(false);
   const [subscriptionDetails, setSubscriptionDetails] = useState(null);
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Validate stored credentials against Railway API
+  const validateWithServer = useCallback(async () => {
+    const storedEmail = localStorage.getItem('userEmail');
+    const storedCode = localStorage.getItem('unlockCode');
+    
+    if (!storedEmail || !storedCode) {
+      return false;
+    }
+    
+    try {
+      setIsValidating(true);
+      const response = await apiCall('/api/unlock/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          code: storedCode,
+          email: storedEmail
+        })
+      });
+      
+      if (response.success && response.user?.status === 'active') {
+        // Valid subscription - update localStorage flags
+        localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
+        localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
+        return true;
+      } else {
+        // Invalid or expired - clear localStorage
+        localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+        localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+        return false;
+      }
+    } catch (error) {
+      // API error - fall back to localStorage (offline mode)
+      console.warn('Server validation failed, using cached status:', error.message);
+      return localStorage.getItem(STORAGE_KEYS.DIRECT_UNLOCK) === 'true';
+    } finally {
+      setIsValidating(false);
+    }
+  }, []);
 
   const checkStatus = () => {
     // Check if permanently unlocked (legacy or subscription)
@@ -75,7 +116,26 @@ export function useUnlockStatus() {
   };
 
   useEffect(() => {
+    // Initial check from localStorage
     checkStatus();
+    
+    // Validate with server on mount (async)
+    const validateOnMount = async () => {
+      const storedEmail = localStorage.getItem('userEmail');
+      const storedCode = localStorage.getItem('unlockCode');
+      
+      if (storedEmail && storedCode) {
+        const isValid = await validateWithServer();
+        if (!isValid) {
+          // Server says invalid - update state
+          setIsUnlocked(false);
+          localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+          localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+        }
+      }
+    };
+    
+    validateOnMount();
     
     // Listen for storage changes (in case of updates from other tabs/components)
     const handleStorageChange = (e) => {
@@ -93,7 +153,7 @@ export function useUnlockStatus() {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, []);
+  }, [validateWithServer]);
 
   const markFreeQuoteUsed = () => {
     const timestamp = Date.now().toString();
