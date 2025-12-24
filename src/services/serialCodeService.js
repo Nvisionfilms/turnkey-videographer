@@ -101,17 +101,9 @@ export function verifyCodeChecksum(code) {
 export async function activateSubscriptionCode(code, email = '') {
   const normalizedCode = code.trim().toUpperCase();
   
-  // Check if already activated on this device
-  const existingCode = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_CODE);
-  const isActivated = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED) === 'true';
-  
-  if (isActivated && existingCode) {
-    return {
-      success: false,
-      message: 'A subscription is already active on this device.',
-      code: 'ALREADY_ACTIVATED'
-    };
-  }
+  // Clear any old localStorage data - server is source of truth now
+  localStorage.removeItem(STORAGE_KEYS.SUBSCRIPTION_CODE);
+  localStorage.removeItem(STORAGE_KEYS.SUBSCRIPTION_ACTIVATED);
   
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-backend-c520.up.railway.app';
   
