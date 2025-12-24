@@ -830,9 +830,9 @@ app.post('/api/unlock/validate-enhanced', async (req, res) => {
       return res.status(400).json({ error: 'Email and code are required' });
     }
     
-    // Get user record with session ID
+    // Get user record (stripe_session_id is optional)
     const result = await pool.query(
-      `SELECT email, unlock_code, subscription_type, expires_at, status, stripe_session_id
+      `SELECT email, unlock_code, subscription_type, expires_at, status
        FROM users
        WHERE email = $1 AND unlock_code = $2`,
       [email.toLowerCase(), code.toUpperCase()]
@@ -843,29 +843,6 @@ app.post('/api/unlock/validate-enhanced', async (req, res) => {
     }
     
     const user = result.rows[0];
-    
-    // If we have a session ID, validate it with Stripe
-    if (user.stripe_session_id) {
-      try {
-        const session = await stripe.checkout.sessions.retrieve(user.stripe_session_id);
-        
-        if (session.payment_status !== 'paid') {
-          // Payment was refunded or failed, revoke access
-          await pool.query(
-            'UPDATE users SET status = $1 WHERE email = $2',
-            ['revoked', email.toLowerCase()]
-          );
-          
-          return res.status(403).json({ 
-            error: 'Payment refunded or failed',
-            status: 'revoked'
-          });
-        }
-      } catch (stripeError) {
-        console.error('Stripe session validation failed:', stripeError);
-        // If we can't validate with Stripe, check local status
-      }
-    }
     
     // Check if expired
     if (user.expires_at && new Date(user.expires_at) < new Date()) {
