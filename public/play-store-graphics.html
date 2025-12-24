@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Play Store Graphics Generator</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 40px;
+        }
+        h1 { color: #D4AF37; }
+        h2 { margin-top: 40px; color: #ccc; }
+        .instructions {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .graphic-container {
+            margin: 20px 0;
+            display: inline-block;
+        }
+        .label {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        /* App Icon - 512x512 */
+        .app-icon {
+            width: 512px;
+            height: 512px;
+            background: linear-gradient(145deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .app-icon img {
+            width: 340px;
+            height: auto;
+        }
+        
+        /* Feature Graphic - 1024x500 */
+        .feature-graphic {
+            width: 1024px;
+            height: 500px;
+            background: linear-gradient(145deg, #0a0a0a 0%, #151515 50%, #0a0a0a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .feature-graphic img {
+            max-width: 700px;
+            height: auto;
+        }
+        .tagline {
+            color: #D4AF37;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google Play Store Graphics</h1>
+    
+    <div class="instructions">
+        <strong>Instructions:</strong>
+        <ol>
+            <li>Right-click each graphic below</li>
+            <li>Select "Save image as..." or take a screenshot</li>
+            <li>Upload to Google Play Console</li>
+        </ol>
+        <p><strong>Note:</strong> For best quality, use a screenshot tool to capture at exact dimensions, or use browser dev tools to save as PNG.</p>
+    </div>
+
+    <h2>App Icon (512 x 512 px)</h2>
+    <div class="label">Right-click → Save image as PNG</div>
+    <div class="graphic-container">
+        <div class="app-icon" id="appIcon">
+            <img src="file:///C:/Users/nvisi/Downloads/turnkey_icon.png" alt="TurnKey Icon" 
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22340%22 height=%22340%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23D4AF37%22 font-size=%22200%22>T</text></svg>'">
+        </div>
+    </div>
+
+    <h2>Feature Graphic (1024 x 500 px)</h2>
+    <div class="label">Right-click → Save image as PNG</div>
+    <div class="graphic-container">
+        <div class="feature-graphic" id="featureGraphic">
+            <img src="file:///C:/Users/nvisi/Downloads/turnkey_logo.png" alt="TurnKey Logo"
+                 onerror="this.innerHTML='<span style=color:#D4AF37;font-size:72px;font-weight:bold>TurnKey</span>'">
+            <div class="tagline">Professional Video Production Pricing</div>
+        </div>
+    </div>
+
+    <h2>Quick Screenshot Method:</h2>
+    <div class="instructions">
+        <p><strong>Windows:</strong> Press <code>Win + Shift + S</code> to open Snipping Tool, then drag to select each graphic.</p>
+        <p><strong>Save dimensions:</strong></p>
+        <ul>
+            <li>App Icon: 512 x 512 pixels</li>
+            <li>Feature Graphic: 1024 x 500 pixels</li>
+        </ul>
+    </div>
+
+</body>
+</html>
