@@ -38,36 +38,40 @@ export function useUnlockStatus() {
     try {
       setIsValidating(true);
       
-      // If we have a session ID, validate it to prevent refund bypass
+      // Always try to validate the session if we have it
       if (storedSessionId) {
-        const sessionResponse = await apiCall('/api/unlock/validate-session', {
-          method: 'POST',
-          body: JSON.stringify({
-            email: storedEmail,
-            sessionId: storedSessionId
-          })
-        });
-        
-        if (sessionResponse.status === 'revoked') {
-          // Payment was refunded - clear all access
-          localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
-          localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
-          localStorage.removeItem('userEmail');
-          localStorage.removeItem('unlockCode');
-          localStorage.removeItem('stripeSessionId');
-          return false;
-        }
-        
-        if (sessionResponse.isActive) {
-          // Valid session - update localStorage flags
-          localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
-          localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
-          return true;
+        try {
+          const sessionResponse = await apiCall('/api/unlock/validate-session', {
+            method: 'POST',
+            body: JSON.stringify({
+              email: storedEmail,
+              sessionId: storedSessionId
+            })
+          });
+          
+          if (sessionResponse.status === 'revoked') {
+            // Payment was refunded - clear all access
+            localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+            localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('unlockCode');
+            localStorage.removeItem('stripeSessionId');
+            return false;
+          }
+          
+          if (sessionResponse.isActive) {
+            // Valid session - update localStorage flags
+            localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
+            localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
+            return true;
+          }
+        } catch (sessionError) {
+          console.warn('Session validation failed, falling back to code validation:', sessionError);
         }
       }
       
-      // Fallback to regular code validation
-      const response = await apiCall('/api/unlock/verify', {
+      // Use enhanced validation that checks Stripe session from database
+      const response = await apiCall('/api/unlock/validate-enhanced', {
         method: 'POST',
         body: JSON.stringify({
           code: storedCode,
@@ -75,7 +79,17 @@ export function useUnlockStatus() {
         })
       });
       
-      if (response.success && response.user?.status === 'active') {
+      if (response.status === 'revoked') {
+        // Payment was refunded - clear all access
+        localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+        localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('unlockCode');
+        localStorage.removeItem('stripeSessionId');
+        return false;
+      }
+      
+      if (response.isActive) {
         // Valid subscription - update localStorage flags
         localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
         localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');

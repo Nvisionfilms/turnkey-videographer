@@ -821,6 +821,82 @@ app.post('/api/unlock/validate-session', async (req, res) => {
   }
 });
 
+// Enhanced validation that checks Stripe session status
+app.post('/api/unlock/validate-enhanced', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and code are required' });
+    }
+    
+    // Get user record with session ID
+    const result = await pool.query(
+      `SELECT email, unlock_code, subscription_type, expires_at, status, stripe_session_id
+       FROM users
+       WHERE email = $1 AND unlock_code = $2`,
+      [email.toLowerCase(), code.toUpperCase()]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No valid subscription found' });
+    }
+    
+    const user = result.rows[0];
+    
+    // If we have a session ID, validate it with Stripe
+    if (user.stripe_session_id) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(user.stripe_session_id);
+        
+        if (session.payment_status !== 'paid') {
+          // Payment was refunded or failed, revoke access
+          await pool.query(
+            'UPDATE users SET status = $1 WHERE email = $2',
+            ['revoked', email.toLowerCase()]
+          );
+          
+          return res.status(403).json({ 
+            error: 'Payment refunded or failed',
+            status: 'revoked'
+          });
+        }
+      } catch (stripeError) {
+        console.error('Stripe session validation failed:', stripeError);
+        // If we can't validate with Stripe, check local status
+      }
+    }
+    
+    // Check if expired
+    if (user.expires_at && new Date(user.expires_at) < new Date()) {
+      await pool.query(
+        'UPDATE users SET status = $1 WHERE email = $2',
+        ['expired', email.toLowerCase()]
+      );
+      
+      return res.json({
+        email: user.email,
+        unlockCode: user.unlock_code,
+        status: 'expired'
+      });
+    }
+    
+    // Session is valid and paid
+    res.json({
+      email: user.email,
+      unlockCode: user.unlock_code,
+      subscriptionType: user.subscription_type,
+      expiresAt: user.expires_at,
+      status: user.status,
+      isActive: user.status === 'active'
+    });
+    
+  } catch (error) {
+    console.error('Enhanced validation error:', error);
+    res.status(500).json({ error: 'Failed to validate subscription' });
+  }
+});
+
 // Check user subscription status
 app.get('/api/unlock/status/:email', async (req, res) => {
   try {
