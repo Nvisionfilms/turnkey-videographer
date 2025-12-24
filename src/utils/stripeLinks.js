@@ -2,8 +2,8 @@
 // Do not inline these in components
 
 export const STRIPE_LINKS = {
-  operatorMonthly: "https://buy.stripe.com/test_5kQ28qfwd7sP3wu47A8IU01",
-  operatorAnnual: "https://buy.stripe.com/test_28E9AS3NvfZl0ki47A8IU00"
+  operatorMonthly: "https://buy.stripe.com/bJe3cu6XN5ExcQs42E7ss00",
+  operatorAnnual: "https://buy.stripe.com/dRmeVcgyn5Ex9EgfLm7ss01"
 };
 
 export const STRIPE_PRODUCTS = {
