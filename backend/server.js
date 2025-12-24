@@ -14,11 +14,16 @@ const PORT = process.env.PORT || 3000;
 // Middleware - CORS
 // Important: browsers enforce CORS (PowerShell/curl do not). We reflect the request Origin so
 // Netlify previews, custom domains, and localhost can call the API.
-// We do not use cookie-based auth here, so credentials are intentionally disabled.
+// Capacitor Android uses capacitor://localhost or https://localhost
 const corsOptions = {
-  origin: true,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    // Allow all origins for now (Capacitor, Netlify, localhost, etc)
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   credentials: false,
 };
 app.use(cors(corsOptions));
