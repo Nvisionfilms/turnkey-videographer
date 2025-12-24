@@ -69,15 +69,16 @@ async function handleCheckoutCompleted(session) {
     const unlockCode = await generateUniqueUnlockCode(pool);
     console.log(`Generated unlock code: ${unlockCode}`);
 
-    // 2. Mark code as used and assign to customer
+    // 2. Insert the new code into unlock_codes table and mark as used
     const expiresAt = new Date();
     expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year from now
 
     await client.query(
-      `UPDATE unlock_codes 
-       SET status = $1, user_email = $2, affiliate_code = $3, activated_at = NOW()
-       WHERE code = $4`,
-      ['used', customerEmail.toLowerCase(), affiliateCode, unlockCode]
+      `INSERT INTO unlock_codes (code, status, user_email, affiliate_code, activated_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       ON CONFLICT (code) DO UPDATE 
+       SET status = $2, user_email = $3, affiliate_code = $4, activated_at = NOW()`,
+      [unlockCode, 'used', customerEmail.toLowerCase(), affiliateCode]
     );
 
     // 3. Create user account
