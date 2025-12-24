@@ -1,10 +1,12 @@
 import express from 'express';
 import Stripe from 'stripe';
+import { Resend } from 'resend';
 import pool from '../db.js';
 import { generateUniqueUnlockCode } from '../utils/unlockCodeGenerator.js';
 
 const router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Stripe webhook endpoint - must use raw body
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -54,6 +56,7 @@ async function handleCheckoutCompleted(session) {
   const amountPaid = session.amount_total / 100; // Convert from cents
   const affiliateCode = session.metadata?.affiliateCode || session.client_reference_id;
   const discountCode = session.metadata?.discountCode;
+  const sessionId = session.id; // Store session ID for validation
 
   if (!customerEmail) {
     console.error('❌ No customer email found in session');
@@ -83,11 +86,11 @@ async function handleCheckoutCompleted(session) {
 
     // 3. Create user account
     await client.query(
-      `INSERT INTO users (email, unlock_code, subscription_type, expires_at, status)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (email, unlock_code, subscription_type, expires_at, status, stripe_session_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (email) DO UPDATE 
-       SET unlock_code = $2, expires_at = $4, status = $5`,
-      [customerEmail.toLowerCase(), unlockCode, 'one-time', expiresAt, 'active']
+       SET unlock_code = $2, expires_at = $4, status = $5, stripe_session_id = $6`,
+      [customerEmail.toLowerCase(), unlockCode, 'one-time', expiresAt, 'active', sessionId]
     );
 
     // 4. Track conversion for affiliate (if affiliate code provided)
@@ -123,13 +126,39 @@ async function handleCheckoutCompleted(session) {
 
     await client.query('COMMIT');
 
-    // 6. TODO: Send email with unlock code
-    // await sendUnlockCodeEmail({
-    //   to: customerEmail,
-    //   customerName: customerName,
-    //   unlockCode: unlockCode,
-    //   amountPaid: amountPaid
-    // });
+    // 6. Send email with unlock code via Resend
+    try {
+      await resend.emails.send({
+        from: 'noreply@helpmefilm.com',
+        to: [customerEmail],
+        subject: 'Your NVision Unlock Code',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1a1a1a;">Payment Successful!</h2>
+            <p>Hi ${customerName},</p>
+            <p>Thank you for your payment of $${amountPaid}. Your unlock code is ready:</p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="font-size: 24px; font-weight: bold; color: #2563eb; letter-spacing: 2px; text-align: center;">
+                ${unlockCode}
+              </p>
+            </div>
+            <p>To activate your access:</p>
+            <ol>
+              <li>Go to <a href="https://www.helpmefilm.com/#/Unlock">https://www.helpmefilm.com/#/Unlock</a></li>
+              <li>Enter your email: ${customerEmail}</li>
+              <li>Enter your unlock code: ${unlockCode}</li>
+              <li>Click "Activate"</li>
+            </ol>
+            <p style="color: #666; font-size: 14px;">This code is valid for one year from activation.</p>
+            <p>Best regards,<br>The NVision Team</p>
+          </div>
+        `
+      });
+      console.log('✅ Email sent to:', customerEmail);
+    } catch (emailError) {
+      console.error('❌ Failed to send email:', emailError);
+      // Continue anyway - the code is still generated and stored
+    }
 
     console.log(`✅ Order processed successfully for ${customerEmail}`);
     console.log(`   Unlock Code: ${unlockCode}`);

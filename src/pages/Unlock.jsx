@@ -141,8 +141,19 @@ export default function Unlock() {
       localStorage.setItem('nvision_is_unlocked', 'true');
       localStorage.setItem('nvision_direct_unlock', 'true');
       
+      // Store session ID for refund validation (if available from activation)
+      const sessionId = searchParams.get('session_id');
+      if (sessionId) {
+        localStorage.setItem('stripeSessionId', sessionId);
+      }
+      
       // Show success modal
       setShowSuccessModal(true);
+      
+      // Auto-refresh after 2 seconds to update unlock status
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       toast({
         title: "Invalid access code",

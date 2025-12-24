@@ -25,10 +25,11 @@ export function useUnlockStatus() {
   const [subscriptionDetails, setSubscriptionDetails] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
 
-  // Validate stored credentials against Railway API
+  // Validate stored credentials and Stripe session against Railway API
   const validateWithServer = useCallback(async () => {
     const storedEmail = localStorage.getItem('userEmail');
     const storedCode = localStorage.getItem('unlockCode');
+    const storedSessionId = localStorage.getItem('stripeSessionId');
     
     if (!storedEmail || !storedCode) {
       return false;
@@ -36,6 +37,36 @@ export function useUnlockStatus() {
     
     try {
       setIsValidating(true);
+      
+      // If we have a session ID, validate it to prevent refund bypass
+      if (storedSessionId) {
+        const sessionResponse = await apiCall('/api/unlock/validate-session', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: storedEmail,
+            sessionId: storedSessionId
+          })
+        });
+        
+        if (sessionResponse.status === 'revoked') {
+          // Payment was refunded - clear all access
+          localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+          localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('unlockCode');
+          localStorage.removeItem('stripeSessionId');
+          return false;
+        }
+        
+        if (sessionResponse.isActive) {
+          // Valid session - update localStorage flags
+          localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
+          localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
+          return true;
+        }
+      }
+      
+      // Fallback to regular code validation
       const response = await apiCall('/api/unlock/verify', {
         method: 'POST',
         body: JSON.stringify({

@@ -746,6 +746,81 @@ app.post('/api/unlock/activate', async (req, res) => {
   }
 });
 
+// Validate Stripe session to prevent refund bypass
+app.post('/api/unlock/validate-session', async (req, res) => {
+  try {
+    const { email, sessionId } = req.body;
+    
+    if (!email || !sessionId) {
+      return res.status(400).json({ error: 'Email and sessionId are required' });
+    }
+    
+    // Get user record with session ID
+    const result = await pool.query(
+      `SELECT email, unlock_code, subscription_type, expires_at, status, stripe_session_id
+       FROM users
+       WHERE email = $1 AND stripe_session_id = $2`,
+      [email.toLowerCase(), sessionId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No valid session found' });
+    }
+    
+    const user = result.rows[0];
+    
+    // Validate the session with Stripe to ensure it's not refunded
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      
+      if (session.payment_status !== 'paid') {
+        // Payment was refunded or failed, revoke access
+        await pool.query(
+          'UPDATE users SET status = $1 WHERE email = $2',
+          ['revoked', email.toLowerCase()]
+        );
+        
+        return res.status(403).json({ 
+          error: 'Payment refunded or failed',
+          status: 'revoked'
+        });
+      }
+      
+      // Check if expired
+      if (user.expires_at && new Date(user.expires_at) < new Date()) {
+        await pool.query(
+          'UPDATE users SET status = $1 WHERE email = $2',
+          ['expired', email.toLowerCase()]
+        );
+        
+        return res.json({
+          email: user.email,
+          unlockCode: user.unlock_code,
+          status: 'expired'
+        });
+      }
+      
+      // Session is valid and paid
+      res.json({
+        email: user.email,
+        unlockCode: user.unlock_code,
+        subscriptionType: user.subscription_type,
+        expiresAt: user.expires_at,
+        status: user.status,
+        isActive: user.status === 'active'
+      });
+      
+    } catch (stripeError) {
+      console.error('Stripe session validation failed:', stripeError);
+      return res.status(500).json({ error: 'Failed to validate session with Stripe' });
+    }
+    
+  } catch (error) {
+    console.error('Session validation error:', error);
+    res.status(500).json({ error: 'Failed to validate session' });
+  }
+});
+
 // Check user subscription status
 app.get('/api/unlock/status/:email', async (req, res) => {
   try {
