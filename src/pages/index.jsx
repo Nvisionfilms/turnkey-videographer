@@ -16,6 +16,8 @@ import AffiliateDashboard from "./AffiliateDashboard";
 
 import AffiliateLogin from "./AffiliateLogin";
 
+import Affiliate from "./Affiliate";
+
 import AdminAffiliates from "./AdminAffiliates";
 
 import AdminAnalytics from "./AdminAnalytics";
@@ -92,7 +94,7 @@ function PagesContent() {
                 
                 <Route path="/Unlock" element={<Unlock />} />
                 
-                <Route path="/affiliate" element={<AffiliateLogin />} />
+                <Route path="/affiliate" element={<Affiliate />} />
                 
                 <Route path="/affiliate/signup" element={<AffiliateSignup />} />
                 

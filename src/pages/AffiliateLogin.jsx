@@ -84,6 +84,11 @@ export default function AffiliateLogin() {
 
       const affiliate = response.affiliate;
 
+      // Store affiliate session in localStorage
+      localStorage.setItem('affiliateCode', affiliate.code);
+      localStorage.setItem('affiliateName', affiliate.name);
+      localStorage.setItem('affiliateEmail', affiliate.email);
+
       toast({
         title: "Welcome back!",
         description: `Logged in as ${affiliate.name}`,

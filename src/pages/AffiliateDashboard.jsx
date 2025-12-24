@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Copy, Check, DollarSign, Users, MousePointerClick, TrendingUp, ExternalLink } from "lucide-react";
+import { Copy, Check, DollarSign, Users, MousePointerClick, TrendingUp, ExternalLink, LogOut } from "lucide-react";
 import { 
   generateReferralUrl,
   canRequestPayout,
@@ -77,13 +77,28 @@ export default function AffiliateDashboard() {
     <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            Welcome back, {affiliate.name}!
-          </h1>
-          <p style={{ color: 'var(--color-text-secondary)' }}>
-            Your affiliate code: <span className="font-mono font-semibold" style={{ color: 'var(--color-accent-primary)' }}>{affiliate.code}</span>
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+              Welcome back, {affiliate.name}!
+            </h1>
+            <p style={{ color: 'var(--color-text-secondary)' }}>
+              Your affiliate code: <span className="font-mono font-semibold" style={{ color: 'var(--color-accent-primary)' }}>{affiliate.code}</span>
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              localStorage.removeItem('affiliateCode');
+              localStorage.removeItem('affiliateName');
+              localStorage.removeItem('affiliateEmail');
+              navigate('/affiliate/login');
+            }}
+            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
         </div>
 
         {/* Stats Grid */}
