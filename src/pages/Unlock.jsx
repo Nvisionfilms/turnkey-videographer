@@ -13,7 +13,7 @@ import { getDeviceId } from "@/utils/deviceFingerprint";
 import { getReferralCookie } from "../utils/affiliateUtils";
 import { trackConversion } from "../utils/affiliateUtils";
 import { apiCall, API_ENDPOINTS } from "../config/api";
-import { STRIPE_LINKS, PRICING } from "../utils/stripeLinks";
+import { STRIPE_LINKS, PRICING, getStripeLink } from "../utils/stripeLinks";
 
 export default function Unlock() {
   const navigate = useNavigate();
@@ -287,7 +287,11 @@ export default function Unlock() {
                 <li>- Custom branding</li>
               </ul>
               <button
-                onClick={() => window.location.href = STRIPE_LINKS.operatorMonthly}
+                onClick={() => {
+                  const referral = getReferralCookie();
+                  const affiliateCode = referral?.code || null;
+                  window.location.href = getStripeLink('operatorMonthly', affiliateCode);
+                }}
                 className="w-full py-2 rounded text-xs font-medium"
                 style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)', border: '1px solid var(--color-button-border)' }}
               >
@@ -308,7 +312,11 @@ export default function Unlock() {
                 <li>- $12.42/month</li>
               </ul>
               <button
-                onClick={() => window.location.href = STRIPE_LINKS.operatorAnnual}
+                onClick={() => {
+                  const referral = getReferralCookie();
+                  const affiliateCode = referral?.code || null;
+                  window.location.href = getStripeLink('operatorAnnual', affiliateCode);
+                }}
                 className="w-full py-2 rounded text-xs"
                 style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
               >

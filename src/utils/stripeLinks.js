@@ -6,6 +6,20 @@ export const STRIPE_LINKS = {
   operatorAnnual: "https://buy.stripe.com/dRmeVcgyn5Ex9EgfLm7ss01"
 };
 
+// Get Stripe link with affiliate code appended (for tracking conversions)
+export function getStripeLink(plan, affiliateCode = null) {
+  const baseUrl = STRIPE_LINKS[plan];
+  if (!baseUrl) return null;
+  
+  // If affiliate code provided, append as client_reference_id
+  if (affiliateCode) {
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    return `${baseUrl}${separator}client_reference_id=${affiliateCode}`;
+  }
+  
+  return baseUrl;
+}
+
 export const STRIPE_PRODUCTS = {
   operatorMonthly: "prod_TehfhDouskoIkz",
   operatorAnnual: "prod_TehhXkCkSiXDaj"
