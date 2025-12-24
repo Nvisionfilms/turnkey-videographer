@@ -127,7 +127,7 @@ export default function RoleSelector({
 
   return (
     <Card className={cardClassName || "shadow-md border-slate-200"}>
-      <CardHeader className={cardHeaderClassName || "bg-slate-50 border-b border-slate-200"}>
+      <CardHeader className={cardHeaderClassName || ""}>
         <CardTitle className={`flex items-center gap-2 text-lg ${cardTitleClassName || ""}`}>
           <Users className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
           Roles & Services
@@ -159,7 +159,7 @@ export default function RoleSelector({
                   className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 text-center ${
                     selected 
                       ? 'border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-lg' 
-                      : 'border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-md'
+                      : 'border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-md'
                   }`}
                   style={{
                     cursor: hasNoPricingModel ? 'not-allowed' : 'pointer'
@@ -177,7 +177,7 @@ export default function RoleSelector({
                       <RoleIcon 
                         className="w-12 h-12" 
                         style={{ 
-                          color: selected ? 'white' : 'var(--color-accent-primary)',
+                          color: selected ? 'var(--color-bg-primary)' : 'var(--color-accent-primary)',
                           strokeWidth: 2
                         }} 
                       />
@@ -204,9 +204,9 @@ export default function RoleSelector({
                   {selected && (
                     <div 
                       className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ background: 'var(--color-success)' }}
+                      style={{ background: 'var(--color-accent-primary)' }}
                     >
-                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4" style={{ color: 'var(--color-bg-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
@@ -231,7 +231,7 @@ export default function RoleSelector({
                               onChange={(e) => handleQuantityChange(rate.id, 'crew_qty', e.target.value)}
                               className="h-10"
                               style={{ 
-                                background: 'white',
+                                background: 'var(--color-input-bg)',
                                 borderColor: 'var(--color-border)',
                                 color: 'var(--color-text-primary)'
                               }}
@@ -251,7 +251,7 @@ export default function RoleSelector({
                                   onChange={(e) => handleQuantityChange(rate.id, 'half_days', e.target.value)}
                                   className="h-10"
                                   style={{ 
-                                    background: 'white',
+                                    background: 'var(--color-input-bg)',
                                     borderColor: 'var(--color-border)',
                                     color: 'var(--color-text-primary)'
                                   }}
@@ -269,7 +269,7 @@ export default function RoleSelector({
                                   onChange={(e) => handleQuantityChange(rate.id, 'full_days', e.target.value)}
                                   className="h-10"
                                   style={{ 
-                                    background: 'white',
+                                    background: 'var(--color-input-bg)',
                                     borderColor: 'var(--color-border)',
                                     color: 'var(--color-text-primary)'
                                   }}
@@ -289,7 +289,7 @@ export default function RoleSelector({
                                 onChange={(e) => handleQuantityChange(rate.id, 'quantity', e.target.value)}
                                 className="h-10"
                                 style={{ 
-                                  background: 'white',
+                                  background: 'var(--color-input-bg)',
                                   borderColor: 'var(--color-border)',
                                   color: 'var(--color-text-primary)'
                                 }}
@@ -310,7 +310,7 @@ export default function RoleSelector({
                             onChange={(e) => handleQuantityChange(rate.id, 'minutes_output', e.target.value)}
                             className="h-10"
                             style={{ 
-                              background: 'white',
+                              background: 'var(--color-input-bg)',
                               borderColor: 'var(--color-border)',
                               color: 'var(--color-text-primary)'
                             }}
@@ -330,7 +330,7 @@ export default function RoleSelector({
                             className="h-10"
                             placeholder="Enter count or use preset"
                             style={{ 
-                              background: 'white',
+                              background: 'var(--color-input-bg)',
                               borderColor: 'var(--color-border)',
                               color: 'var(--color-text-primary)'
                             }}
@@ -349,7 +349,7 @@ export default function RoleSelector({
                             onChange={(e) => handleQuantityChange(rate.id, 'requests', e.target.value)}
                             className="h-10"
                             style={{ 
-                              background: 'white',
+                              background: 'var(--color-input-bg)',
                               borderColor: 'var(--color-border)',
                               color: 'var(--color-text-primary)'
                             }}

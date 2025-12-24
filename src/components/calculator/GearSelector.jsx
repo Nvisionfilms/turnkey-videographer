@@ -68,7 +68,7 @@ export default function GearSelector({
 
   return (
     <Card className={cardClassName || "shadow-md border-slate-200"}>
-      <CardHeader className={cardHeaderClassName || "bg-slate-50 border-b border-slate-200"}>
+      <CardHeader className={cardHeaderClassName || ""}>
         <div className="flex items-center justify-between">
           <CardTitle className={`flex items-center gap-2 text-lg ${cardTitleClassName || ""}`}>
             <Camera className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
@@ -119,7 +119,7 @@ export default function GearSelector({
                       className={`w-full p-5 rounded-2xl border-2 transition-all duration-200 text-center ${
                         selected 
                           ? 'border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-lg' 
-                          : 'border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-md'
+                          : 'border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-md'
                       }`}
                     >
                       {/* Icon */}
@@ -134,7 +134,7 @@ export default function GearSelector({
                           <GearIcon 
                             className="w-8 h-8" 
                             style={{ 
-                              color: selected ? 'white' : 'var(--color-accent-primary)',
+                              color: selected ? 'var(--color-bg-primary)' : 'var(--color-accent-primary)',
                               strokeWidth: 2
                             }} 
                           />
@@ -172,9 +172,9 @@ export default function GearSelector({
                       {selected && (
                         <div 
                           className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center"
-                          style={{ background: 'var(--color-success)' }}
+                          style={{ background: 'var(--color-accent-primary)' }}
                         >
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-4 h-4" style={{ color: 'var(--color-bg-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>

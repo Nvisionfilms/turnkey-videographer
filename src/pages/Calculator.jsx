@@ -2274,8 +2274,8 @@ export default function Calculator() {
                     type="button"
                     className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
                       formData.day_type === "half" && !formData.single_price_enabled 
-                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
-                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => {
                       // Update all selected roles to use half day
@@ -2308,8 +2308,8 @@ export default function Calculator() {
                     type="button"
                     className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
                       formData.day_type === "full" && !formData.single_price_enabled 
-                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
-                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => {
                       // Update all selected roles to use full day
@@ -2342,8 +2342,8 @@ export default function Calculator() {
                     type="button"
                     className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
                       formData.day_type === "custom" && !formData.single_price_enabled 
-                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
-                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => setFormData({...formData, day_type: "custom", single_price_enabled: false})}
                   >
@@ -2368,8 +2368,8 @@ export default function Calculator() {
                     type="button"
                     className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
                       formData.single_price_enabled 
-                        ? 'border-2 border-[var(--color-accent-primary)] bg-white shadow-sm' 
-                        : 'border-2 border-[var(--color-border)] bg-white hover:border-[var(--color-accent-primary)] hover:shadow-sm'
+                        ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
+                        : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => setFormData({...formData, single_price_enabled: true, day_type: null})}
                   >

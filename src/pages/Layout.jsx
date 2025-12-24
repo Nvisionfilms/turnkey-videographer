@@ -56,14 +56,14 @@ export default function Layout({ children }) {
       <style>{`
         :root {
           /* TurnKey Ledger Palette */
-          --color-bg-primary: #0B0D10;
-          --color-bg-secondary: #11141A;
-          --color-bg-tertiary: #141821;
-          --color-bg-card: #141821;
+          --color-bg-primary: #06101E;
+          --color-bg-secondary: #0A172B;
+          --color-bg-tertiary: #0D1B33;
+          --color-bg-card: #0D1B33;
 
-          --color-border: #1E2430;
-          --color-border-light: #1A1F29;
-          --color-border-dark: #2A3142;
+          --color-border: #1C2C44;
+          --color-border-light: #17263B;
+          --color-border-dark: #2A3E5E;
 
           --color-text-primary: #E6E9EF;
           --color-text-secondary: #A7AFBD;
@@ -78,12 +78,12 @@ export default function Layout({ children }) {
           --color-intent: #3A7F5A;
 
           /* Controls */
-          --color-input-bg: #11141A;
-          --color-input-border: #1E2430;
+          --color-input-bg: #0A172B;
+          --color-input-border: #1C2C44;
 
           --color-button-text: #E6E9EF;
-          --color-button-bg: #1E2430;
-          --color-button-border: #2A3142;
+          --color-button-bg: #10223A;
+          --color-button-border: #2A3E5E;
           --color-danger: #9B4B4B;
           --color-error: #9B4B4B;
         }

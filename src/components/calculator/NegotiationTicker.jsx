@@ -207,8 +207,8 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
               width: 18px;
               height: 18px;
               border-radius: 9999px;
-              background: #fff;
-              border: 2px solid rgba(0,0,0,0.55);
+              background: var(--color-bg-tertiary);
+              border: 2px solid rgba(230, 233, 239, 0.22);
               margin-top: -1px;
             }
 
@@ -224,9 +224,9 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
               width: 18px;
               height: 18px;
               border-radius: 9999px;
-              background: #fff;
+              background: var(--color-bg-tertiary);
               cursor: grab;
-              border: 2px solid rgba(0,0,0,0.55);
+              border: 2px solid rgba(230, 233, 239, 0.22);
               box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             }
             .negotiation-slider::-moz-range-thumb:active {
