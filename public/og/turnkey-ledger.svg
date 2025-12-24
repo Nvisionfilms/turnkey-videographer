@@ -1,0 +1,5 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1200" fill="#06101E"/>
+  <text x="600" y="540" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="600" fill="#E6E9EF" text-anchor="middle">TurnKey Pricing Ledger</text>
+  <text x="600" y="660" font-family="system-ui, -apple-system, sans-serif" font-size="36" fill="#A7AFBD" text-anchor="middle">Records pricing decisions.</text>
+</svg>

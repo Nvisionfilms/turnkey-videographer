@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Generate OG Images</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #1a1a1a;
+      font-family: system-ui, sans-serif;
+      color: white;
+    }
+    h1 { margin-bottom: 10px; }
+    p { color: #888; margin-bottom: 30px; }
+    .canvas-container {
+      margin-bottom: 40px;
+    }
+    canvas {
+      border: 1px solid #333;
+      display: block;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #4C6FFF;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    button:hover {
+      background: #3a5ce0;
+    }
+  </style>
+</head>
+<body>
+  <h1>TurnKey OG Image Generator</h1>
+  <p>Click the buttons to download the images, then place them in the /public/og/ folder.</p>
+
+  <div class="canvas-container">
+    <h2>1200×1200 (Meta/Facebook/Instagram)</h2>
+    <canvas id="canvas-square" width="1200" height="1200"></canvas>
+    <button onclick="downloadImage('canvas-square', 'turnkey-ledger.png')">Download turnkey-ledger.png</button>
+  </div>
+
+  <div class="canvas-container">
+    <h2>1200×630 (Twitter/LinkedIn)</h2>
+    <canvas id="canvas-wide" width="1200" height="630"></canvas>
+    <button onclick="downloadImage('canvas-wide', 'turnkey-ledger-wide.png')">Download turnkey-ledger-wide.png</button>
+  </div>
+
+  <script>
+    function drawImage(canvasId, width, height) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = '#06101E';
+      ctx.fillRect(0, 0, width, height);
+      
+      // Title
+      ctx.fillStyle = '#E6E9EF';
+      ctx.font = '600 72px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('TurnKey Pricing Ledger', width / 2, height / 2 - 40);
+      
+      // Subtitle
+      ctx.fillStyle = '#A7AFBD';
+      ctx.font = '400 36px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Records pricing decisions.', width / 2, height / 2 + 50);
+    }
+    
+    function downloadImage(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    
+    // Draw both images on load
+    drawImage('canvas-square', 1200, 1200);
+    drawImage('canvas-wide', 1200, 630);
+  </script>
+</body>
+</html>
