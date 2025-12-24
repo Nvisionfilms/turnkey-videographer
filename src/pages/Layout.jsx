@@ -55,27 +55,37 @@ export default function Layout({ children }) {
     <SidebarProvider>
       <style>{`
         :root {
-          /* Dark Tool Theme - Minimal, Professional */
-          --color-bg-primary: #0a0a0b;
-          --color-bg-secondary: #111113;
-          --color-bg-tertiary: #18181b;
-          --color-bg-card: #111113;
-          --color-accent-primary: #3b82f6;
-          --color-accent-secondary: #60a5fa;
-          --color-accent-hover: #2563eb;
-          --color-text-primary: #fafafa;
-          --color-text-secondary: #a1a1aa;
-          --color-text-muted: #71717a;
-          --color-border: #27272a;
-          --color-border-light: #1f1f23;
-          --color-border-dark: #3f3f46;
-          --color-success: #22c55e;
-          --color-warning: #eab308;
-          --color-danger: #ef4444;
-          --color-error: #ef4444;
-          --color-input-bg: #18181b;
-          --color-input-border: #27272a;
-          --color-button-text: #fafafa;
+          /* TurnKey Ledger Palette */
+          --color-bg-primary: #0B0D10;
+          --color-bg-secondary: #11141A;
+          --color-bg-tertiary: #141821;
+          --color-bg-card: #141821;
+
+          --color-border: #1E2430;
+          --color-border-light: #1A1F29;
+          --color-border-dark: #2A3142;
+
+          --color-text-primary: #E6E9EF;
+          --color-text-secondary: #A7AFBD;
+          --color-text-muted: #6B7280;
+
+          /* Meaning-driven system colors */
+          --color-accent-primary: #4C6FFF; /* decision */
+          --color-accent-secondary: rgba(76, 111, 255, 0.75);
+          --color-accent-hover: rgba(76, 111, 255, 0.90);
+
+          --color-floor: #8B5E34;
+          --color-intent: #3A7F5A;
+
+          /* Controls */
+          --color-input-bg: #11141A;
+          --color-input-border: #1E2430;
+
+          --color-button-text: #E6E9EF;
+          --color-button-bg: #1E2430;
+          --color-button-border: #2A3142;
+          --color-danger: #9B4B4B;
+          --color-error: #9B4B4B;
         }
 
         body {
@@ -89,7 +99,7 @@ export default function Layout({ children }) {
         
         .nav-item-inactive:hover {
           color: var(--color-text-primary) !important;
-          background: rgba(59, 130, 246, 0.1) !important;
+          background: rgba(76, 111, 255, 0.10) !important;
         }
 
         [data-radix-popper-content-wrapper] {
@@ -143,18 +153,18 @@ export default function Layout({ children }) {
 
         input:focus, select:focus, textarea:focus {
           border-color: var(--color-accent-primary) !important;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+          box-shadow: 0 0 0 2px rgba(76, 111, 255, 0.22) !important;
           outline: none !important;
         }
 
         /* Dropdown/Select styling */
         [role="option"]:hover,
         [data-state="checked"] {
-          background: rgba(59, 130, 246, 0.15) !important;
+          background: rgba(76, 111, 255, 0.12) !important;
         }
 
         [role="option"][data-highlighted] {
-          background: rgba(59, 130, 246, 0.15) !important;
+          background: rgba(76, 111, 255, 0.12) !important;
         }
 
         /* Button styling - minimal */
@@ -169,17 +179,21 @@ export default function Layout({ children }) {
           box-shadow: none !important;
         }
 
-        /* Primary button */
+        /* Primary actions should feel administrative, not promotional */
         button[style*="background: var(--color-accent-primary)"],
-        button[style*="background-color: var(--color-accent-primary)"] {
-          background: var(--color-accent-primary) !important;
+        button[style*="background-color: var(--color-accent-primary)"],
+        button[style*="background: var(--color-accent-hover)"],
+        button[style*="background-color: var(--color-accent-hover)"] {
+          background: var(--color-button-bg) !important;
           color: var(--color-button-text) !important;
-          border: none !important;
+          border: 1px solid var(--color-button-border) !important;
         }
 
         button[style*="background: var(--color-accent-primary)"]:hover,
-        button[style*="background-color: var(--color-accent-primary)"]:hover {
-          background: var(--color-accent-hover) !important;
+        button[style*="background-color: var(--color-accent-primary)"]:hover,
+        button[style*="background: var(--color-accent-hover)"]:hover,
+        button[style*="background-color: var(--color-accent-hover)"]:hover {
+          background: rgba(30, 36, 48, 0.92) !important;
         }
 
         /* Label styling - StudioBinder */
@@ -338,8 +352,8 @@ export default function Layout({ children }) {
               </Button>
             </div>
             
-            <Alert className="border" style={{ background: 'rgba(212, 175, 55, 0.1)', borderColor: 'var(--color-accent-primary)' }}>
-              <Shield className="h-4 w-4" style={{ color: 'var(--color-accent-primary)' }} />
+            <Alert className="border" style={{ background: 'var(--color-bg-tertiary)', borderColor: 'var(--color-border)' }}>
+              <Shield className="h-4 w-4" style={{ color: 'var(--color-text-muted)' }} />
               <AlertDescription className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                 <strong>Privacy First:</strong> All data is stored locally in your browser.
               </AlertDescription>

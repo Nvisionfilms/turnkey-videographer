@@ -227,19 +227,19 @@ function CalculatorCarousel() {
       icon: DollarSign,
       title: "Set Your Rates",
       description: "Choose your experience level and the calculator suggests industry-standard day rates",
-      color: "rgba(212, 175, 55, 0.1)"
+      color: "rgba(76, 111, 255, 0.12)"
     },
     {
       icon: Settings,
       title: "Select Your Gear",
       description: "Add cameras, lenses, audio equipment - the tool calculates amortization automatically",
-      color: "rgba(212, 175, 55, 0.1)"
+      color: "rgba(76, 111, 255, 0.12)"
     },
     {
       icon: FileText,
       title: "Generate Quote",
       description: "Professional PDF quotes ready to send with all line items, taxes, and terms included",
-      color: "rgba(212, 175, 55, 0.1)"
+      color: "rgba(76, 111, 255, 0.12)"
     }
   ];
 
@@ -287,7 +287,7 @@ function CalculatorCarousel() {
             <button
               onClick={prevSlide}
               className="p-2 rounded-full hover:scale-110 transition-transform"
-              style={{ background: 'rgba(212, 175, 55, 0.1)' }}
+              style={{ background: 'rgba(76, 111, 255, 0.12)' }}
             >
               <ChevronLeft className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
             </button>
@@ -299,7 +299,7 @@ function CalculatorCarousel() {
                   onClick={() => setCurrentSlide(idx)}
                   className="w-2 h-2 rounded-full transition-all duration-300"
                   style={{
-                    background: idx === currentSlide ? 'var(--color-accent-primary)' : 'rgba(212, 175, 55, 0.3)',
+                    background: idx === currentSlide ? 'var(--color-accent-primary)' : 'rgba(76, 111, 255, 0.28)',
                     width: idx === currentSlide ? '24px' : '8px'
                   }}
                 />
@@ -309,7 +309,7 @@ function CalculatorCarousel() {
             <button
               onClick={nextSlide}
               className="p-2 rounded-full hover:scale-110 transition-transform"
-              style={{ background: 'rgba(212, 175, 55, 0.1)' }}
+              style={{ background: 'rgba(76, 111, 255, 0.12)' }}
             >
               <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
             </button>

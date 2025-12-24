@@ -35,6 +35,11 @@ export default function DeliverableCalculator() {
   const navigate = useNavigate();
   const { isUnlocked, hasUsedFreeQuote, markFreeQuoteUsed } = useUnlockStatus();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+
+  const cardStyle = useMemo(() => ({
+    background: 'var(--color-bg-secondary)',
+    borderColor: 'var(--color-border)'
+  }), []);
   
   // Form state matching the schema
   // Nothing is pre-activated - user must select a work type first
@@ -435,23 +440,34 @@ export default function DeliverableCalculator() {
   const isModifierSelected = (modifierId) => {
     return selections.modifiers.some(m => m.modifierId === modifierId);
   };
+
+  const getDeliverableSubtext = (delivDef) => {
+    if (!delivDef) return '';
+
+    if (delivDef?.constraints?.requiresPost) {
+      return 'Final edit, formatted and delivered';
+    }
+
+    if (selections.workType === 'capture_only' && !selections.postRequested) {
+      return 'Capture only. No edit unless selected.';
+    }
+
+    return 'Finished outcome, formatted and delivered';
+  };
   
   return (
     <div className="min-h-screen p-6" style={{ background: 'var(--color-bg-primary)' }}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            Freelancer Calculator
+            Deliverables Pricing
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            Quick pricing for solo videographers and small crews - deliverable-based estimates
+            Subject-based pricing for solo operators.
           </p>
-          <Alert className="mt-4" style={{ background: 'var(--color-bg-tertiary)', borderColor: 'var(--color-border-light)' }}>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription style={{ color: 'var(--color-text-secondary)' }}>
-              <strong>Quick Estimate Tool:</strong> This calculator provides general rate estimates. When you proceed to the Crew Calculator, you'll use your own custom rates and pricing.
-            </AlertDescription>
-          </Alert>
+          <p className="mt-2" style={{ color: 'var(--color-text-muted)' }}>
+            This page defines what you deliver — and what costs extra.
+          </p>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -459,9 +475,12 @@ export default function DeliverableCalculator() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Client Info */}
-            <Card>
+            <Card style={cardStyle}>
               <CardHeader>
-                <CardTitle>Client Information</CardTitle>
+                <CardTitle>Project Context</CardTitle>
+                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  This information anchors the scope. It does not affect pricing.
+                </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -484,14 +503,14 @@ export default function DeliverableCalculator() {
             </Card>
             
             {/* Work Type - Primary Mode Selector */}
-            <Card>
+            <Card style={cardStyle}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings className="w-5 h-5" />
-                  What type of work is this?
+                  Delivery Type
                 </CardTitle>
                 <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                  This determines your pricing structure and available options
+                  This determines how responsibility is handled.
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -514,15 +533,14 @@ export default function DeliverableCalculator() {
                     }))}
                   >
                     <div className="text-center">
-                      <div className="text-2xl mb-2">✂️</div>
                       <div className="font-semibold">Post-Production Only</div>
                       <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                        Editing, color, sound — no shooting
+                        You are delivering edits, not capture.
                       </p>
                     </div>
                   </div>
                   
-                  {/* Capture Only */}
+                  {/* Capture + Delivery */}
                   <div 
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all`}
                     style={{ 
@@ -539,15 +557,14 @@ export default function DeliverableCalculator() {
                     }))}
                   >
                     <div className="text-center">
-                      <div className="text-2xl mb-2">🎥</div>
-                      <div className="font-semibold">Capture Only</div>
+                      <div className="font-semibold">Capture + Delivery</div>
                       <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                        Shoot and deliver footage — client edits
+                        You shoot efficiently and deliver final assets.
                       </p>
                     </div>
                   </div>
                   
-                  {/* Full Production */}
+                  {/* Turnkey Delivery */}
                   <div 
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all`}
                     style={{ 
@@ -564,10 +581,9 @@ export default function DeliverableCalculator() {
                     }))}
                   >
                     <div className="text-center">
-                      <div className="text-2xl mb-2">🎬</div>
-                      <div className="font-semibold">Full Production</div>
+                      <div className="font-semibold">Turnkey Delivery</div>
                       <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-                        Shoot + edit — turnkey delivery
+                        You control capture, edit, and outcome.
                       </p>
                     </div>
                   </div>
@@ -644,7 +660,7 @@ export default function DeliverableCalculator() {
             
             {/* Layer 1: Production Category - Only show when production days are enabled */}
             {selections.includeProductionDays && (
-              <Card>
+              <Card style={cardStyle}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Package className="w-5 h-5" />
@@ -717,12 +733,15 @@ export default function DeliverableCalculator() {
             )}
             
             {/* Layer 2: Deliverables */}
-            <Card>
+            <Card style={cardStyle}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Video className="w-5 h-5" />
-                  Deliverables
+                  What You Are Delivering
                 </CardTitle>
+                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  Each item represents a finished outcome, not time spent.
+                </p>
               </CardHeader>
               <CardContent className="space-y-3">
                 {availableDeliverables.length === 0 && (
@@ -733,6 +752,7 @@ export default function DeliverableCalculator() {
                 {availableDeliverables.map(deliv => {
                   const isSelected = isDeliverableSelected(deliv.id);
                   const quantity = getDeliverableQuantity(deliv.id);
+                  const deliverableSubtext = getDeliverableSubtext(deliv);
                   
                   return (
                     <div key={deliv.id} className="flex items-center justify-between p-3 rounded-lg border">
@@ -746,6 +766,11 @@ export default function DeliverableCalculator() {
                           <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                             {isUnlocked ? `$${deliv.unitPrice} per ${deliv.unit}` : ''}
                           </div>
+                          {deliverableSubtext && (
+                            <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                              {deliverableSubtext}
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -797,9 +822,12 @@ export default function DeliverableCalculator() {
             
             
             {/* Layer 4: Modifiers */}
-            <Card>
+            <Card style={cardStyle}>
               <CardHeader>
-                <CardTitle>Production Modifiers</CardTitle>
+                <CardTitle>Scope Add-Ons</CardTitle>
+                <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  These increase complexity, not quality.
+                </p>
               </CardHeader>
               <CardContent className="space-y-3">
                 {availableModifiers.map(mod => {
@@ -845,7 +873,7 @@ export default function DeliverableCalculator() {
             <div className="sticky top-6 space-y-6">
               
               {!isUnlocked && (
-                <Card>
+                <Card style={cardStyle}>
                   <CardHeader>
                     <CardTitle>Ledger access required</CardTitle>
                   </CardHeader>
@@ -861,7 +889,7 @@ export default function DeliverableCalculator() {
               )}
               
               {/* Estimate Summary */}
-              <Card>
+              <Card style={cardStyle}>
                 <CardHeader>
                   <CardTitle>Estimate Summary</CardTitle>
                 </CardHeader>
@@ -932,46 +960,80 @@ export default function DeliverableCalculator() {
               {isUnlocked && (
                 <>
                   {/* Pricing Breakdown */}
-                  <Card>
+                  <Card style={cardStyle}>
                     <CardHeader>
-                      <CardTitle>Pricing</CardTitle>
+                      <CardTitle>Scope Summary</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--color-text-secondary)' }}>Subtotal</span>
-                        <span className="font-medium">
-                          ${quote.computed.pricing.subtotalBeforeFloor.toLocaleString()}
-                        </span>
-                      </div>
-                      
-                      {quote.computed.pricing.priceFloorAdded > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span style={{ color: 'var(--color-text-secondary)' }}>Minimum Engagement</span>
-                          <span className="font-medium" style={{ color: 'var(--color-accent-primary)' }}>
-                            +${quote.computed.pricing.priceFloorAdded.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {quote.computed.pricing.scopedMultiplier.multiplier > 1.0 && (
-                        <div className="flex justify-between text-sm">
-                          <span style={{ color: 'var(--color-text-secondary)' }}>
-                            Risk Multiplier ({((quote.computed.pricing.scopedMultiplier.multiplier - 1) * 100).toFixed(0)}%)
-                          </span>
-                          <span className="font-medium" style={{ color: 'var(--color-accent-primary)' }}>
-                            +${quote.computed.pricing.scopedMultiplier.multiplierAmount.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      
-                      <Separator />
-                      
-                      <div className="flex justify-between text-lg font-bold">
-                        <span>Total</span>
-                        <span style={{ color: 'var(--color-accent-primary)' }}>
-                          ${quote.computed.pricing.total.toLocaleString()}
-                        </span>
-                      </div>
+                      {(() => {
+                        const computed = quote?.computed;
+                        const pricing = computed?.pricing;
+                        const lineItems = computed?.lineItems || [];
+
+                        const scopeAddOns = lineItems
+                          .filter(li => li?.kind === 'modifier_fixed')
+                          .reduce((sum, li) => sum + (typeof li.amount === 'number' ? li.amount : 0), 0);
+
+                        const deliverablesTotal = Math.max(0, (pricing?.subtotalAfterFloor || 0) - scopeAddOns);
+                        const complexityMultiplier = pricing?.scopedMultiplier?.multiplierAmount || 0;
+                        const scopeLockedTotal = pricing?.total || 0;
+
+                        const formatMoney = (value) => Number(value || 0).toLocaleString();
+
+                        return (
+                          <>
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>Deliverables Total</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>What you are delivering.</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>This is the sum of defined deliverables only.</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>No assumptions. No extras.</div>
+                              </div>
+                              <div className="text-sm font-medium" style={{ color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                                ${formatMoney(deliverablesTotal)}
+                              </div>
+                            </div>
+
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>Scope Add-Ons</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>What expands responsibility.</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>These increase complexity, not quality.</div>
+                              </div>
+                              <div className="text-sm font-medium" style={{ color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                                ${formatMoney(scopeAddOns)}
+                              </div>
+                            </div>
+
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>Complexity Multiplier</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>How demanding this scope is.</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Applied based on delivery pressure, constraints, and risk.</div>
+                              </div>
+                              <div className="text-sm font-medium" style={{ color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                                ${formatMoney(complexityMultiplier)}
+                              </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="text-lg font-bold">Scope-Locked Total</div>
+                                <div className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>This price reflects the scope as defined above.</div>
+                              </div>
+                              <div className="text-lg font-bold" style={{ color: 'var(--color-accent-primary)', fontVariantNumeric: 'tabular-nums' }}>
+                                ${formatMoney(scopeLockedTotal)}
+                              </div>
+                            </div>
+
+                            <div className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                              Changes to scope require a new quote.
+                            </div>
+                          </>
+                        );
+                      })()}
                     </CardContent>
                   </Card>
                 </>
@@ -1012,7 +1074,7 @@ export default function DeliverableCalculator() {
               {isUnlocked && (
                 <>
                   {/* Export Actions */}
-                  <Card>
+                  <Card style={cardStyle}>
                     <CardContent className="pt-6 space-y-3">
                       <Button className="w-full" variant="outline" disabled={hasCalculationError} onClick={() => checkAccessAndProceed(persistEstimateAndGoToCrew)}>
                         <ArrowRight className="w-4 h-4 mr-2" />
@@ -1020,14 +1082,20 @@ export default function DeliverableCalculator() {
                       </Button>
                       <Button className="w-full" disabled={selections.deliverables.length === 0} onClick={handleExportQuote}>
                         <Download className="w-4 h-4 mr-2" />
-                        Export Quote
+                        Generate Scope-Locked Quote
                       </Button>
                       <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={handleExportInvoice}>
                         <Download className="w-4 h-4 mr-2" />
-                        Export Invoice
+                        Generate Scope-Locked Invoice
                       </Button>
                     </CardContent>
                   </Card>
+
+                  <div className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                    Clear deliverables prevent burnout.
+                    <br />
+                    Clear pricing prevents resentment.
+                  </div>
                 </>
               )}
             </div>

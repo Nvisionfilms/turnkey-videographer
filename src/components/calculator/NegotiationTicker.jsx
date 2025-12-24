@@ -2,18 +2,9 @@
 // Cards are REACTIVE, not informative. Slider creates tension.
 // Psychology: The system reacts, it doesn't explain.
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function NegotiationTicker({ calculations, settings, customPriceOverride, onPriceChange }) {
-  const [showSliderMicroTip, setShowSliderMicroTip] = useState(() => {
-    try {
-      return sessionStorage.getItem('turnkey_slider_tip_dismissed_v1') !== '1';
-    } catch {
-      return false;
-    }
-  });
-  const [floorPulse, setFloorPulse] = useState(false);
-  const [desiredDim, setDesiredDim] = useState(false);
   const prevCurrentRef = useRef(null);
   
   if (!calculations || !calculations.total) {
@@ -33,30 +24,18 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
   
   const isBelowMinimum = current < minimum;
   const isAboveDesired = current >= desired;
-  const isCompromised = current > minimum && current < desired;
   
   // Detect threshold crossings for visual feedback
   useEffect(() => {
     if (prevCurrentRef.current !== null) {
       const prev = prevCurrentRef.current;
-      // Crossed below minimum - pulse the floor card
-      if (prev >= minimum && current < minimum) {
-        setFloorPulse(true);
-        setTimeout(() => setFloorPulse(false), 300);
-      }
-      // Moving away from desired - dim it
-      if (current < desired * 0.9) {
-        setDesiredDim(true);
-      } else {
-        setDesiredDim(false);
-      }
     }
     prevCurrentRef.current = current;
   }, [current, minimum, desired]);
   
   // Dynamic consequence text for DECISION card - no emotional adjectives
   const getDecisionText = () => {
-    return 'What you are choosing to send.';
+    return 'What you are choosing.';
   };
 
   const formatMoney = (n) => {
@@ -88,11 +67,11 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
 
   // Dynamic text for FLOOR card - consequence framing only
   const getFloorText = () => {
-    return 'Below this, the work costs you money.';
+    return 'Cannot go below this';
   };
 
   const getIntentText = () => {
-    return 'What you believed the work was worth.';
+    return 'Set before pressure';
   };
 
   return (
@@ -104,89 +83,87 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
       
       {/* Three cards row - REACTIVE, responsive */}
       <div className="flex flex-row gap-2 md:gap-4 mb-4 overflow-x-auto" style={{ fontVariantNumeric: 'tabular-nums' }}>
-        {/* FLOOR Card - Reactive to threshold crossing */}
+        {/* FLOOR Card - Amber */}
         <div 
-          className="flex-1 min-w-0 p-3 md:p-4 rounded-lg text-center transition-all duration-150"
+          className="flex-1 min-w-0 p-3 md:p-4 rounded-lg text-center transition-all duration-150" 
           style={{ 
-            background: floorPulse ? 'rgba(184, 74, 74, 0.3)' : 'rgba(184, 74, 74, 0.1)', 
-            border: isBelowMinimum ? '2px solid #b84a4a' : '1px solid rgba(184, 74, 74, 0.3)',
-            transform: floorPulse ? 'scale(1.02)' : 'scale(1)'
+            background: 'rgba(139, 94, 52, 0.12)',
+            border: isBelowMinimum ? '2px solid #8B5E34' : '1px solid rgba(139, 94, 52, 0.35)'
           }}
         >
           <div 
             className="text-xs font-semibold uppercase tracking-wide mb-1"
-            style={{ color: '#b84a4a' }}
+            style={{ color: '#8B5E34' }}
           >
             FLOOR
           </div>
-          <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#b84a4a' }}>
+          <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#8B5E34' }}>
             {formatMoney(minimum)}
           </div>
           <div 
             className="text-xs font-medium transition-all duration-150 hidden md:block" 
-            style={{ color: isBelowMinimum ? '#b84a4a' : 'rgba(184, 74, 74, 0.7)' }}
+            style={{ color: isBelowMinimum ? '#8B5E34' : 'rgba(139, 94, 52, 0.75)' }}
           >
             {getFloorText()}
           </div>
         </div>
 
-        {/* DECISION Card - Red/Green/Blue based on position */}
+        {/* DECISION Card - Steel Blue */}
         <div 
           className="flex-1 min-w-0 p-3 md:p-4 rounded-lg text-center transition-all duration-150" 
           style={{ 
-            background: isBelowMinimum ? 'rgba(184, 74, 74, 0.15)' : isAboveDesired ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
-            border: isBelowMinimum ? '2px solid #b84a4a' : isAboveDesired ? '2px solid #3b82f6' : '2px solid #10b981'
+            background: 'rgba(76, 111, 255, 0.12)',
+            border: '2px solid #4C6FFF'
           }}
         >
           <div 
             className="text-xs font-semibold uppercase tracking-wide mb-1"
-            style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
+            style={{ color: '#4C6FFF' }}
           >
             DECISION
           </div>
           <div 
             className="text-lg md:text-2xl font-bold mb-1" 
-            style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
+            style={{ color: '#4C6FFF' }}
           >
             {formatMoney(current)}
           </div>
           <div 
             className="text-xs font-medium hidden md:block" 
-            style={{ color: isBelowMinimum ? '#b84a4a' : isAboveDesired ? '#3b82f6' : '#10b981' }}
+            style={{ color: '#4C6FFF' }}
           >
             {getDecisionText()}
           </div>
         </div>
 
-        {/* INTENT Card - Blue, dims when abandoned */}
+        {/* INTENT Card - Desaturated Green */}
         <div 
           className="flex-1 min-w-0 p-3 md:p-4 rounded-lg text-center transition-all duration-300" 
           style={{ 
-            background: isAboveDesired ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)', 
-            border: isAboveDesired ? '2px solid #3b82f6' : '1px solid rgba(59, 130, 246, 0.3)',
-            opacity: desiredDim ? 0.5 : 1
+            background: 'rgba(58, 127, 90, 0.12)',
+            border: isAboveDesired ? '2px solid #3A7F5A' : '1px solid rgba(58, 127, 90, 0.35)'
           }}
         >
           <div 
             className="text-xs font-semibold uppercase tracking-wide mb-1"
-            style={{ color: '#3b82f6' }}
+            style={{ color: '#3A7F5A' }}
           >
             INTENT
           </div>
-          <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#3b82f6' }}>
+          <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#3A7F5A' }}>
             {formatMoney(desired)}
           </div>
-          <div className="text-xs hidden md:block" style={{ color: 'rgba(59, 130, 246, 0.8)' }}>
+          <div className="text-xs hidden md:block" style={{ color: 'rgba(58, 127, 90, 0.80)' }}>
             {getIntentText()}
           </div>
         </div>
       </div>
 
-      {/* Interactive Slider - Pill shape, red-green-blue gradient */}
+      {/* Interactive Slider - Pill shape, steel blue fill */}
       {range > 0 && onPriceChange && (
         <div className="mb-3 py-4">
-          <div className="text-xs uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>
-            Negotiation Range
+          <div className="text-xs mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+            Explore price pressure between floor and intent.
           </div>
           <input
             type="range"
@@ -195,17 +172,6 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             step={Math.max(1, Math.floor(range / 100))}
             value={Math.max(minimum, current)}
             onChange={handleSliderChange}
-            onInput={(e) => {
-              if (showSliderMicroTip) {
-                setShowSliderMicroTip(false);
-                try {
-                  sessionStorage.setItem('turnkey_slider_tip_dismissed_v1', '1');
-                } catch {
-                  // ignore
-                }
-              }
-              handleSliderChange(e);
-            }}
             className="w-full rounded-full cursor-pointer negotiation-slider"
             style={{
               height: '16px',
@@ -219,14 +185,8 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
           />
 
           <div className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
-            This slider adjusts what you send, not what the work is worth.
+            Moving this does not change your floor or intent. It shows trade-offs.
           </div>
-
-          {showSliderMicroTip && (
-            <div className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
-              You can move this. Your decision is recorded when exported.
-            </div>
-          )}
 
           <style>{`
             .negotiation-slider {
@@ -237,13 +197,9 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
               height: 16px;
               border-radius: 9999px;
               background:
-                linear-gradient(to right,
-                  #b84a4a 0%,
-                  #10b981 50%,
-                  #3b82f6 100%
-                ) 0 0 / calc(var(--turnkeyPct) * 1%) 100% no-repeat,
-                rgba(255, 255, 255, 0.10);
-              box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+                linear-gradient(to right, #4C6FFF, #4C6FFF) 0 0 / calc(var(--turnkeyPct) * 1%) 100% no-repeat,
+                #1F2533;
+              box-shadow: inset 0 0 0 1px rgba(230, 233, 239, 0.06);
             }
             .negotiation-slider::-webkit-slider-thumb {
               -webkit-appearance: none;
@@ -260,13 +216,9 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
               height: 16px;
               border-radius: 9999px;
               background:
-                linear-gradient(to right,
-                  #b84a4a 0%,
-                  #10b981 50%,
-                  #3b82f6 100%
-                ) 0 0 / calc(var(--turnkeyPct) * 1%) 100% no-repeat,
-                rgba(255, 255, 255, 0.10);
-              box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+                linear-gradient(to right, #4C6FFF, #4C6FFF) 0 0 / calc(var(--turnkeyPct) * 1%) 100% no-repeat,
+                #1F2533;
+              box-shadow: inset 0 0 0 1px rgba(230, 233, 239, 0.06);
             }
             .negotiation-slider::-moz-range-thumb {
               width: 18px;

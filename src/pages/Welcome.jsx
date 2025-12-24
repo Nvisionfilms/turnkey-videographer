@@ -85,7 +85,7 @@ export default function Welcome() {
             {features.map((feature, index) => (
               <Card key={index} className="border-0 shadow-lg" style={{ background: 'var(--color-bg-card)', borderColor: 'var(--color-border)' }}>
                 <CardHeader>
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ background: 'rgba(212, 175, 55, 0.1)', color: 'var(--color-accent-primary)' }}>
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ background: 'rgba(76, 111, 255, 0.12)', color: 'var(--color-accent-primary)' }}>
                     {feature.icon}
                   </div>
                   <CardTitle className="text-lg" style={{ color: 'var(--color-text-primary)' }}>{feature.title}</CardTitle>

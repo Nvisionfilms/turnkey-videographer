@@ -2589,7 +2589,7 @@ export default function Calculator() {
               <CardHeader className="pb-3" style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border-dark)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 111, 255, 0.12)' }}>
                       <Shield className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
                     </div>
                     <div>
@@ -2598,7 +2598,7 @@ export default function Calculator() {
                     </div>
                   </div>
                   {formData.usage_rights_enabled && (
-                    <div className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(212, 175, 55, 0.15)', color: 'var(--color-accent-primary)' }}>
+                    <div className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(76, 111, 255, 0.12)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
                       Active
                     </div>
                   )}
@@ -2608,9 +2608,9 @@ export default function Calculator() {
                 {/* Toggle Switch */}
                 <label className="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200" 
                   style={{ 
-                    background: formData.usage_rights_enabled ? 'rgba(212, 175, 55, 0.05)' : 'var(--color-bg-primary)',
+                    background: formData.usage_rights_enabled ? 'rgba(76, 111, 255, 0.06)' : 'var(--color-bg-primary)',
                     border: '1px solid',
-                    borderColor: formData.usage_rights_enabled ? 'rgba(212, 175, 55, 0.3)' : 'var(--color-border)'
+                    borderColor: formData.usage_rights_enabled ? 'rgba(76, 111, 255, 0.28)' : 'var(--color-border)'
                   }}
                   onClick={() => setFormData({...formData, usage_rights_enabled: !formData.usage_rights_enabled})}
                 >
@@ -2744,9 +2744,9 @@ export default function Calculator() {
                       </div>
                     </div>
                     
-                    <div className="mt-2 p-3 rounded-lg" style={{ background: 'rgba(212, 175, 55, 0.05)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                    <div className="mt-2 p-3 rounded-lg" style={{ background: 'rgba(76, 111, 255, 0.06)', border: '1px solid rgba(76, 111, 255, 0.20)' }}>
                       <p className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-                        💡 <strong>Industry Standard:</strong> 20-50% of production cost • Base: ${calculations?.subtotal?.toFixed(2) || '0.00'}
+                        <strong>Industry Standard:</strong> 20-50% of production cost • Base: ${calculations?.subtotal?.toFixed(2) || '0.00'}
                       </p>
                     </div>
                   </div>
@@ -2763,16 +2763,16 @@ export default function Calculator() {
               <CardHeader className="pb-3" style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border-dark)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 111, 255, 0.12)' }}>
                       <Users className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
                     </div>
                     <div>
-                      <CardTitle className="text-base" style={{ color: 'var(--color-text-primary)' }}>Talent & Actor Fees</CardTitle>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>On-screen talent and performers</p>
+                      <CardTitle className="text-base" style={{ color: 'var(--color-text-primary)' }}>Talent Fees</CardTitle>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>On-camera talent and usage for featured people</p>
                     </div>
                   </div>
                   {formData.talent_fees_enabled && (
-                    <div className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(212, 175, 55, 0.15)', color: 'var(--color-accent-primary)' }}>
+                    <div className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(76, 111, 255, 0.12)', color: 'var(--color-accent-primary)', border: '1px solid var(--color-border)' }}>
                       Active
                     </div>
                   )}
@@ -2782,9 +2782,9 @@ export default function Calculator() {
                 {/* Toggle Switch */}
                 <label className="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200" 
                   style={{ 
-                    background: formData.talent_fees_enabled ? 'rgba(212, 175, 55, 0.05)' : 'var(--color-bg-primary)',
+                    background: formData.talent_fees_enabled ? 'rgba(76, 111, 255, 0.06)' : 'var(--color-bg-primary)',
                     border: '1px solid',
-                    borderColor: formData.talent_fees_enabled ? 'rgba(212, 175, 55, 0.3)' : 'var(--color-border)'
+                    borderColor: formData.talent_fees_enabled ? 'rgba(76, 111, 255, 0.28)' : 'var(--color-border)'
                   }}
                   onClick={() => setFormData({...formData, talent_fees_enabled: !formData.talent_fees_enabled})}
                 >
@@ -2795,7 +2795,7 @@ export default function Calculator() {
                     />
                     <div>
                       <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>Include Talent Fees</div>
-                      <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Add actor and performer costs</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Add talent costs to this quote</div>
                     </div>
                   </div>
                 </label>
@@ -2805,7 +2805,7 @@ export default function Calculator() {
                     {/* Primary Talent */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 111, 255, 0.12)' }}>
                           <User className="w-4 h-4" style={{ color: 'var(--color-accent-primary)' }} />
                         </div>
                         <div>
@@ -2860,7 +2860,7 @@ export default function Calculator() {
                     {/* Extras */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212, 175, 55, 0.1)' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(76, 111, 255, 0.12)' }}>
                           <Users className="w-4 h-4" style={{ color: 'var(--color-accent-primary)' }} />
                         </div>
                         <div>
@@ -2903,7 +2903,7 @@ export default function Calculator() {
                     </div>
                     
                     {/* Total Display */}
-                    <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)', border: '2px solid rgba(212, 175, 55, 0.3)' }}>
+                    <div className="p-4 rounded-xl" style={{ background: 'rgba(76, 111, 255, 0.06)', border: '1px solid rgba(76, 111, 255, 0.22)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Check className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
@@ -2914,7 +2914,7 @@ export default function Calculator() {
                         </span>
                       </div>
                       {(formData.talent_primary_count > 0 || formData.talent_extra_count > 0) && (
-                        <div className="mt-2 pt-2 text-xs" style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)', color: 'var(--color-text-muted)' }}>
+                        <div className="mt-2 pt-2 text-xs" style={{ borderTop: '1px solid rgba(76, 111, 255, 0.20)', color: 'var(--color-text-muted)' }}>
                           {formData.talent_primary_count > 0 && `${formData.talent_primary_count} primary × $${formData.talent_primary_rate}`}
                           {formData.talent_primary_count > 0 && formData.talent_extra_count > 0 && ' + '}
                           {formData.talent_extra_count > 0 && `${formData.talent_extra_count} extras × $${formData.talent_extra_rate}`}
@@ -3040,19 +3040,19 @@ function CalculatorCarousel() {
       icon: DollarSign,
       title: "Set Your Rates",
       description: "Choose your experience level and the calculator suggests industry-standard day rates",
-      color: "rgba(212, 175, 55, 0.1)"
+      color: "rgba(76, 111, 255, 0.12)"
     },
     {
       icon: SettingsIcon,
       title: "Select Your Gear",
       description: "Add cameras, lenses, audio equipment - the tool calculates amortization automatically",
-      color: "rgba(212, 175, 55, 0.1)"
+      color: "rgba(76, 111, 255, 0.12)"
     },
     {
       icon: FileText,
       title: "Generate Quote",
       description: "Professional PDF quotes ready to send with all line items, taxes, and terms included",
-      color: "rgba(212, 175, 55, 0.1)"
+      color: "rgba(76, 111, 255, 0.12)"
     }
   ];
 
@@ -3100,7 +3100,7 @@ function CalculatorCarousel() {
             <button
               onClick={prevSlide}
               className="p-2 rounded-full hover:scale-110 transition-transform"
-              style={{ background: 'rgba(212, 175, 55, 0.1)' }}
+              style={{ background: 'rgba(76, 111, 255, 0.12)' }}
             >
               <ChevronLeft className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
             </button>
@@ -3112,7 +3112,7 @@ function CalculatorCarousel() {
                   onClick={() => setCurrentSlide(idx)}
                   className="w-2 h-2 rounded-full transition-all duration-300"
                   style={{
-                    background: idx === currentSlide ? 'var(--color-accent-primary)' : 'rgba(212, 175, 55, 0.3)',
+                    background: idx === currentSlide ? 'var(--color-accent-primary)' : 'rgba(76, 111, 255, 0.28)',
                     width: idx === currentSlide ? '24px' : '8px'
                   }}
                 />
@@ -3122,7 +3122,7 @@ function CalculatorCarousel() {
             <button
               onClick={nextSlide}
               className="p-2 rounded-full hover:scale-110 transition-transform"
-              style={{ background: 'rgba(212, 175, 55, 0.1)' }}
+              style={{ background: 'rgba(76, 111, 255, 0.12)' }}
             >
               <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
             </button>

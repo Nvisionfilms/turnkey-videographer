@@ -200,9 +200,9 @@ export default function Unlock() {
             </div>
 
             {/* OPERATOR MONTHLY */}
-            <div className="rounded-lg p-5" style={{ background: 'var(--color-bg-secondary)', border: '2px solid var(--color-accent-primary)' }}>
+            <div className="rounded-lg p-5" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
               <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Operator</h3>
-              <div className="text-2xl font-bold mb-1" style={{ color: 'var(--color-accent-primary)' }}>$19</div>
+              <div className="text-2xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>$19</div>
               <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>per month</p>
               <ul className="space-y-1 mb-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                 <li>- Unlimited exports</li>
@@ -213,7 +213,7 @@ export default function Unlock() {
               <button
                 onClick={() => window.location.href = STRIPE_LINKS.operatorMonthly}
                 className="w-full py-2 rounded text-xs font-medium"
-                style={{ background: 'var(--color-accent-primary)', color: '#000' }}
+                style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)', border: '1px solid var(--color-button-border)' }}
               >
                 Activate
               </button>
@@ -221,7 +221,7 @@ export default function Unlock() {
 
             {/* OPERATOR ANNUAL */}
             <div className="rounded-lg p-5 relative" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
-              <div className="absolute -top-2 right-2 px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#22c55e', color: 'white' }}>
+              <div className="absolute -top-2 right-2 px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
                 35% off
               </div>
               <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Annual</h3>
@@ -241,21 +241,23 @@ export default function Unlock() {
             </div>
 
             {/* FOUNDING OPERATOR */}
-            <div className="rounded-lg p-5 relative" style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(244, 208, 63, 0.05) 100%)', border: '2px solid #D4AF37' }}>
-              <div className="absolute -top-2 right-2 px-2 py-0.5 rounded text-xs font-medium" style={{ background: '#D4AF37', color: '#000' }}>
+            <div className="rounded-lg p-5 relative" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
+              <div className="absolute -top-2 right-2 px-2 py-0.5 rounded text-xs font-medium" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
                 98 left
               </div>
               <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Founding</h3>
-              <div className="text-2xl font-bold mb-1" style={{ color: '#D4AF37' }}>$299</div>
-              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>one-time, lifetime</p>
+              <div className="text-2xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>$299</div>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>one time</p>
               <ul className="space-y-1 mb-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                 <li>- Lifetime access</li>
-                <li>- Priority support</li>
+                <li>- Unlimited exports</li>
+                <li>- Full recording</li>
+                <li>- History + patterns</li>
               </ul>
               <button
                 onClick={() => window.location.href = STRIPE_LINKS.foundingOperator}
-                className="w-full py-2 rounded text-xs font-medium"
-                style={{ background: '#D4AF37', color: '#000' }}
+                className="w-full py-2 rounded text-xs"
+                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
               >
                 Activate
               </button>

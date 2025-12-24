@@ -25,13 +25,13 @@ export default function MobileFloatingTotal({ total, onExpand }) {
           <div className="flex items-center gap-3">
             <div 
               className="w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(212, 175, 55, 0.2)' }}
+              style={{ background: 'var(--color-bg-tertiary)' }}
             >
-              <DollarSign className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
+              <DollarSign className="w-5 h-5" style={{ color: 'var(--color-text-secondary)' }} />
             </div>
             <div className="text-left">
-              <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                Quote Total
+              <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                Scope-Locked Total
               </div>
               <div className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
                 ${total.toLocaleString()}
