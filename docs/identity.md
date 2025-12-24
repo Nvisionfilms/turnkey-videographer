@@ -1,3 +1,167 @@
+# TURNKEY — IDENTITY GOVERNANCE FORMULA
+
+---
+
+## 🔒 Identity Enforcement Rule
+
+Before writing copy, designing UI, or shipping a feature, reference this document.
+
+If the change introduces:
+- Motivation
+- Confidence-building
+- "Know your worth" language
+- Encouragement, reassurance, or praise
+
+**It must be rewritten or rejected.**
+
+TurnKey does not improve how users feel about pricing.
+It improves what they are able to see.
+
+---
+
+## DECISION FILTER (THE ACTUAL FORMULA)
+
+Every decision must pass all 5 checks.
+If it fails any one, it does not ship.
+
+### 1. BEHAVIOR CHECK
+
+**Question:**
+What behavior does this make visible that was previously invisible?
+
+**Passes if:**
+- It records a decision
+- It preserves history
+- It prevents forgetting
+
+**Fails if:**
+- It only "helps"
+- It only speeds things up
+- It exists for convenience alone
+
+### 2. MEMORY CHECK
+
+**Question:**
+Does this still matter 30 days later?
+
+**Passes if:**
+- It contributes to a ledger
+- It compounds over time
+- It changes what the user can reference later
+
+**Fails if:**
+- It only exists in the moment
+- It disappears after interaction
+- It creates instant feedback or insight
+
+### 3. LANGUAGE CHECK
+
+**Question:**
+Could this sentence appear on a SaaS landing page?
+
+If yes, rewrite it.
+
+**Approved language sounds like:**
+- A contract
+- A ledger
+- A system record
+- An accounting note
+
+**Banned language includes:**
+- "You should"
+- "You deserve"
+- "Know your worth"
+- "Build confidence"
+- "Feel empowered"
+
+### 4. PRESSURE ORDER CHECK
+
+**Question:**
+Is this defined before the client exists?
+
+**Passes if:**
+- It sets constraints early
+- It locks boundaries before negotiation
+- It reinforces "this was set before pressure"
+
+**Fails if:**
+- It reacts to negotiation
+- It adapts to discomfort
+- It exists to soften pressure
+
+### 5. LEDGER TEST
+
+**Final test:**
+Does this feel like a ledger or a dashboard?
+
+**Ledger = correct**
+- Counts
+- Totals
+- Time-bounded records
+- Neutral statements
+
+**Dashboard = reject**
+- Performance framing
+- Trends with interpretation
+- Positive/negative judgment
+- Visual celebration or warning
+
+---
+
+## MANDATORY REWRITE TRIGGERS
+
+If any of the following appear, the content is automatically flagged for rewrite:
+
+- Confidence
+- Worth
+- Motivation
+- Encouragement
+- Empowerment
+- Hustle
+- Wins / losses
+- Success language
+
+TurnKey does not interpret outcomes.
+It records them.
+
+---
+
+## NAMING LOCK (PREVENTS DRIFT)
+
+Use these words. Do not invent new ones.
+
+| Concept | Locked Term |
+|---------|-------------|
+| User history | Pricing Ledger |
+| Behavior tracking | Recorded Decisions |
+| Price movement | Trade-offs |
+| Minimum | Floor |
+| Final price | Decision |
+| Target | Intent |
+| Summary | This Month / Previous |
+| Behavior section | Ledger (never "dashboard") |
+
+If a new label is needed, it must:
+- Be noun-based
+- Sound contractual
+- Avoid emotion
+
+---
+
+## HOW YOU USE THIS DAY-TO-DAY
+
+| Role | Check |
+|------|-------|
+| Designers | Language + Ledger tests |
+| Developers | Behavior + Memory tests |
+| Marketing | Language + Pressure order |
+| Partnerships | What it is NOT |
+
+This isn't branding.
+It's operational discipline.
+
+---
+
 # TURNKEY — CORE IDENTITY
 
 ---

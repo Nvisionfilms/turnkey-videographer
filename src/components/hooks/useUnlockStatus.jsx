@@ -120,29 +120,30 @@ export function useUnlockStatus() {
   };
 
   useEffect(() => {
-    // Always validate with server on mount (async)
+    // Always validate with server on mount (async) - SILENT, no toasts
     const validateOnMount = async () => {
       const storedEmail = localStorage.getItem('userEmail');
       const storedCode = localStorage.getItem('unlockCode');
       
       if (storedEmail && storedCode) {
-        // Has credentials - validate with server
+        // Has credentials - validate with server silently
         const isValid = await validateWithServer();
         setIsUnlocked(isValid);
         
         if (isValid) {
-          // Valid - set localStorage flags
+          // Valid - set localStorage flags silently
           localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
           localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
         } else {
-          // Invalid - clear all localStorage
+          // Invalid - clear all localStorage silently
+          // User will see locked state naturally when they try to use features
           localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
           localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
           localStorage.removeItem('userEmail');
           localStorage.removeItem('unlockCode');
         }
       } else {
-        // No credentials - ensure locked and clear flags
+        // No credentials - ensure locked silently
         localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
         localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
         setIsUnlocked(false);
@@ -160,12 +161,12 @@ export function useUnlockStatus() {
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check periodically (every minute) for trial expiration
-    const interval = setInterval(checkStatus, 60000);
+    // REMOVED: Periodic interval check - was causing disruptive toasts
+    // Validation only happens on mount and explicit user actions
+    // This prevents interrupting users during phone calls or active work
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, [validateWithServer]);
 
