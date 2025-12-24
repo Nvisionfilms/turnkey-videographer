@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Commission Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 900px; }
+        button { padding: 10px 20px; margin: 5px; font-size: 14px; cursor: pointer; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .section h3 { margin-top: 0; }
+        #result { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; }
+        pre { white-space: pre-wrap; font-size: 12px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: #666; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>💰 Commission Management</h1>
+    
+    <div class="section">
+        <h3>1. Auto-Clear Pending Commissions</h3>
+        <p class="info">Moves commissions from "pending" to "cleared" after 14 days. Run daily or weekly.</p>
+        <button onclick="autoClear()">Run Auto-Clear</button>
+    </div>
+    
+    <div class="section">
+        <h3>2. View Commission Summary</h3>
+        <p class="info">See totals by status: pending, cleared, paid, reversed.</p>
+        <button onclick="getSummary()">Get Summary</button>
+    </div>
+    
+    <div class="section">
+        <h3>3. Ready for Payout</h3>
+        <p class="info">Affiliates with $25+ cleared and ready for payout.</p>
+        <button onclick="getReadyForPayout()">Check Ready Payouts</button>
+    </div>
+    
+    <div class="section">
+        <h3>4. Create Payout Batch & Export CSV</h3>
+        <p class="info">Creates a batch of all cleared commissions and generates CSV for PayPal.</p>
+        <button onclick="createBatch()">Create Batch & Get CSV</button>
+    </div>
+    
+    <div class="section">
+        <h3>5. Mark Batch as Paid</h3>
+        <p class="info">After you've paid via PayPal, mark the batch as paid.</p>
+        <input type="number" id="batchId" placeholder="Batch ID" style="padding: 8px; width: 100px;">
+        <button onclick="markBatchPaid()">Mark Paid</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'https://backend-backend-c520.up.railway.app';
+        
+        async function autoClear() {
+            showLoading('Running auto-clear...');
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/commissions/auto-clear`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                showResult('Auto-Clear Result', result, result.success);
+            } catch (error) {
+                showError(error);
+            }
+        }
+        
+        async function getSummary() {
+            showLoading('Getting summary...');
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/commissions/summary`);
+                const result = await response.json();
+                
+                let html = '<h4>Commission Summary</h4><table>';
+                html += '<tr><th>Status</th><th>Count</th><th>Total</th></tr>';
+                for (const [status, data] of Object.entries(result)) {
+                    html += `<tr><td>${status}</td><td>${data.count}</td><td>$${(data.totalCents/100).toFixed(2)}</td></tr>`;
+                }
+                html += '</table>';
+                document.getElementById('result').innerHTML = html;
+            } catch (error) {
+                showError(error);
+            }
+        }
+        
+        async function getReadyForPayout() {
+            showLoading('Checking ready payouts...');
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/commissions/ready-for-payout`);
+                const result = await response.json();
+                
+                if (result.length === 0) {
+                    document.getElementById('result').innerHTML = '<p>No affiliates ready for payout (need $25+ cleared).</p>';
+                    return;
+                }
+                
+                let html = '<h4>Ready for Payout</h4><table>';
+                html += '<tr><th>Name</th><th>PayPal</th><th>Commissions</th><th>Amount</th></tr>';
+                for (const aff of result) {
+                    html += `<tr><td>${aff.name}</td><td>${aff.paypalEmail}</td><td>${aff.commissionCount}</td><td>$${aff.totalDollars}</td></tr>`;
+                }
+                html += '</table>';
+                document.getElementById('result').innerHTML = html;
+            } catch (error) {
+                showError(error);
+            }
+        }
+        
+        async function createBatch() {
+            showLoading('Creating batch...');
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/commissions/create-batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    let html = `<h4 class="success">✅ Batch #${result.batchId} Created</h4>`;
+                    html += `<p><strong>Affiliates:</strong> ${result.affiliateCount}</p>`;
+                    html += `<p><strong>Total:</strong> $${result.totalAmountDollars}</p>`;
+                    html += `<h4>CSV for PayPal:</h4>`;
+                    html += `<textarea style="width:100%;height:150px;font-family:monospace;">${result.csv}</textarea>`;
+                    html += `<p class="info">Copy this CSV, pay via PayPal, then mark batch #${result.batchId} as paid.</p>`;
+                    document.getElementById('result').innerHTML = html;
+                } else {
+                    showResult('Batch Creation', result, false);
+                }
+            } catch (error) {
+                showError(error);
+            }
+        }
+        
+        async function markBatchPaid() {
+            const batchId = document.getElementById('batchId').value;
+            if (!batchId) {
+                alert('Enter a batch ID');
+                return;
+            }
+            
+            showLoading('Marking batch as paid...');
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/commissions/batch/${batchId}/mark-paid`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                showResult(`Batch #${batchId}`, result, result.success);
+            } catch (error) {
+                showError(error);
+            }
+        }
+        
+        function showLoading(msg) {
+            document.getElementById('result').innerHTML = `<p>${msg}</p>`;
+        }
+        
+        function showResult(title, data, success) {
+            const cls = success ? 'success' : 'error';
+            document.getElementById('result').innerHTML = `<h4 class="${cls}">${title}</h4><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+        
+        function showError(error) {
+            document.getElementById('result').innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+        }
+    </script>
+</body>
+</html>
