@@ -2268,17 +2268,17 @@ export default function Calculator() {
               defaultOpen={true}
               cardClassName="border-[var(--color-border-dark)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
             >
-                <div className="space-y-3">
+                {/* Pricing model grid - 2 cols on mobile */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                   {/* Half Day */}
                   <button
                     type="button"
-                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                    className={`flex flex-col items-center p-3 md:p-4 rounded-lg cursor-pointer transition-all duration-200 text-center ${
                       formData.day_type === "half" && !formData.single_price_enabled 
                         ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
                         : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => {
-                      // Update all selected roles to use half day
                       const updatedRoles = (formData.selected_roles || []).map(role => ({
                         ...role,
                         half_days: role.half_days || role.full_days || 1,
@@ -2287,7 +2287,7 @@ export default function Calculator() {
                       setFormData({...formData, day_type: "half", single_price_enabled: false, selected_roles: updatedRoles});
                     }}
                   >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mb-2 ${
                       formData.day_type === "half" && !formData.single_price_enabled
                         ? 'border-[var(--color-accent-primary)]'
                         : 'border-[var(--color-border-dark)]'
@@ -2296,23 +2296,19 @@ export default function Calculator() {
                         <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                        Half Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to {settings?.half_day_hours || 6} hours)</span>
-                      </div>
-                    </div>
+                    <div className="text-xs md:text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>Half Day</div>
+                    <div className="text-xs hidden md:block" style={{ color: 'var(--color-text-secondary)' }}>≤{settings?.half_day_hours || 6}h</div>
                   </button>
 
                   {/* Full Day */}
                   <button
                     type="button"
-                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                    className={`flex flex-col items-center p-3 md:p-4 rounded-lg cursor-pointer transition-all duration-200 text-center ${
                       formData.day_type === "full" && !formData.single_price_enabled 
                         ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
                         : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => {
-                      // Update all selected roles to use full day
                       const updatedRoles = (formData.selected_roles || []).map(role => ({
                         ...role,
                         full_days: role.full_days || role.half_days || 1,
@@ -2321,7 +2317,7 @@ export default function Calculator() {
                       setFormData({...formData, day_type: "full", single_price_enabled: false, selected_roles: updatedRoles});
                     }}
                   >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mb-2 ${
                       formData.day_type === "full" && !formData.single_price_enabled
                         ? 'border-[var(--color-accent-primary)]'
                         : 'border-[var(--color-border-dark)]'
@@ -2330,24 +2326,21 @@ export default function Calculator() {
                         <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                        Full Day Rates <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(up to {settings?.full_day_hours || 10} hours)</span>
-                      </div>
-                    </div>
+                    <div className="text-xs md:text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>Full Day</div>
+                    <div className="text-xs hidden md:block" style={{ color: 'var(--color-text-secondary)' }}>≤{settings?.full_day_hours || 10}h</div>
                   </button>
 
                   {/* Custom Hourly */}
                   <button
                     type="button"
-                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                    className={`flex flex-col items-center p-3 md:p-4 rounded-lg cursor-pointer transition-all duration-200 text-center ${
                       formData.day_type === "custom" && !formData.single_price_enabled 
                         ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
                         : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => setFormData({...formData, day_type: "custom", single_price_enabled: false})}
                   >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mb-2 ${
                       formData.day_type === "custom" && !formData.single_price_enabled
                         ? 'border-[var(--color-accent-primary)]'
                         : 'border-[var(--color-border-dark)]'
@@ -2356,24 +2349,21 @@ export default function Calculator() {
                         <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                        Custom Hourly Rate
-                      </div>
-                    </div>
+                    <div className="text-xs md:text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>Hourly</div>
+                    <div className="text-xs hidden md:block" style={{ color: 'var(--color-text-secondary)' }}>Custom</div>
                   </button>
 
                   {/* Single Fixed Price */}
                   <button
                     type="button"
-                    className={`w-full flex items-center space-x-4 p-4 rounded-lg cursor-pointer transition-all duration-200 text-left ${
+                    className={`flex flex-col items-center p-3 md:p-4 rounded-lg cursor-pointer transition-all duration-200 text-center ${
                       formData.single_price_enabled 
                         ? 'border-2 border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-sm' 
                         : 'border-2 border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-sm'
                     }`}
                     onClick={() => setFormData({...formData, single_price_enabled: true, day_type: null})}
                   >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mb-2 ${
                       formData.single_price_enabled
                         ? 'border-[var(--color-accent-primary)]'
                         : 'border-[var(--color-border-dark)]'
@@ -2382,11 +2372,8 @@ export default function Calculator() {
                         <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-accent-primary)' }}></div>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                        Single Fixed Price <span className="font-normal" style={{ color: 'var(--color-text-secondary)' }}>(overhead/admin added)</span>
-                      </div>
-                    </div>
+                    <div className="text-xs md:text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>Fixed</div>
+                    <div className="text-xs hidden md:block" style={{ color: 'var(--color-text-secondary)' }}>+overhead</div>
                   </button>
                 </div>
 

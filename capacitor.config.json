@@ -3,9 +3,17 @@
   "appName": "TurnKey",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": ["*.railway.app", "backend-backend-c520.up.railway.app"],
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": true
   },
   "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
     "SplashScreen": {
       "launchShowDuration": 2000,
       "backgroundColor": "#06101E",

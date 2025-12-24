@@ -31,19 +31,25 @@ export const API_ENDPOINTS = {
 export async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
+  try {
+    const response = await fetch(url, {
+      method: options.method || 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: options.body
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || data.message || 'API request failed');
     }
-  };
-  
-  const response = await fetch(url, { ...defaultOptions, ...options });
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.error || data.message || 'API request failed');
+    
+    return data;
+  } catch (error) {
+    console.error('API call failed:', url, error);
+    throw error;
   }
-  
-  return data;
 }

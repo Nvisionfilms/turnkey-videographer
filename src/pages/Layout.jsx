@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Video, Settings, Calculator, Lock, BarChart3, LogOut, LogIn, Users } from "lucide-react";
@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUnlockStatus } from "@/components/hooks/useUnlockStatus";
+import { App } from '@capacitor/app';
 
 const navigationItems = [
   {
@@ -50,6 +51,21 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const { isUnlocked, hasUsedFreeQuote } = useUnlockStatus();
 
+  // Handle Android back button
+  useEffect(() => {
+    const handleBackButton = App.addListener('backButton', ({ canGoBack }) => {
+      if (canGoBack) {
+        window.history.back();
+      } else {
+        // On main page, minimize app instead of closing
+        App.minimizeApp();
+      }
+    });
+
+    return () => {
+      handleBackButton.remove();
+    };
+  }, []);
 
   return (
     <SidebarProvider>

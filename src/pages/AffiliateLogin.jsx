@@ -32,18 +32,15 @@ export default function AffiliateLogin() {
     try {
       // Check if this is admin login
       if (email.toLowerCase() === 'nvisionmg@gmail.com') {
-        // Try admin login
+        // Try admin login using apiCall (works on mobile)
         try {
           console.log('Attempting admin login...');
           
-          // Use direct fetch like the test page
-          const response = await fetch('https://backend-backend-c520.up.railway.app/api/admin/login', {
+          const adminResponse = await apiCall(API_ENDPOINTS.adminLogin, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
           });
           
-          const adminResponse = await response.json();
           console.log('Admin response:', adminResponse);
 
           // Store admin token
@@ -57,8 +54,7 @@ export default function AffiliateLogin() {
             console.log('Admin premium access activated');
             
             console.log('Redirecting to /admin/affiliates...');
-            // Force navigation with window.location for clean state
-            window.location.href = '/admin/affiliates';
+            navigate('/admin/affiliates');
             return;
           }
           
@@ -66,9 +62,9 @@ export default function AffiliateLogin() {
           setError('Login failed');
           return;
         } catch (adminError) {
-          // If admin login fails, show error
           console.error('Admin login error:', adminError);
-          setError('Invalid admin credentials: ' + adminError.message);
+          setError('Admin login failed: ' + (adminError.message || 'Network error'));
+          setLoading(false);
           return;
         }
       }
@@ -96,12 +92,15 @@ export default function AffiliateLogin() {
 
       navigate(`/affiliate/dashboard?code=${affiliate.code}`);
     } catch (error) {
-      setError(error.message || 'Invalid email or password');
+      console.error('Login error:', error);
+      setError(error.message || 'Network error - check connection');
       toast({
         title: "Login Failed",
-        description: error.message || 'Invalid email or password',
+        description: error.message || 'Network error',
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 

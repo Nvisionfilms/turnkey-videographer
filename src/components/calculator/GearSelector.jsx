@@ -103,8 +103,8 @@ export default function GearSelector({
               </div>
             </div>
 
-            {/* Grid of gear cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Grid of gear cards - 3 cols on mobile, 4 on md, 5 on lg */}
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5 md:gap-3">
               {gearCosts.map((gear) => {
                 const selected = isGearSelected(gear.id);
                 const GearIcon = getGearIcon(gear.item);
@@ -112,27 +112,27 @@ export default function GearSelector({
                 
                 return (
                   <div key={gear.id} className="relative">
-                    {/* Gear Card Button */}
+                    {/* Gear Card Button - compact on mobile */}
                     <button
                       type="button"
                       onClick={() => handleGearToggle(gear.id, !selected)}
-                      className={`w-full p-5 rounded-2xl border-2 transition-all duration-200 text-center ${
+                      className={`w-full p-2 md:p-4 rounded-lg md:rounded-xl border-2 transition-all duration-200 text-center ${
                         selected 
                           ? 'border-[var(--color-accent-primary)] bg-[var(--color-bg-secondary)] shadow-lg' 
                           : 'border-[var(--color-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-primary)] hover:shadow-md'
                       }`}
                     >
-                      {/* Icon */}
-                      <div className="flex justify-center mb-3">
+                      {/* Icon - smaller on mobile */}
+                      <div className="flex justify-center mb-1 md:mb-2">
                         <div 
-                          className="w-16 h-16 rounded-full flex items-center justify-center"
+                          className="w-7 h-7 md:w-12 md:h-12 rounded-full flex items-center justify-center"
                           style={{ 
                             background: selected ? 'var(--color-accent-primary)' : 'var(--color-bg-tertiary)',
                             transition: 'all 0.2s'
                           }}
                         >
                           <GearIcon 
-                            className="w-8 h-8" 
+                            className="w-3.5 h-3.5 md:w-6 md:h-6" 
                             style={{ 
                               color: selected ? 'var(--color-bg-primary)' : 'var(--color-accent-primary)',
                               strokeWidth: 2
@@ -141,40 +141,32 @@ export default function GearSelector({
                         </div>
                       </div>
                       
-                      {/* Gear Name */}
+                      {/* Gear Name - smaller on mobile */}
                       <h4 
-                        className="text-sm font-bold mb-2 line-clamp-2" 
-                        style={{ color: 'var(--color-text-primary)', minHeight: '2.5rem' }}
+                        className="text-[9px] md:text-xs font-semibold leading-tight line-clamp-2" 
+                        style={{ color: 'var(--color-text-primary)' }}
                       >
                         {gear.item}
                       </h4>
                       
-                      {/* Investment & Daily Cost */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-center gap-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                          <span>Investment:</span>
-                          <span className="font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                            ${gear.total_investment.toLocaleString()}
-                          </span>
-                        </div>
-                        <div 
-                          className="text-sm font-bold px-3 py-1 rounded-full inline-block"
-                          style={{ 
-                            background: selected ? 'rgba(37, 99, 235, 0.1)' : 'var(--color-bg-tertiary)',
-                            color: selected ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)'
-                          }}
-                        >
-                          ${dailyCost}/day
-                        </div>
+                      {/* Daily Cost only on mobile */}
+                      <div 
+                        className="text-[9px] md:text-xs font-bold mt-1 px-1.5 md:px-2 py-0.5 rounded-full inline-block"
+                        style={{ 
+                          background: selected ? 'rgba(37, 99, 235, 0.1)' : 'var(--color-bg-tertiary)',
+                          color: selected ? 'var(--color-accent-primary)' : 'var(--color-text-secondary)'
+                        }}
+                      >
+                        ${dailyCost}/d
                       </div>
                       
                       {/* Selected Checkmark */}
                       {selected && (
                         <div 
-                          className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center"
+                          className="absolute top-1 right-1 md:top-2 md:right-2 w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center"
                           style={{ background: 'var(--color-accent-primary)' }}
                         >
-                          <svg className="w-4 h-4" style={{ color: 'var(--color-bg-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-2.5 h-2.5 md:w-3 md:h-3" style={{ color: 'var(--color-bg-primary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>

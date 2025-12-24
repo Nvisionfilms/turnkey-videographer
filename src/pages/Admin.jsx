@@ -575,22 +575,22 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
   };
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'var(--color-bg-primary)' }}>
+    <div className="min-h-screen p-3 md:p-6" style={{ background: 'var(--color-bg-primary)' }}>
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Setup Rates & Business Information</h1>
-          <p className="mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-xl md:text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Setup Rates</h1>
+          <p className="text-xs md:text-base mb-3 hidden md:block" style={{ color: 'var(--color-text-muted)' }}>
             Configure your day rates, gear costs, and business settings. This information is stored locally on your computer and will be used to calculate quotes.
-            Start by entering your rates manually or use the AI Auto-Fill feature to populate industry-standard pricing.
           </p>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <Button
               onClick={loadAllDefaults}
               variant="outline"
-              className="gap-2"
+              size="sm"
+              className="gap-1 text-xs md:text-sm"
               style={{ borderColor: 'var(--color-accent-primary)', color: 'var(--color-accent-primary)', background: 'var(--color-bg-secondary)' }}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3 h-3 md:w-4 md:h-4" />
               Load All Defaults
             </Button>
             <Button
@@ -602,10 +602,11 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                 );
               }}
               variant="outline"
-              className="gap-2"
+              size="sm"
+              className="gap-1 text-xs md:text-sm"
               style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-secondary)' }}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3 h-3 md:w-4 md:h-4" />
               Restore Default Roles
             </Button>
             <Button
@@ -617,21 +618,22 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                 );
               }}
               variant="outline"
-              className="gap-2"
+              size="sm"
+              className="gap-1 text-xs md:text-sm"
               style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-secondary)' }}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3 h-3 md:w-4 md:h-4" />
               Reset All to $0
             </Button>
           </div>
         </div>
 
-        <Tabs defaultValue="rates" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
-            <TabsTrigger value="rates" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Day Rates</TabsTrigger>
-            <TabsTrigger value="gear" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Gear Costs</TabsTrigger>
-            <TabsTrigger value="cameras" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Cameras</TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Business Info</TabsTrigger>
+        <Tabs defaultValue="rates" className="space-y-3 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-4 h-auto" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
+            <TabsTrigger value="rates" className="text-[10px] md:text-sm py-2 data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Day Rates</TabsTrigger>
+            <TabsTrigger value="gear" className="text-[10px] md:text-sm py-2 data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Gear Costs</TabsTrigger>
+            <TabsTrigger value="cameras" className="text-[10px] md:text-sm py-2 data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Cameras</TabsTrigger>
+            <TabsTrigger value="settings" className="text-[10px] md:text-sm py-2 data-[state=active]:bg-[var(--color-bg-tertiary)] data-[state=active]:text-[var(--color-text-primary)]" style={{ color: 'var(--color-text-secondary)' }}>Business</TabsTrigger>
           </TabsList>
 
           <TabsContent value="rates">
@@ -746,116 +748,82 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                   </Card>
                 )}
 
-                <Table>
-                  <TableHeader>
-                    <TableRow style={{ borderColor: 'var(--color-border)' }}>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Role</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Unit Type</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Half Day Rate</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Full Day Rate</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Active</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dayRates.length === 0 ? (
-                      <TableRow style={{ borderColor: 'var(--color-border)' }}>
-                        <TableCell colSpan={6} className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>No rates found. Click "Add New Rate" to create one.</TableCell>
-                      </TableRow>
-                    ) : (
-                      dayRates.map((rate) => (
-                        <TableRow key={rate.id} style={{ borderColor: 'var(--color-border)' }} className="hover:bg-[var(--color-bg-tertiary)]">
-                          <TableCell data-label="Role" className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{rate.role}</TableCell>
-                          <TableCell data-label="Unit Type">
-                            <Badge variant="outline" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>{rate.unit_type}</Badge>
-                          </TableCell>
-                          <TableCell data-label="Half Day Rate" style={{ color: 'var(--color-text-primary)' }}>
-                            {editingRate?.id === rate.id ? (
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={editingRate.half_day_rate}
-                                onChange={(e) => setEditingRate({...editingRate, half_day_rate: parseFloat(e.target.value) || 0})}
-                                className="w-24"
-                                style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                              />
-                            ) : (
-                              `$${rate.half_day_rate}`
-                            )}
-                          </TableCell>
-                          <TableCell data-label="Full Day Rate" style={{ color: 'var(--color-text-primary)' }}>
-                            {editingRate?.id === rate.id ? (
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={editingRate.full_day_rate}
-                                onChange={(e) => setEditingRate({...editingRate, full_day_rate: parseFloat(e.target.value) || 0})}
-                                className="w-24"
-                                style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                              />
-                            ) : (
-                              `$${rate.full_day_rate}`
-                            )}
-                          </TableCell>
-                          <TableCell data-label="Active">
-                            <Checkbox 
-                              checked={rate.active} 
-                              onCheckedChange={(checked) => toggleRateActive(rate.id, checked)}
+                {/* Mobile-friendly rate cards */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {dayRates.length === 0 ? (
+                    <div className="col-span-full text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>
+                      No rates found. Click "Add New Rate" to create one.
+                    </div>
+                  ) : (
+                    dayRates.map((rate) => (
+                      <div 
+                        key={rate.id}
+                        className={`p-2 rounded-lg border-2 ${rate.active ? 'border-[var(--color-accent-primary)]' : 'border-[var(--color-border)] opacity-50'}`}
+                        style={{ background: 'var(--color-bg-primary)' }}
+                      >
+                        {editingRate?.id === rate.id ? (
+                          <div className="space-y-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={editingRate.half_day_rate}
+                              onChange={(e) => setEditingRate({...editingRate, half_day_rate: parseFloat(e.target.value) || 0})}
+                              className="h-7 text-xs"
+                              placeholder="Half Day"
+                              style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
                             />
-                          </TableCell>
-                          <TableCell data-label="Actions" className="flex gap-2">
-                            {editingRate?.id === rate.id ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => updateRate(rate.id, editingRate)}
-                                  style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
-                                >
-                                  <Save className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingRate(null)}
-                                  style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-tertiary)' }}
-                                >
-                                  Cancel
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingRate(rate)}
-                                  style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-tertiary)' }}
-                                >
-                                  Edit
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => {
-                                    showConfirmDialog(
-                                      "Delete day rate?",
-                                      `Are you sure you want to delete "${rate.role}"? This action cannot be undone.`,
-                                      () => deleteRate(rate.id)
-                                    );
-                                  }}
-                                  style={{ background: 'var(--color-error)', color: 'white' }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={editingRate.full_day_rate}
+                              onChange={(e) => setEditingRate({...editingRate, full_day_rate: parseFloat(e.target.value) || 0})}
+                              className="h-7 text-xs"
+                              placeholder="Full Day"
+                              style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                            />
+                            <div className="flex gap-1">
+                              <Button size="sm" className="flex-1 h-6 text-[10px]" onClick={() => updateRate(rate.id, editingRate)} style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}>
+                                Save
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => setEditingRate(null)} style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                                ✕
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-[10px] font-semibold mb-1 line-clamp-1" style={{ color: 'var(--color-text-primary)' }}>{rate.role}</div>
+                            <div className="text-[9px] mb-1" style={{ color: 'var(--color-text-muted)' }}>{rate.unit_type}</div>
+                            <div className="flex justify-between text-[10px] mb-2">
+                              <span style={{ color: 'var(--color-text-secondary)' }}>½: ${rate.half_day_rate}</span>
+                              <span style={{ color: 'var(--color-text-primary)' }}>Full: ${rate.full_day_rate}</span>
+                            </div>
+                            <div className="flex items-center justify-between mb-1">
+                              <Checkbox 
+                                checked={rate.active} 
+                                onCheckedChange={(checked) => toggleRateActive(rate.id, checked)}
+                                className="h-3 w-3"
+                              />
+                              <span className="text-[8px]" style={{ color: rate.active ? 'var(--color-accent-primary)' : 'var(--color-text-muted)' }}>
+                                {rate.active ? 'Active' : 'Off'}
+                              </span>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" className="flex-1 h-6 text-[10px]" onClick={() => setEditingRate(rate)} style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                                Edit
+                              </Button>
+                              <Button size="sm" variant="destructive" className="h-6 px-2" onClick={() => showConfirmDialog("Delete?", `Delete "${rate.role}"?`, () => deleteRate(rate.id))}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -933,96 +901,68 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                   </Card>
                 )}
 
-                <Table>
-                  <TableHeader>
-                    <TableRow style={{ borderColor: 'var(--color-border)' }}>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Item</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Total Investment</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Include by Default</TableHead>
-                      <TableHead style={{ color: 'var(--color-accent-primary)' }}>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {gearCosts.length === 0 ? (
-                      <TableRow style={{ borderColor: 'var(--color-border)' }}>
-                        <TableCell colSpan={4} className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>No gear costs found. Click "Add New Gear" to create one.</TableCell>
-                      </TableRow>
-                    ) : (
-                      gearCosts.map((gear) => (
-                        <TableRow key={gear.id} style={{ borderColor: 'var(--color-border)' }} className="hover:bg-[var(--color-bg-tertiary)]">
-                          <TableCell data-label="Item" className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{gear.item}</TableCell>
-                          <TableCell data-label="Total Investment" style={{ color: 'var(--color-text-primary)' }}>
-                            {editingGear?.id === gear.id ? (
-                              <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={editingGear.total_investment}
-                                onChange={(e) => setEditingGear({...editingGear, total_investment: parseFloat(e.target.value) || 0})}
-                                className="w-32"
-                                style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                              />
-                            ) : (
-                              `$${gear.total_investment.toLocaleString()}`
-                            )}
-                          </TableCell>
-                          <TableCell data-label="Include by Default">
-                            <Checkbox 
-                              checked={gear.include_by_default} 
-                              onCheckedChange={(checked) => toggleGearIncludeByDefault(gear.id, checked)}
+                {/* Mobile-friendly gear cards */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {gearCosts.length === 0 ? (
+                    <div className="col-span-full text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>
+                      No gear costs found. Click "Add New Gear" to create one.
+                    </div>
+                  ) : (
+                    gearCosts.map((gear) => (
+                      <div 
+                        key={gear.id}
+                        className={`p-2 rounded-lg border-2 ${gear.include_by_default ? 'border-[var(--color-accent-primary)]' : 'border-[var(--color-border)]'}`}
+                        style={{ background: 'var(--color-bg-primary)' }}
+                      >
+                        {editingGear?.id === gear.id ? (
+                          <div className="space-y-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={editingGear.total_investment}
+                              onChange={(e) => setEditingGear({...editingGear, total_investment: parseFloat(e.target.value) || 0})}
+                              className="h-7 text-xs"
+                              placeholder="Investment $"
+                              style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
                             />
-                          </TableCell>
-                          <TableCell data-label="Actions" className="flex gap-2">
-                            {editingGear?.id === gear.id ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => updateGear(gear.id, editingGear)}
-                                  style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
-                                >
-                                  <Save className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingGear(null)}
-                                  style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-tertiary)' }}
-                                >
-                                  Cancel
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingGear(gear)}
-                                  style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)', background: 'var(--color-bg-tertiary)' }}
-                                >
-                                  Edit
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => {
-                                    showConfirmDialog(
-                                      "Delete gear item?",
-                                      `Are you sure you want to delete "${gear.item}"? This action cannot be undone.`,
-                                      () => deleteGear(gear.id)
-                                    );
-                                  }}
-                                  style={{ background: 'var(--color-error)', color: 'white' }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                            <div className="flex gap-1">
+                              <Button size="sm" className="flex-1 h-6 text-[10px]" onClick={() => updateGear(gear.id, editingGear)} style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}>
+                                Save
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-6 text-[10px] px-2" onClick={() => setEditingGear(null)} style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                                ✕
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-[10px] font-semibold mb-1 line-clamp-1" style={{ color: 'var(--color-text-primary)' }}>{gear.item}</div>
+                            <div className="text-xs font-bold mb-2" style={{ color: 'var(--color-accent-primary)' }}>${gear.total_investment.toLocaleString()}</div>
+                            <div className="flex items-center justify-between mb-1">
+                              <Checkbox 
+                                checked={gear.include_by_default} 
+                                onCheckedChange={(checked) => toggleGearIncludeByDefault(gear.id, checked)}
+                                className="h-3 w-3"
+                              />
+                              <span className="text-[8px]" style={{ color: gear.include_by_default ? 'var(--color-accent-primary)' : 'var(--color-text-muted)' }}>
+                                {gear.include_by_default ? 'Default' : 'Off'}
+                              </span>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" className="flex-1 h-6 text-[10px]" onClick={() => setEditingGear(gear)} style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                                Edit
+                              </Button>
+                              <Button size="sm" variant="destructive" className="h-6 px-2" onClick={() => showConfirmDialog("Delete?", `Delete "${gear.item}"?`, () => deleteGear(gear.id))}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1104,542 +1044,250 @@ Return ALL 8 roles in your response. Use mid-range values from the provided rang
                   </div>
                 )}
 
-                <Table>
-                  <TableHeader>
-                    <TableRow style={{ borderColor: 'var(--color-border)' }}>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Make</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Model</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Default</TableHead>
-                      <TableHead style={{ color: 'var(--color-text-secondary)' }}>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cameras.map((camera) => (
-                      <TableRow key={camera.id} style={{ borderColor: 'var(--color-border)' }}>
-                        <TableCell style={{ color: 'var(--color-text-primary)' }}>
-                          {editingCamera === camera.id ? (
-                            <Input
-                              defaultValue={camera.make}
-                              onBlur={(e) => updateCamera(camera.id, { make: e.target.value })}
-                              style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                            />
-                          ) : (
-                            camera.make
-                          )}
-                        </TableCell>
-                        <TableCell style={{ color: 'var(--color-text-primary)' }}>
-                          {editingCamera === camera.id ? (
-                            <Input
-                              defaultValue={camera.model}
-                              onBlur={(e) => updateCamera(camera.id, { model: e.target.value })}
-                              style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                            />
-                          ) : (
-                            camera.model
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Checkbox
-                            checked={camera.is_default}
-                            onCheckedChange={() => toggleCameraDefault(camera.id)}
+                {/* Mobile-friendly camera cards */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {cameras.map((camera) => (
+                    <div 
+                      key={camera.id} 
+                      className={`p-3 rounded-lg border-2 ${camera.is_default ? 'border-[var(--color-accent-primary)]' : 'border-[var(--color-border)]'}`}
+                      style={{ background: 'var(--color-bg-primary)' }}
+                    >
+                      {editingCamera === camera.id ? (
+                        <div className="space-y-2">
+                          <Input
+                            defaultValue={camera.make}
+                            onBlur={(e) => updateCamera(camera.id, { make: e.target.value })}
+                            className="h-8 text-sm"
+                            placeholder="Make"
+                            style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
                           />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
+                          <Input
+                            defaultValue={camera.model}
+                            onBlur={(e) => updateCamera(camera.id, { model: e.target.value })}
+                            className="h-8 text-sm"
+                            placeholder="Model"
+                            style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
+                          />
+                          <Button
+                            onClick={() => setEditingCamera(null)}
+                            size="sm"
+                            className="w-full h-7 text-xs"
+                            style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+                          >
+                            Done
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-right text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>{camera.make}</div>
+                          <div className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>{camera.model}</div>
+                          <div className="flex items-center justify-between mb-2">
+                            <Checkbox
+                              checked={camera.is_default}
+                              onCheckedChange={() => toggleCameraDefault(camera.id)}
+                            />
+                            {camera.is_default && <span className="text-[10px]" style={{ color: 'var(--color-accent-primary)' }}>Default</span>}
+                          </div>
+                          <div className="flex gap-1">
                             <Button
-                              onClick={() => setEditingCamera(editingCamera === camera.id ? null : camera.id)}
+                              onClick={() => setEditingCamera(camera.id)}
                               variant="outline"
                               size="sm"
+                              className="flex-1 h-7 text-xs"
                               style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
                             >
-                              {editingCamera === camera.id ? 'Done' : 'Edit'}
+                              Edit
                             </Button>
                             <Button
                               onClick={() => deleteCamera(camera.id)}
                               variant="destructive"
                               size="sm"
+                              className="h-7 px-2"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="settings">
             <Card className="shadow-lg" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-secondary)' }}>
-              <CardHeader style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border)' }}>
-                <CardTitle className="flex items-center gap-2" style={{ color: 'var(--color-text-primary)' }}>
-                  <SettingsIcon className="w-5 h-5" style={{ color: 'var(--color-accent-primary)' }} />
-                  Business Information
+              <CardHeader className="p-3 md:p-6" style={{ background: 'var(--color-bg-tertiary)', borderBottom: '1px solid var(--color-border)' }}>
+                <CardTitle className="flex items-center gap-2 text-sm md:text-base" style={{ color: 'var(--color-text-primary)' }}>
+                  <SettingsIcon className="w-4 h-4 md:w-5 md:h-5" style={{ color: 'var(--color-accent-primary)' }} />
+                  Business Info
                 </CardTitle>
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                  General settings for your business. These values will be used in calculations and displayed on your quotes.
+                <p className="text-xs hidden md:block" style={{ color: 'var(--color-text-muted)' }}>
+                  Settings for calculations and quotes.
                 </p>
               </CardHeader>
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-3 md:p-6 space-y-4 md:space-y-6">
                 
                 {/* Company Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
-                    Company Information
+                <div className="space-y-2 md:space-y-4">
+                  <h3 className="text-sm md:text-lg font-semibold pb-1 md:pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                    Company Info
                   </h3>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-2 md:gap-4 grid-cols-2">
                     <div>
-                      <Label htmlFor="company_name" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Company Name
+                      <Label htmlFor="company_name" className="text-[10px] md:text-sm mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
+                        Name
                       </Label>
                       <Input
                         id="company_name"
                         value={localSettings?.company_name || ""}
                         onChange={(e) => handleSettingsUpdate('company_name', e.target.value)}
-                        placeholder="Your Company Name"
+                        placeholder="Company Name"
+                        className="h-8 text-xs md:text-sm"
                         style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="company_tagline" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                      <Label htmlFor="company_tagline" className="text-[10px] md:text-sm mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
                         Tagline
                       </Label>
                       <Input
                         id="company_tagline"
                         value={localSettings?.company_tagline || ""}
                         onChange={(e) => handleSettingsUpdate('company_tagline', e.target.value)}
-                        placeholder="Professional Videography Services"
+                        placeholder="Tagline"
+                        className="h-8 text-xs md:text-sm"
                         style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                      Company Logo
+                  {/* Logo - compact on mobile */}
+                  <div className="hidden md:block">
+                    <Label className="text-[10px] md:text-sm mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
+                      Logo
                     </Label>
-                    
                     {localSettings?.company_logo ? (
-                      <div className="space-y-3">
-                        <div className="relative inline-block">
-                          <img 
-                            src={localSettings.company_logo} 
-                            alt="Company Logo" 
-                            className="max-w-[200px] max-h-[80px] border rounded"
-                            style={{ borderColor: 'var(--color-border-dark)' }}
-                          />
-                          <Button
-                            onClick={handleRemoveLogo}
-                            variant="destructive"
-                            size="sm"
-                            className="absolute -top-2 -right-2"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div>
-                          <label htmlFor="logo-upload-replace">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => document.getElementById('logo-upload-replace').click()}
-                              type="button"
-                              style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
-                            >
-                              <Upload className="w-4 h-4 mr-2" />
-                              Replace Logo
-                            </Button>
-                          </label>
-                          <input
-                            id="logo-upload-replace"
-                            type="file"
-                            accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
-                            onChange={handleLogoUpload}
-                            className="hidden"
-                          />
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <img src={localSettings.company_logo} alt="Logo" className="max-w-[100px] max-h-[40px] border rounded" style={{ borderColor: 'var(--color-border-dark)' }} />
+                        <Button onClick={handleRemoveLogo} variant="destructive" size="sm" className="h-6 px-2"><X className="w-3 h-3" /></Button>
                       </div>
                     ) : (
-                      <div>
-                        <label htmlFor="logo-upload">
-                          <div 
-                            className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-opacity-50 transition-colors"
-                            style={{ borderColor: 'var(--color-border-dark)', background: 'var(--color-bg-tertiary)' }}
-                          >
-                            <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--color-text-muted)' }} />
-                            <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                              Click to upload logo
-                            </p>
-                            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                              PNG, JPG, SVG or WebP (max 2MB)
-                            </p>
-                          </div>
-                        </label>
-                        <input
-                          id="logo-upload"
-                          type="file"
-                          accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
-                          onChange={handleLogoUpload}
-                          className="hidden"
-                        />
-                      </div>
+                      <label htmlFor="logo-upload">
+                        <div className="border-2 border-dashed rounded p-3 text-center cursor-pointer text-xs" style={{ borderColor: 'var(--color-border-dark)', background: 'var(--color-bg-tertiary)' }}>
+                          <Upload className="w-4 h-4 mx-auto mb-1" style={{ color: 'var(--color-text-muted)' }} />
+                          <span style={{ color: 'var(--color-text-muted)' }}>Upload</span>
+                        </div>
+                        <input id="logo-upload" type="file" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp" onChange={handleLogoUpload} className="hidden" />
+                      </label>
                     )}
-                    
-                    <p className="text-xs text-muted-foreground mt-2" style={{ color: 'var(--color-text-muted)' }}>
-                      Logo will appear on quotes and invoices. Recommended size: 400x160px
-                    </p>
                   </div>
                   
                   <div>
-                    <Label htmlFor="company_address" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                    <Label htmlFor="company_address" className="text-[10px] md:text-sm mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>
                       Address
                     </Label>
-                    <Input
-                      id="company_address"
-                      value={localSettings?.company_address || ""}
-                      onChange={(e) => handleSettingsUpdate('company_address', e.target.value)}
-                      placeholder="123 Main St, City, State 12345"
-                      style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                    />
+                    <Input id="company_address" value={localSettings?.company_address || ""} onChange={(e) => handleSettingsUpdate('company_address', e.target.value)} placeholder="Address" className="h-8 text-xs md:text-sm" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-2 grid-cols-3">
                     <div>
-                      <Label htmlFor="company_phone" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Phone
-                      </Label>
-                      <Input
-                        id="company_phone"
-                        value={localSettings?.company_phone || ""}
-                        onChange={(e) => handleSettingsUpdate('company_phone', e.target.value)}
-                        placeholder="(555) 123-4567"
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
+                      <Label htmlFor="company_phone" className="text-[10px] md:text-sm mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>Phone</Label>
+                      <Input id="company_phone" value={localSettings?.company_phone || ""} onChange={(e) => handleSettingsUpdate('company_phone', e.target.value)} placeholder="Phone" className="h-8 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                     <div>
-                      <Label htmlFor="company_email" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Email
-                      </Label>
-                      <Input
-                        id="company_email"
-                        type="email"
-                        value={localSettings?.company_email || ""}
-                        onChange={(e) => handleSettingsUpdate('company_email', e.target.value)}
-                        placeholder="info@company.com"
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
+                      <Label htmlFor="company_email" className="text-[10px] md:text-sm mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>Email</Label>
+                      <Input id="company_email" type="email" value={localSettings?.company_email || ""} onChange={(e) => handleSettingsUpdate('company_email', e.target.value)} placeholder="Email" className="h-8 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                     <div>
-                      <Label htmlFor="company_website" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Website
-                      </Label>
-                      <Input
-                        id="company_website"
-                        value={localSettings?.company_website || ""}
-                        onChange={(e) => handleSettingsUpdate('company_website', e.target.value)}
-                        placeholder="www.yourcompany.com"
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
+                      <Label htmlFor="company_website" className="text-[10px] md:text-sm mb-1 block" style={{ color: 'var(--color-text-secondary)' }}>Web</Label>
+                      <Input id="company_website" value={localSettings?.company_website || ""} onChange={(e) => handleSettingsUpdate('company_website', e.target.value)} placeholder="Website" className="h-8 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                   </div>
                 </div>
 
-                {/* Financial Settings */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
-                    Financial Settings
+                {/* Financial Settings - Compact */}
+                <div className="space-y-2 md:space-y-4">
+                  <h3 className="text-sm md:text-lg font-semibold pb-1 md:pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                    Financial
                   </h3>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-2 grid-cols-3 md:grid-cols-4">
                     <div>
-                      <Label htmlFor="overhead_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Overhead (%)
-                      </Label>
-                      <Input
-                        id="overhead_percent"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={localSettings?.overhead_percent || 0}
-                        onChange={(e) => handleSettingsUpdate('overhead_percent', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Percentage added to labor for business operating costs (shown in Business Print only)
-                      </p>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Overhead %</Label>
+                      <Input type="number" min="0" max="100" value={localSettings?.overhead_percent || 0} onChange={(e) => handleSettingsUpdate('overhead_percent', parseFloat(e.target.value) || 0)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                     <div>
-                      <Label htmlFor="profit_margin_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Profit Margin (%)
-                      </Label>
-                      <Input
-                        id="profit_margin_percent"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={localSettings?.profit_margin_percent || 0}
-                        onChange={(e) => handleSettingsUpdate('profit_margin_percent', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Percentage added to labor for profit (shown in Business Print only)
-                      </p>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Profit %</Label>
+                      <Input type="number" min="0" max="100" value={localSettings?.profit_margin_percent || 0} onChange={(e) => handleSettingsUpdate('profit_margin_percent', parseFloat(e.target.value) || 0)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                     <div>
-                      <Label htmlFor="desired_profit_margin_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Desired Profit Margin (%)
-                      </Label>
-                      <Input
-                        id="desired_profit_margin_percent"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={localSettings?.desired_profit_margin_percent || 0}
-                        onChange={(e) => handleSettingsUpdate('desired_profit_margin_percent', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        The percentage of profit you aim for on top of your total costs.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="tax_rate_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Tax Rate (%)
-                      </Label>
-                      <Input
-                        id="tax_rate_percent"
-                        type="number"
-                        min="0"
-                        max="25"
-                        step="0.01"
-                        value={localSettings?.tax_rate_percent || 0}
-                        onChange={(e) => handleSettingsUpdate('tax_rate_percent', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Sales tax percentage applied to quotes
-                      </p>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Target %</Label>
+                      <Input type="number" min="0" max="100" value={localSettings?.desired_profit_margin_percent || 0} onChange={(e) => handleSettingsUpdate('desired_profit_margin_percent', parseFloat(e.target.value) || 0)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                     <div>
-                      <div className="flex items-center gap-3 mb-3">
-                        <Checkbox
-                          id="deposit_enabled"
-                          checked={localSettings?.deposit_enabled !== false}
-                          onCheckedChange={(checked) => handleSettingsUpdate('deposit_enabled', checked)}
-                        />
-                        <Label htmlFor="deposit_enabled" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
-                          Enable Deposit/Balance Split
-                        </Label>
-                      </div>
-                      <Label htmlFor="deposit_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Deposit (%)
-                      </Label>
-                      <Input
-                        id="deposit_percent"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={localSettings?.deposit_percent || 0}
-                        onChange={(e) => handleSettingsUpdate('deposit_percent', parseFloat(e.target.value) || 0)}
-                        disabled={localSettings?.deposit_enabled === false}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)', opacity: localSettings?.deposit_enabled === false ? 0.5 : 1 }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        {localSettings?.deposit_enabled === false ? 'Deposit disabled - full payment only' : 'Percentage of total due as deposit'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="nonprofit_discount_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Nonprofit Discount (%)
-                      </Label>
-                      <Input
-                        id="nonprofit_discount_percent"
-                        type="number"
-                        min="0"
-                        max="50"
-                        step="1"
-                        value={localSettings?.nonprofit_discount_percent || 0}
-                        onChange={(e) => handleSettingsUpdate('nonprofit_discount_percent', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Tax %</Label>
+                      <Input type="number" min="0" max="25" step="0.01" value={localSettings?.tax_rate_percent || 0} onChange={(e) => handleSettingsUpdate('tax_rate_percent', parseFloat(e.target.value) || 0)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                     <div>
-                      <Label htmlFor="rush_fee_percent" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Rush Fee (%)
-                      </Label>
-                      <Input
-                        id="rush_fee_percent"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={localSettings?.rush_fee_percent || 0}
-                        onChange={(e) => handleSettingsUpdate('rush_fee_percent', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Deposit %</Label>
+                      <Input type="number" min="0" max="100" value={localSettings?.deposit_percent || 0} onChange={(e) => handleSettingsUpdate('deposit_percent', parseFloat(e.target.value) || 0)} disabled={localSettings?.deposit_enabled === false} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)', opacity: localSettings?.deposit_enabled === false ? 0.5 : 1 }} />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Nonprofit %</Label>
+                      <Input type="number" min="0" max="50" value={localSettings?.nonprofit_discount_percent || 0} onChange={(e) => handleSettingsUpdate('nonprofit_discount_percent', parseFloat(e.target.value) || 0)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Rush %</Label>
+                      <Input type="number" min="0" max="100" value={localSettings?.rush_fee_percent || 0} onChange={(e) => handleSettingsUpdate('rush_fee_percent', parseFloat(e.target.value) || 0)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Checkbox id="deposit_enabled" checked={localSettings?.deposit_enabled !== false} onCheckedChange={(checked) => handleSettingsUpdate('deposit_enabled', checked)} className="h-3 w-3" />
+                      <Label htmlFor="deposit_enabled" className="text-[8px] md:text-xs cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>Deposit On</Label>
                     </div>
                   </div>
                 </div>
 
-                {/* Pricing Model Settings */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
-                    Pricing Model Settings
+                {/* Pricing & Operational - Compact */}
+                <div className="space-y-2 md:space-y-4">
+                  <h3 className="text-sm md:text-lg font-semibold pb-1 md:pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                    Pricing & Operations
                   </h3>
-                  
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-2 grid-cols-4">
                     <div>
-                      <Label htmlFor="half_day_hours" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Half Day Hours
-                      </Label>
-                      <Input
-                        id="half_day_hours"
-                        type="number"
-                        min="1"
-                        max="12"
-                        step="1"
-                        value={localSettings?.half_day_hours || 6}
-                        onChange={(e) => handleSettingsUpdate('half_day_hours', parseInt(e.target.value) || 6)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Maximum hours for half-day rate (default: 6)
-                      </p>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>½ Day Hrs</Label>
+                      <Input type="number" min="1" max="12" value={localSettings?.half_day_hours || 6} onChange={(e) => handleSettingsUpdate('half_day_hours', parseInt(e.target.value) || 6)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                     <div>
-                      <Label htmlFor="full_day_hours" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Full Day Hours
-                      </Label>
-                      <Input
-                        id="full_day_hours"
-                        type="number"
-                        min="1"
-                        max="16"
-                        step="1"
-                        value={localSettings?.full_day_hours || 10}
-                        onChange={(e) => handleSettingsUpdate('full_day_hours', parseInt(e.target.value) || 10)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Maximum hours for full-day rate before overtime (default: 10)
-                      </p>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Full Hrs</Label>
+                      <Input type="number" min="1" max="16" value={localSettings?.full_day_hours || 10} onChange={(e) => handleSettingsUpdate('full_day_hours', parseInt(e.target.value) || 10)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>$/Mile</Label>
+                      <Input type="number" min="0" step="0.01" value={localSettings?.mileage_rate || 0} onChange={(e) => handleSettingsUpdate('mileage_rate', parseFloat(e.target.value) || 0)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>OT Multi</Label>
+                      <Input type="number" min="1" step="0.1" value={localSettings?.overtime_multiplier || 1.5} onChange={(e) => handleSettingsUpdate('overtime_multiplier', parseFloat(e.target.value) || 1.5)} className="h-7 text-xs" style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }} />
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)' }}>
-                    <Checkbox
-                      id="show_service_fee_on_invoice"
-                      checked={localSettings?.show_service_fee_on_invoice !== false}
-                      onCheckedChange={(checked) => handleSettingsUpdate('show_service_fee_on_invoice', checked)}
-                    />
-                    <div>
-                      <Label htmlFor="show_service_fee_on_invoice" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
-                        Show Service Fee on Invoice
-                      </Label>
-                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        When enabled, service fee appears as separate line item. When disabled, it's baked into crew rates.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)' }}>
-                    <Checkbox
-                      id="simplified_invoice"
-                      checked={localSettings?.simplified_invoice || false}
-                      onCheckedChange={(checked) => handleSettingsUpdate('simplified_invoice', checked)}
-                    />
-                    <div>
-                      <Label htmlFor="simplified_invoice" className="cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>
-                        Simplified Invoice Mode
-                      </Label>
-                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Show single "Production Cost" line instead of detailed crew breakdown
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Operational Settings */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold pb-2" style={{ color: 'var(--color-text-primary)', borderBottom: '1px solid var(--color-border)' }}>
-                    Operational Settings
-                  </h3>
-                  
                   <div>
-                    <Label htmlFor="gearAmortizationDays" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                      Gear Amortization Period (Days)
-                    </Label>
-                    <Slider
-                      id="gearAmortizationDays"
-                      min={1}
-                      max={365}
-                      step={1}
-                      value={[localSettings?.gear_amortization_days || 90]}
-                      onValueChange={(value) => handleSettingsUpdate('gear_amortization_days', value[0])}
-                      className="w-full mt-2"
-                    />
-                    <p className="text-sm mt-1" style={{ color: 'var(--color-text-primary)' }}>
-                      {localSettings?.gear_amortization_days || 90} Days
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                      Over how many job-days you expect to recoup the investment cost of your gear.
-                    </p>
+                    <Label className="text-[9px] md:text-xs mb-0.5 block" style={{ color: 'var(--color-text-secondary)' }}>Gear Amortization: {localSettings?.gear_amortization_days || 90} days</Label>
+                    <Slider min={1} max={365} step={1} value={[localSettings?.gear_amortization_days || 90]} onValueChange={(value) => handleSettingsUpdate('gear_amortization_days', value[0])} className="w-full" />
                   </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="mileage_rate" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Mileage Rate ($/mile)
-                      </Label>
-                      <Input
-                        id="mileage_rate"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={localSettings?.mileage_rate || 0}
-                        onChange={(e) => handleSettingsUpdate('mileage_rate', parseFloat(e.target.value) || 0)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-1 p-1.5 rounded" style={{ background: 'var(--color-bg-tertiary)' }}>
+                      <Checkbox id="show_service_fee_on_invoice" checked={localSettings?.show_service_fee_on_invoice !== false} onCheckedChange={(checked) => handleSettingsUpdate('show_service_fee_on_invoice', checked)} className="h-3 w-3" />
+                      <Label htmlFor="show_service_fee_on_invoice" className="text-[8px] md:text-xs cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>Show Fee</Label>
                     </div>
-                    <div>
-                      <Label htmlFor="overtime_multiplier" className="mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
-                        Overtime Multiplier
-                      </Label>
-                      <Input
-                        id="overtime_multiplier"
-                        type="number"
-                        min="1"
-                        step="0.1"
-                        value={localSettings?.overtime_multiplier || 1.5}
-                        onChange={(e) => handleSettingsUpdate('overtime_multiplier', parseFloat(e.target.value) || 1.5)}
-                        style={{ background: 'var(--color-input-bg)', color: 'var(--color-text-primary)', borderColor: 'var(--color-input-border)' }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                        Rate multiplier after 10 hours
-                      </p>
+                    <div className="flex items-center gap-1 p-1.5 rounded" style={{ background: 'var(--color-bg-tertiary)' }}>
+                      <Checkbox id="simplified_invoice" checked={localSettings?.simplified_invoice || false} onCheckedChange={(checked) => handleSettingsUpdate('simplified_invoice', checked)} className="h-3 w-3" />
+                      <Label htmlFor="simplified_invoice" className="text-[8px] md:text-xs cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>Simple Invoice</Label>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id="tax_travel"
-                      checked={localSettings?.tax_travel || false}
-                      onCheckedChange={(checked) => handleSettingsUpdate('tax_travel', checked)}
-                    />
-                    <Label htmlFor="tax_travel" style={{ color: 'var(--color-text-secondary)' }}>
-                      Include travel in taxable amount
-                    </Label>
+                    <div className="flex items-center gap-1 p-1.5 rounded" style={{ background: 'var(--color-bg-tertiary)' }}>
+                      <Checkbox id="tax_travel" checked={localSettings?.tax_travel || false} onCheckedChange={(checked) => handleSettingsUpdate('tax_travel', checked)} className="h-3 w-3" />
+                      <Label htmlFor="tax_travel" className="text-[8px] md:text-xs cursor-pointer" style={{ color: 'var(--color-text-secondary)' }}>Tax Travel</Label>
+                    </div>
                   </div>
                 </div>
 
