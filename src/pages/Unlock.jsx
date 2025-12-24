@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Check, Clock, AlertCircle } from "lucide-react";
+import { Check, Clock, AlertCircle, Copy, CheckCircle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,6 +23,10 @@ export default function Unlock() {
   const [email, setEmail] = useState("");
   const [deviceId, setDeviceId] = useState("");
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [paymentEmail, setPaymentEmail] = useState("");
+  const [codeCopied, setCodeCopied] = useState(false);
   
   // Use the new hook for unlock status management
   const { hasUsedTrialBefore, activateTrial, activateSubscription, subscriptionDetails, activateDirectUnlock } = useUnlockStatus();
@@ -33,6 +37,20 @@ export default function Unlock() {
     getDeviceId().then(id => setDeviceId(id));
   }, []);
 
+  // Generate a unique unlock code
+  const generateUnlockCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const segments = [];
+    for (let s = 0; s < 4; s++) {
+      let segment = '';
+      for (let i = 0; i < 4; i++) {
+        segment += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      segments.push(segment);
+    }
+    return 'TK-' + segments.join('-');
+  };
+
   // Check for payment success from Stripe redirect
   // SECURITY: Only session_id from Stripe is trusted. 
   // payment=success alone is NOT sufficient (bypass risk).
@@ -41,28 +59,39 @@ export default function Unlock() {
       const sessionId = searchParams.get('session_id');
       
       // Only trust Stripe session_id, not generic payment=success param
-      if (sessionId) {
+      if (sessionId && !showSuccessModal) {
         setIsCheckingPayment(true);
         
+        // Generate a unique code for this purchase
+        const code = generateUnlockCode();
+        setGeneratedCode(code);
+        
+        // Use email from state or generate placeholder
+        const customerEmail = email || localStorage.getItem('userEmail') || 'Provided at checkout';
+        setPaymentEmail(customerEmail);
+        
         // Activate direct unlock (payment verified by Stripe session)
-        const result = await activateDirectUnlock(email || 'customer@email.com');
+        const result = await activateDirectUnlock(customerEmail);
         
         if (result.success) {
+          // Store the generated code
+          localStorage.setItem('unlockCode', code);
+          localStorage.setItem('unlockDate', new Date().toISOString());
+          
           // Track affiliate conversion
-          const conversion = trackConversion(result.unlockKey || 'payment-unlock');
+          const conversion = trackConversion(code);
           if (conversion) {
             console.log('Affiliate conversion tracked:', conversion);
           }
           
+          // Show success modal instead of just toast
+          setShowSuccessModal(true);
+        } else {
           toast({
-            title: "Ledger access granted",
-            description: "Your pricing decisions will now be recorded and stored.",
+            title: "Unlock failed",
+            description: "Please contact support if this persists.",
+            variant: "destructive"
           });
-          
-          // Redirect to calculator after short delay
-          setTimeout(() => {
-            navigate(createPageUrl("/"));
-          }, 2000);
         }
         
         setIsCheckingPayment(false);
@@ -70,7 +99,18 @@ export default function Unlock() {
     };
     
     checkPaymentSuccess();
-  }, [searchParams, navigate, toast, activateDirectUnlock, email]);
+  }, [searchParams, showSuccessModal, activateDirectUnlock, email, toast]);
+
+  const copyCodeToClipboard = () => {
+    navigator.clipboard.writeText(generatedCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  const handleContinueToCalculator = () => {
+    setShowSuccessModal(false);
+    navigate(createPageUrl("Calculator"));
+  };
 
   // Format code as user types (auto-add dashes)
   const formatCode = (value) => {
@@ -164,6 +204,70 @@ export default function Unlock() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg-primary)' }}>
+      {/* SUCCESS MODAL */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
+          <div className="w-full max-w-md rounded-xl p-8 text-center" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ background: 'var(--color-accent-primary)' }}>
+              <CheckCircle className="w-8 h-8" style={{ color: 'var(--color-bg-primary)' }} />
+            </div>
+            
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+              Access Granted
+            </h2>
+            <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+              Your payment was successful. Save your access code below.
+            </p>
+            
+            {/* Generated Code */}
+            <div className="mb-4 p-4 rounded-lg" style={{ background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)' }}>
+              <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>Your Access Code</p>
+              <div className="flex items-center justify-center gap-3">
+                <code className="text-xl font-mono font-bold tracking-wider" style={{ color: 'var(--color-accent-primary)' }}>
+                  {generatedCode}
+                </code>
+                <button
+                  onClick={copyCodeToClipboard}
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-secondary)' }}
+                >
+                  {codeCopied ? <Check className="w-4 h-4" style={{ color: 'var(--color-accent-primary)' }} /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            
+            {/* Email */}
+            <div className="mb-6 p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)' }}>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                Email: <span style={{ color: 'var(--color-text-secondary)' }}>{paymentEmail}</span>
+              </p>
+            </div>
+            
+            <p className="text-xs mb-6" style={{ color: 'var(--color-text-muted)' }}>
+              This code is stored locally. Screenshot or save it for your records.
+            </p>
+            
+            <Button
+              onClick={handleContinueToCalculator}
+              className="w-full py-4 text-base font-semibold"
+              style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
+            >
+              Continue to Calculator
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* LOADING STATE */}
+      {isCheckingPayment && !showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.8)' }}>
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-4 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--color-border)', borderTopColor: 'var(--color-accent-primary)' }}></div>
+            <p style={{ color: 'var(--color-text-secondary)' }}>Verifying payment...</p>
+          </div>
+        </div>
+      )}
+
       {/* HEADER */}
       <section className="px-6 pt-12 pb-6">
         <div className="max-w-4xl mx-auto">
