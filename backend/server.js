@@ -1224,7 +1224,297 @@ app.get('/api/admin/affiliates', async (req, res) => {
   }
 });
 
-// Mark payout as paid (admin)
+// ==================== COMMISSION LEDGER ROUTES ====================
+
+// Auto-clear job: Move pending -> cleared after 14 days (call daily via cron or manually)
+app.post('/api/admin/commissions/auto-clear', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `UPDATE affiliate_commissions
+       SET status = 'cleared'
+       WHERE status = 'pending'
+       AND eligible_at <= NOW()
+       RETURNING id, affiliate_code, commission_cents`
+    );
+    
+    console.log(`✅ Auto-cleared ${result.rows.length} commissions`);
+    
+    res.json({
+      success: true,
+      clearedCount: result.rows.length,
+      cleared: result.rows
+    });
+  } catch (error) {
+    console.error('Auto-clear error:', error);
+    res.status(500).json({ error: 'Failed to auto-clear commissions' });
+  }
+});
+
+// Get commission summary by status (admin dashboard)
+app.get('/api/admin/commissions/summary', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        status,
+        COUNT(*) as count,
+        SUM(commission_cents) as total_cents
+      FROM affiliate_commissions
+      GROUP BY status
+    `);
+    
+    const summary = {
+      pending: { count: 0, totalCents: 0 },
+      cleared: { count: 0, totalCents: 0 },
+      paid: { count: 0, totalCents: 0 },
+      reversed: { count: 0, totalCents: 0 }
+    };
+    
+    result.rows.forEach(row => {
+      summary[row.status] = {
+        count: parseInt(row.count),
+        totalCents: parseInt(row.total_cents) || 0
+      };
+    });
+    
+    res.json(summary);
+  } catch (error) {
+    console.error('Get commission summary error:', error);
+    res.status(500).json({ error: 'Failed to get commission summary' });
+  }
+});
+
+// Get cleared commissions ready for payout (grouped by affiliate)
+app.get('/api/admin/commissions/ready-for-payout', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        a.id as affiliate_id,
+        a.name,
+        a.email,
+        a.paypal_email,
+        a.code,
+        COUNT(c.id) as commission_count,
+        SUM(c.commission_cents) as total_cents
+      FROM affiliate_commissions c
+      JOIN affiliates a ON c.affiliate_id = a.id
+      WHERE c.status = 'cleared'
+      AND c.batch_id IS NULL
+      GROUP BY a.id, a.name, a.email, a.paypal_email, a.code
+      HAVING SUM(c.commission_cents) >= 2500
+      ORDER BY SUM(c.commission_cents) DESC
+    `);
+    
+    const affiliates = result.rows.map(row => ({
+      affiliateId: row.affiliate_id,
+      name: row.name,
+      email: row.email,
+      paypalEmail: row.paypal_email,
+      code: row.code,
+      commissionCount: parseInt(row.commission_count),
+      totalCents: parseInt(row.total_cents),
+      totalDollars: (parseInt(row.total_cents) / 100).toFixed(2)
+    }));
+    
+    res.json(affiliates);
+  } catch (error) {
+    console.error('Get ready for payout error:', error);
+    res.status(500).json({ error: 'Failed to get payout data' });
+  }
+});
+
+// Create payout batch and export CSV (admin)
+app.post('/api/admin/commissions/create-batch', async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    // Create batch record
+    const batchResult = await client.query(
+      `INSERT INTO affiliate_payout_batches (status) VALUES ('created') RETURNING id`
+    );
+    const batchId = batchResult.rows[0].id;
+    
+    // Get all cleared commissions and assign to batch
+    const commissionsResult = await client.query(`
+      SELECT 
+        c.id,
+        a.id as affiliate_id,
+        a.name,
+        a.paypal_email,
+        c.commission_cents
+      FROM affiliate_commissions c
+      JOIN affiliates a ON c.affiliate_id = a.id
+      WHERE c.status = 'cleared'
+      AND c.batch_id IS NULL
+    `);
+    
+    if (commissionsResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'No cleared commissions to batch' });
+    }
+    
+    // Assign commissions to batch
+    const commissionIds = commissionsResult.rows.map(r => r.id);
+    await client.query(
+      `UPDATE affiliate_commissions SET batch_id = $1 WHERE id = ANY($2)`,
+      [batchId, commissionIds]
+    );
+    
+    // Calculate totals per affiliate for CSV
+    const payoutData = {};
+    commissionsResult.rows.forEach(row => {
+      if (!payoutData[row.affiliate_id]) {
+        payoutData[row.affiliate_id] = {
+          name: row.name,
+          paypalEmail: row.paypal_email,
+          totalCents: 0
+        };
+      }
+      payoutData[row.affiliate_id].totalCents += row.commission_cents;
+    });
+    
+    // Generate CSV content
+    let csv = 'Name,PayPal Email,Amount USD\n';
+    let totalAmount = 0;
+    let affiliateCount = 0;
+    
+    Object.values(payoutData).forEach(affiliate => {
+      if (affiliate.totalCents >= 2500) { // Only include if >= $25
+        const amount = (affiliate.totalCents / 100).toFixed(2);
+        csv += `"${affiliate.name}","${affiliate.paypalEmail}",${amount}\n`;
+        totalAmount += affiliate.totalCents;
+        affiliateCount++;
+      }
+    });
+    
+    // Update batch with totals
+    await client.query(
+      `UPDATE affiliate_payout_batches 
+       SET total_amount_cents = $1, affiliate_count = $2 
+       WHERE id = $3`,
+      [totalAmount, affiliateCount, batchId]
+    );
+    
+    await client.query('COMMIT');
+    
+    res.json({
+      success: true,
+      batchId,
+      affiliateCount,
+      totalAmountCents: totalAmount,
+      totalAmountDollars: (totalAmount / 100).toFixed(2),
+      csv
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Create batch error:', error);
+    res.status(500).json({ error: 'Failed to create payout batch' });
+  } finally {
+    client.release();
+  }
+});
+
+// Mark batch as paid (admin)
+app.post('/api/admin/commissions/batch/:batchId/mark-paid', async (req, res) => {
+  const { batchId } = req.params;
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    // Update batch status
+    await client.query(
+      `UPDATE affiliate_payout_batches SET status = 'paid', paid_at = NOW() WHERE id = $1`,
+      [batchId]
+    );
+    
+    // Update all commissions in batch to paid
+    await client.query(
+      `UPDATE affiliate_commissions SET status = 'paid', paid_at = NOW() WHERE batch_id = $1`,
+      [batchId]
+    );
+    
+    await client.query('COMMIT');
+    
+    res.json({ success: true });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Mark batch paid error:', error);
+    res.status(500).json({ error: 'Failed to mark batch as paid' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get affiliate commission stats (for affiliate dashboard)
+app.get('/api/affiliates/:code/commissions', async (req, res) => {
+  try {
+    const { code } = req.params;
+    
+    // Get summary by status
+    const summaryResult = await pool.query(`
+      SELECT 
+        status,
+        COUNT(*) as count,
+        SUM(commission_cents) as total_cents
+      FROM affiliate_commissions
+      WHERE affiliate_code = $1
+      GROUP BY status
+    `, [code.toUpperCase()]);
+    
+    const summary = {
+      pending: { count: 0, totalCents: 0 },
+      cleared: { count: 0, totalCents: 0 },
+      paid: { count: 0, totalCents: 0 },
+      reversed: { count: 0, totalCents: 0 }
+    };
+    
+    summaryResult.rows.forEach(row => {
+      summary[row.status] = {
+        count: parseInt(row.count),
+        totalCents: parseInt(row.total_cents) || 0
+      };
+    });
+    
+    // Get next eligible date
+    const nextEligibleResult = await pool.query(`
+      SELECT MIN(eligible_at) as next_eligible
+      FROM affiliate_commissions
+      WHERE affiliate_code = $1 AND status = 'pending'
+    `, [code.toUpperCase()]);
+    
+    // Get recent commissions
+    const recentResult = await pool.query(`
+      SELECT id, product_key, gross_amount_cents, commission_cents, status, 
+             eligible_at, created_at, reversal_reason
+      FROM affiliate_commissions
+      WHERE affiliate_code = $1
+      ORDER BY created_at DESC
+      LIMIT 10
+    `, [code.toUpperCase()]);
+    
+    res.json({
+      summary,
+      nextEligibleDate: nextEligibleResult.rows[0]?.next_eligible,
+      recentCommissions: recentResult.rows.map(row => ({
+        id: row.id,
+        productKey: row.product_key,
+        grossCents: row.gross_amount_cents,
+        commissionCents: row.commission_cents,
+        status: row.status,
+        eligibleAt: row.eligible_at,
+        createdAt: row.created_at,
+        reversalReason: row.reversal_reason
+      }))
+    });
+  } catch (error) {
+    console.error('Get affiliate commissions error:', error);
+    res.status(500).json({ error: 'Failed to get commission data' });
+  }
+});
+
+// Legacy: Mark payout as paid (admin) - kept for backward compatibility
 app.post('/api/admin/affiliates/:id/payout', async (req, res) => {
   try {
     const { id } = req.params;
