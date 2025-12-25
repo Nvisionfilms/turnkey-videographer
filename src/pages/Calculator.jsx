@@ -1167,25 +1167,16 @@ export default function Calculator() {
       const data = await response.json();
       
       if (data.hasUsedFree) {
-        // Already used free quote (by device OR IP)
-        toast({
-          title: "Export limit reached",
-          description: "Enable recording to continue exporting.",
-          variant: "destructive",
-        });
-        // Don't auto-navigate - let user dismiss toast and click unlock button
+        // Already used free quote (by device OR IP) - redirect to unlock page
+        navigate(createPageUrl("Unlock"));
         return;
       }
     } catch (error) {
       console.error('Failed to check free quote status:', error);
       // Fallback to local check if server fails
       if (hasUsedFreeQuote) {
-        toast({
-          title: "Export limit reached",
-          description: "Enable recording to continue exporting.",
-          variant: "destructive",
-        });
-        // Don't auto-navigate - let user dismiss toast and click unlock button
+        // Redirect to unlock page
+        navigate(createPageUrl("Unlock"));
         return;
       }
     }

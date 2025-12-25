@@ -30,13 +30,32 @@ export default function Unlock() {
   const [codeCopied, setCodeCopied] = useState(false);
   
   // Use the new hook for unlock status management
-  const { hasUsedTrialBefore, activateTrial, activateSubscription, subscriptionDetails, activateDirectUnlock } = useUnlockStatus();
+  const { isUnlocked, hasUsedFreeQuote, hasUsedTrialBefore, activateTrial, activateSubscription, subscriptionDetails, activateDirectUnlock } = useUnlockStatus();
   const trialAlreadyUsed = hasUsedTrialBefore();
+  
+  // Check if user needs to be locked on this page (used free quote but not unlocked)
+  const mustUnlock = !isUnlocked && hasUsedFreeQuote;
 
   // Get device ID on mount
   useEffect(() => {
     getDeviceId().then(id => setDeviceId(id));
   }, []);
+  
+  // Prevent navigation away from unlock page if user must unlock
+  useEffect(() => {
+    if (mustUnlock) {
+      const handleBeforeUnload = (e) => {
+        e.preventDefault();
+        e.returnValue = '';
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
+  }, [mustUnlock]);
 
   // Check for payment success from Stripe redirect
   // Payment was successful - show message to check email for code
@@ -277,11 +296,18 @@ export default function Unlock() {
                 <li>- Watermarked</li>
               </ul>
               <button
-                onClick={() => navigate(createPageUrl("Calculator"))}
+                onClick={() => !mustUnlock && navigate(createPageUrl("Calculator"))}
+                disabled={mustUnlock}
                 className="w-full py-2 rounded text-xs"
-                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}
+                style={{ 
+                  background: mustUnlock ? 'var(--color-bg-primary)' : 'var(--color-bg-tertiary)', 
+                  color: mustUnlock ? 'var(--color-text-muted)' : 'var(--color-text-primary)', 
+                  border: '1px solid var(--color-border)',
+                  cursor: mustUnlock ? 'not-allowed' : 'pointer',
+                  opacity: mustUnlock ? 0.5 : 1
+                }}
               >
-                Continue
+                {mustUnlock ? 'Export Limit Reached' : 'Continue'}
               </button>
             </div>
 
