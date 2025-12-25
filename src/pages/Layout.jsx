@@ -289,8 +289,8 @@ export default function Layout({ children }) {
           <SidebarHeader className="border-b p-6" style={{ borderColor: 'var(--color-border)', background: 'var(--color-bg-primary)' }}>
             <div className="flex items-center gap-3">
               <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f9b5f3cfe46753e8280ef4/7690db0e4_visioncapitalisthead.png"
-                alt="Vision Capitalist Logo"
+                src="/turnkey_appstore.png"
+                alt="TurnKey Logo"
                 className="w-12 h-12 object-contain"
               />
               <div>
@@ -392,8 +392,8 @@ export default function Layout({ children }) {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="p-2 rounded-lg transition-colors duration-200" style={{ color: 'var(--color-text-primary)' }} />
               <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f9b5f3cfe46753e8280ef4/7690db0e4_visioncapitalisthead.png"
-                alt="Vision Capitalist"
+                src="/turnkey_appstore.png"
+                alt="TurnKey"
                 className="w-8 h-8 object-contain"
               />
               <h1 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>TurnKey</h1>
