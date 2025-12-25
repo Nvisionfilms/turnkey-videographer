@@ -39,13 +39,11 @@ export class EnhancedExportService {
     return `${this._formatDate(sortedDates[0])} - ${this._formatDate(sortedDates[sortedDates.length - 1])} (${sortedDates.length} days)`;
   }
 
-  // Generate enhanced HTML (Quote or Invoice)
-  generateHTML(documentType = 'quote') {
+  // Generate Ledger-style HTML (Invoice only - no quotes)
+  generateHTML(documentType = 'invoice') {
     const shootDatesText = this.formatShootDates();
-    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const docNumber = documentType === 'invoice' 
-      ? `INV-${Date.now().toString().slice(-8)}`
-      : `QUO-${Date.now().toString().slice(-8)}`;
+    const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const docNumber = `TK-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
     
     const companyName = this.settings?.company_name || "NVision Video Production";
     const companyLogo = this.settings?.company_logo || "";
@@ -122,54 +120,32 @@ export class EnhancedExportService {
       <body>
         <div class="invoice-header">
           <div class="header-left">
-            ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" class="company-logo" />` : `<div class="company-name-header">${companyName}</div>`}
+            <div class="ledger-title">TurnKey Pricing Ledger</div>
+            <div class="ledger-subtitle">Invoice Record</div>
           </div>
           <div class="header-right">
-            <div class="invoice-title">${documentType.toUpperCase()}</div>
-            <div class="invoice-meta">
-              <div><strong>${documentType === 'invoice' ? 'Invoice' : 'Quote'} #:</strong> ${docNumber}</div>
-              <div><strong>Date:</strong> ${currentDate}</div>
-            </div>
+            <div class="meta-row"><span class="meta-label">Invoice ID:</span> <span class="meta-value">${docNumber}</span></div>
+            <div class="meta-row"><span class="meta-label">Decision Date:</span> <span class="meta-value">${currentDate}</span></div>
+            <div class="meta-row"><span class="meta-label">Status:</span> <span class="meta-value">Final</span></div>
           </div>
         </div>
 
-        <div class="parties-grid">
-          <div class="party-box">
-            <div class="party-label">TO</div>
-            <div class="party-name">${this.formData.client_name || 'Client Name'}</div>
-            ${this.formData.client_email ? `<div class="party-detail">${this.formData.client_email}</div>` : ''}
-            ${this.formData.client_phone ? `<div class="party-detail">${this.formData.client_phone}</div>` : ''}
-          </div>
-          <div class="party-box">
-            <div class="party-label">FROM</div>
-            <div class="party-name">${companyName}</div>
-            ${companyEmail ? `<div class="party-detail">${companyEmail}</div>` : ''}
-            ${companyPhone ? `<div class="party-detail">${companyPhone}</div>` : ''}
-            ${companyAddress ? `<div class="party-detail">${companyAddress}</div>` : ''}
-            ${companyWebsite ? `<div class="party-detail">${companyWebsite}</div>` : ''}
-          </div>
+        <div class="context-block">
+          <div class="context-row"><span class="context-label">Client:</span> <span class="context-value">${this.formData.client_name || '[Client Name]'}</span></div>
+          ${this.formData.project_title ? `<div class="context-row"><span class="context-label">Project Reference:</span> <span class="context-value">${this.formData.project_title}</span></div>` : ''}
+          <div class="context-row"><span class="context-label">Prepared By:</span> <span class="context-value">${companyName}</span></div>
+          <div class="context-row"><span class="context-label">Currency:</span> <span class="context-value">USD</span></div>
         </div>
 
-        ${this.formData.project_title || shootDatesText !== 'TBD' || this.formData.project_manager ? `
-        <div class="project-details">
-          <div class="project-header">PROJECT DETAILS</div>
-          <div class="project-content">
-            ${this.formData.project_title ? `<div class="project-row"><span class="project-label">Project:</span><span class="project-value">${this.formData.project_title}</span></div>` : ''}
-            ${shootDatesText !== 'TBD' ? `<div class="project-row"><span class="project-label">Shoot Dates:</span><span class="project-value">${shootDatesText}</span></div>` : ''}
-            ${this.formData.project_manager ? `<div class="project-row"><span class="project-label">Project Manager:</span><span class="project-value">${this.formData.project_manager}</span></div>` : ''}
-            ${this.formData.production_company ? `<div class="project-row"><span class="project-label">Production Company:</span><span class="project-value">${this.formData.production_company}</span></div>` : ''}
-          </div>
-        </div>
-        ` : ''}
 
-        <table class="invoice-table">
+        <table class="ledger-table">
           <thead>
             <tr>
-              <th class="col-no">#</th>
-              <th class="col-items">Description</th>
-              <th class="col-qty">Qty</th>
+              <th class="col-items">Item</th>
+              <th class="col-type">Type</th>
+              <th class="col-qty">Quantity</th>
               <th class="col-price">Rate</th>
-              <th class="col-total">Amount</th>
+              <th class="col-total">Recorded Total</th>
             </tr>
           </thead>
           <tbody>
@@ -177,32 +153,23 @@ export class EnhancedExportService {
               let lineNumber = 0;
               return (displayLineItems || []).map((item, index) => {
                 if (item?.isSection) {
-                  return `
-                  <tr ${index % 2 === 0 ? 'class="row-alt"' : ''}>
-                    <td class="col-no"></td>
-                    <td class="col-items" colspan="4">
-                      <div class="item-main" style="text-transform: uppercase; letter-spacing: 1px; color: #2563eb;">${item.description}</div>
-                    </td>
-                  </tr>
-                `;
+                  return '';
                 }
 
                 lineNumber += 1;
-                const parts = (item.description || '').split(' - ');
-                const mainDesc = parts[0];
-                const subDesc = parts.slice(1).join(' - ');
+                const mainDesc = (item.description || '').split(' - ')[0];
                 const amount = Number(item.amount || 0);
                 const qty = typeof item?.quantity === 'number' ? item.quantity : 1;
                 const unitPrice = typeof item?.unitPrice === 'number'
                   ? item.unitPrice
                   : (qty > 0 ? (amount / qty) : amount);
+                
+                const itemType = amount < 0 ? 'Adjustment' : (qty > 1 ? 'Decision' : 'Decision');
+                
                 return `
-                <tr ${index % 2 === 0 ? 'class="row-alt"' : ''}>
-                  <td class="col-no">${lineNumber}</td>
-                  <td class="col-items">
-                    <div class="item-main">${mainDesc}</div>
-                    ${subDesc ? `<div class="item-sub">${subDesc}</div>` : ''}
-                  </td>
+                <tr>
+                  <td class="col-items">${mainDesc}</td>
+                  <td class="col-type">${itemType}</td>
                   <td class="col-qty">${qty}</td>
                   <td class="col-price">$${unitPrice.toFixed(2)}</td>
                   <td class="col-total">$${amount.toFixed(2)}</td>
@@ -213,72 +180,25 @@ export class EnhancedExportService {
           </tbody>
         </table>
 
-        <div class="totals-box">
-          <div class="totals-row totals-row-strong">
-            <span>Total:</span>
-            <span>$${targetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
+        <div class="totals-section">
+          <div class="totals-row"><span>Subtotal:</span> <span>$${targetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+          <div class="totals-row"><span>Adjustments:</span> <span>$0.00</span></div>
+          <div class="totals-row totals-final"><span>Final Decision:</span> <span>$${targetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
         </div>
 
-        <div class="bottom-section">
-          ${showPaymentSchedule && this.settings?.deposit_enabled !== false && this.calc.depositDue > 0 ? `
-          <div class="payment-info">
-            <div class="payment-title">Payment information:</div>
-            ${companyName ? `<div class="payment-detail"><strong>Bank Name:</strong> ${companyName}</div>` : ''}
-            ${companyEmail ? `<div class="payment-detail"><strong>Account:</strong> ${companyEmail}</div>` : ''}
-            <div class="payment-schedule">
-              <div class="payment-item">
-                <span>Deposit Due (${this.settings?.deposit_percent || 50}%)</span>
-                <span>$${this.calc.depositDue.toFixed(2)}</span>
-              </div>
-              <div class="payment-item">
-                <span>Balance Due</span>
-                <span>$${this.calc.balanceDue.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-          ` : ''}
-
-          ${termsAndConditions ? `
-          <div class="terms-section">
-            <div class="terms-title">Terms & conditions</div>
-            <div class="terms-text">${termsAndConditions.replace(/\n/g, '<br>')}</div>
-          </div>
-          ` : ''}
+        <div class="ledger-footnote">
+          This invoice reflects recorded pricing decisions at the time they were made.<br>
+          It does not interpret outcomes or adjust for negotiation.
         </div>
 
-        ${notesToCustomer ? `
-        <div class="notes-section">
-          <strong>Note:</strong> ${notesToCustomer.replace(/\n/g, '<br>')}
+        ${showPaymentSchedule && this.settings?.deposit_enabled !== false && this.calc.depositDue > 0 ? `
+        <div class="payment-section">
+          <div class="payment-row"><span class="payment-label">Payment Method:</span> <span class="payment-value">[ACH] [Card]</span></div>
+          <div class="payment-row"><span class="payment-label">Due Date:</span> <span class="payment-value">${currentDate}</span></div>
+          <div class="payment-row"><span class="payment-label">Reference:</span> <span class="payment-value">Invoice ID required</span></div>
         </div>
         ` : ''}
 
-        ${showSignature ? `
-        <div class="signature-section">
-          <div class="signature-box">
-            <div class="signature-title">CLIENT SIGNATURE</div>
-            <div class="signature-line"></div>
-            <div class="signature-label">Signature</div>
-            <div class="signature-date">Date: _________________</div>
-          </div>
-          <div class="signature-box">
-            <div class="signature-title">AUTHORIZED BY</div>
-            <div class="signature-line"></div>
-            <div class="signature-label">${companyName}</div>
-            <div class="signature-date">Date: _________________</div>
-          </div>
-        </div>
-        ` : ''}
-
-        <div class="footer">
-          ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" class="footer-logo" />` : `<div class="footer-company">${companyName}</div>`}
-          <div class="footer-contact">
-            ${companyPhone ? `<span>📞 ${companyPhone}</span>` : ''}
-            ${companyEmail ? `<span>✉ ${companyEmail}</span>` : ''}
-            ${companyWebsite ? `<span>🌐 ${companyWebsite}</span>` : ''}
-            ${companyAddress ? `<span>📍 ${companyAddress}</span>` : ''}
-          </div>
-        </div>
 
         ${!this.isUnlocked ? `
         <div class="watermark">
@@ -297,7 +217,7 @@ export class EnhancedExportService {
     `;
   }
 
-  // StudioBinder-inspired professional styles
+  // Ledger doctrine styles - contractual, minimal, no design flourishes
   _getEnhancedStyles() {
     return `
       * {
@@ -307,435 +227,213 @@ export class EnhancedExportService {
       }
       
       body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        background: #f8fafc;
-        color: #0f172a;
+        font-family: 'Inter', 'Source Sans Pro', -apple-system, system-ui, sans-serif;
+        background: #F6F6F6;
+        color: #1A1A1A;
         margin: 0;
-        padding: 20px;
+        padding: 40px;
+        line-height: 1.5;
       }
       
       .invoice-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 48px;
-        padding-bottom: 24px;
-        border-bottom: 2px solid #2563eb;
+        margin-bottom: 32px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #1A1A1A;
       }
 
       .header-left {
         flex: 1;
       }
 
-      .company-logo {
-        max-width: 200px;
-        max-height: 80px;
-        object-fit: contain;
+      .ledger-title {
+        font-size: 16px;
+        font-weight: 400;
+        color: #1A1A1A;
+        margin-bottom: 4px;
       }
 
-      .company-name-header {
-        font-size: 28px;
-        font-weight: 700;
-        color: #111827;
-        letter-spacing: -0.5px;
+      .ledger-subtitle {
+        font-size: 14px;
+        font-weight: 400;
+        color: #1A1A1A;
       }
 
       .header-right {
         text-align: right;
       }
 
-      .invoice-title {
-        font-size: 36px;
-        font-weight: 700;
-        color: #2563eb;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-      }
-
-      .invoice-meta {
+      .meta-row {
         font-size: 13px;
-        color: #6b7280;
+        color: #1A1A1A;
         line-height: 1.8;
+        margin-bottom: 2px;
       }
 
-      .invoice-meta strong {
-        color: #374151;
-        font-weight: 600;
+      .meta-label {
+        font-weight: 400;
       }
 
-      .parties-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        margin-bottom: 40px;
+      .meta-value {
+        font-weight: 400;
       }
 
-      .party-box {
-        background: #f9fafb;
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
+      .context-block {
+        background: #FFFFFF;
+        padding: 16px;
+        margin-bottom: 32px;
+        border: 1px solid #D0D0D0;
       }
 
-      .party-label {
-        font-size: 11px;
-        color: #2563eb;
-        margin-bottom: 12px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 700;
-      }
-
-      .party-name {
-        font-size: 18px;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 8px;
-      }
-
-      .party-detail {
+      .context-row {
         font-size: 13px;
-        color: #6b7280;
+        color: #1A1A1A;
         line-height: 1.8;
-      }
-
-      .project-details {
-        background: #eff6ff;
-        padding: 20px 24px;
-        border-radius: 12px;
-        margin-bottom: 40px;
-        border: 1px solid #bfdbfe;
-      }
-
-      .project-header {
-        font-size: 11px;
-        color: #2563eb;
-        font-weight: 700;
-        letter-spacing: 1px;
-        margin-bottom: 16px;
-      }
-
-      .project-content {
-        display: grid;
-        gap: 8px;
-      }
-
-      .project-row {
-        display: flex;
-        font-size: 14px;
-        line-height: 1.6;
-      }
-
-      .project-label {
-        color: #6b7280;
-        font-weight: 500;
-        min-width: 160px;
-      }
-
-      .project-value {
-        color: #111827;
-        font-weight: 600;
-      }
-
-      .invoice-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 20px 0;
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      }
-
-      .invoice-table thead {
-        background: #2563eb;
-        color: #ffffff;
-      }
-
-      .invoice-table th {
-        padding: 16px 16px;
-        text-align: left;
-        font-weight: 600;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-      }
-
-      .col-no { width: 50px; text-align: center !important; }
-      .col-items { width: auto; }
-      .col-qty { width: 80px; text-align: center !important; }
-      .col-price { width: 130px; text-align: right !important; }
-      .col-total { width: 130px; text-align: right !important; }
-
-      .invoice-table tbody tr {
-        border-bottom: 1px solid #e5e7eb;
-        transition: background-color 0.2s;
-      }
-
-      .invoice-table tbody tr.row-alt {
-        background: #f9fafb;
-      }
-
-      .invoice-table tbody tr:hover {
-        background: #f3f4f6;
-      }
-
-      .invoice-table td {
-        padding: 16px 16px;
-        font-size: 14px;
-        color: #111827;
-        vertical-align: top;
-      }
-
-      .item-main {
-        font-weight: 600;
-        color: #111827;
         margin-bottom: 4px;
       }
 
-      .item-sub {
-        font-size: 12px;
-        color: #6b7280;
-        line-height: 1.5;
+      .context-label {
+        font-weight: 400;
+        display: inline-block;
+        width: 160px;
       }
 
-      .invoice-table td:nth-child(3),
-      .invoice-table td:nth-child(4),
-      .invoice-table td:nth-child(5) {
-        text-align: right;
+      .context-value {
+        font-weight: 400;
       }
 
-      .invoice-table tfoot {
-        background: #f9fafb;
-        border-top: 3px solid #2563eb;
+
+      .ledger-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background: #FFFFFF;
+        border: 1px solid #D0D0D0;
       }
 
-      .total-row td {
-        padding: 24px 16px !important;
-        font-size: 20px;
-        font-weight: 700;
+      .ledger-table thead {
+        background: #FFFFFF;
+        border-bottom: 2px solid #1A1A1A;
       }
 
-      .total-label {
-        color: #111827;
-        text-align: right !important;
-      }
-
-      .total-amount {
-        color: #000000;
-        font-size: 24px !important;
-      }
-
-      .bottom-section {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        margin-bottom: 40px;
-      }
-
-      .payment-info {
-        background: #f9fafb;
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-      }
-
-      .payment-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: #2563eb;
-        margin-bottom: 16px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      .payment-detail {
-        color: #6b7280;
-        margin-bottom: 8px;
-        font-size: 13px;
-      }
-
-      .payment-detail strong {
-        color: #111827;
-        font-weight: 600;
-      }
-
-      .payment-schedule {
-        margin-top: 16px;
-        background: #ffffff;
-        padding: 16px;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-      }
-
-      .payment-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 0;
-        font-weight: 600;
-        color: #111827;
-        font-size: 14px;
-        border-bottom: 1px solid #f3f4f6;
-      }
-
-      .payment-item:last-child {
-        border-bottom: none;
-      }
-
-      .terms-section {
-        background: #f9fafb;
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-      }
-
-      .terms-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: #2563eb;
-        margin-bottom: 16px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      .terms-text {
-        color: #6b7280;
-        line-height: 1.8;
-        font-size: 12px;
-      }
-
-      .notes-section {
-        background: #fef3c7;
-        border-left: 4px solid #f59e0b;
-        padding: 20px 24px;
-        margin-bottom: 40px;
-        font-size: 13px;
-        color: #78350f;
-        line-height: 1.8;
-        border-radius: 8px;
-      }
-
-      .notes-section strong {
-        color: #92400e;
-        font-weight: 700;
-      }
-
-      .signature-section {
-        background: #f9fafb;
-        padding: 32px 24px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-        margin: 50px 0 40px 0;
-      }
-
-      .signature-box {
+      .ledger-table th {
+        padding: 12px 16px;
         text-align: left;
-      }
-
-      .signature-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: #2563eb;
-        margin-bottom: 16px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      .signature-line {
-        border-bottom: 2px solid #2563eb;
-        height: 70px;
-        margin-bottom: 12px;
-        background: #ffffff;
-        border-radius: 4px;
-      }
-
-      .signature-label {
-        font-size: 11px;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
         font-weight: 600;
+        font-size: 13px;
+        color: #1A1A1A;
       }
 
-      .signature-date {
-        margin-top: 12px;
-        font-size: 12px;
-        color: #6b7280;
+      .col-items { width: auto; }
+      .col-type { width: 120px; }
+      .col-qty { width: 100px; text-align: center !important; }
+      .col-price { width: 130px; text-align: right !important; }
+      .col-total { width: 150px; text-align: right !important; }
+
+      .ledger-table tbody tr {
+        border-bottom: 1px solid #E0E0E0;
       }
 
-      .footer {
+      .ledger-table tbody tr:hover {
+        background: none;
+      }
+
+      .ledger-table td {
+        padding: 12px 16px;
+        font-size: 13px;
+        color: #1A1A1A;
+        vertical-align: top;
+        font-weight: 400;
+      }
+
+      .totals-section {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin: 32px 0;
+        padding: 16px;
+        background: #FFFFFF;
+        border: 1px solid #D0D0D0;
+      }
+
+      .totals-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding-top: 32px;
-        border-top: 2px solid #e5e7eb;
-        margin-top: 48px;
+        width: 350px;
+        max-width: 100%;
+        padding: 8px 0;
+        font-size: 13px;
+        color: #1A1A1A;
+        font-weight: 400;
       }
 
-      .footer-logo {
-        max-width: 150px;
-        max-height: 60px;
-        object-fit: contain;
+      .totals-final {
+        font-size: 14px;
+        font-weight: 600;
+        padding-top: 12px;
+        margin-top: 8px;
+        border-top: 1px solid #1A1A1A;
       }
 
-      .footer-company {
-        font-size: 16px;
-        font-weight: 700;
-        color: #111827;
+      .ledger-footnote {
+        margin: 32px 0;
+        padding: 16px;
+        background: #FFFFFF;
+        border: 1px solid #D0D0D0;
+        font-size: 12px;
+        color: #1A1A1A;
+        line-height: 1.6;
+        font-weight: 400;
       }
 
-      .footer-contact {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        font-size: 11px;
-        color: #6b7280;
-        align-items: center;
+      .payment-section {
+        background: #FFFFFF;
+        padding: 16px;
+        margin: 24px 0;
+        border: 1px solid #D0D0D0;
       }
 
-      .footer-contact span {
-        display: flex;
-        align-items: center;
-        gap: 4px;
+      .payment-row {
+        font-size: 13px;
+        color: #1A1A1A;
+        line-height: 1.8;
+        margin-bottom: 4px;
       }
 
-      .footer-contact span::before {
-        content: '•';
-        margin-right: 8px;
-        color: #d1d5db;
+      .payment-label {
+        font-weight: 400;
+        display: inline-block;
+        width: 140px;
       }
 
-      .footer-contact span:first-child::before {
-        display: none;
+      .payment-value {
+        font-weight: 400;
       }
 
       .watermark {
         text-align: center;
-        padding: 32px 24px;
-        margin-top: 48px;
-        border-top: 2px solid #e5e7eb;
-        background: #f9fafb;
-        border-radius: 8px;
+        padding: 24px;
+        margin-top: 40px;
+        border-top: 1px solid #D0D0D0;
+        background: #FFFFFF;
       }
 
       .watermark p {
         margin: 0;
-        color: #6b7280;
-        font-size: 14px;
+        color: #1A1A1A;
+        font-size: 12px;
+        font-weight: 400;
       }
 
       .watermark strong {
-        color: #2563eb;
-        font-weight: 700;
+        font-weight: 600;
       }
 
       .watermark-upgrade {
         margin-top: 8px !important;
-        font-size: 12px !important;
-        color: #9ca3af !important;
+        font-size: 11px !important;
       }
 
       @media print {
@@ -745,33 +443,16 @@ export class EnhancedExportService {
         }
         
         .invoice-header,
-        .parties-grid,
-        .bottom-section,
-        .signature-section,
-        .footer {
+        .context-block,
+        .ledger-table,
+        .totals-section,
+        .ledger-footnote,
+        .payment-section {
           page-break-inside: avoid;
         }
-      }
-
-      @media (max-width: 768px) {
-        .parties-grid,
-        .bottom-section,
-        .signature-section {
-          grid-template-columns: 1fr;
-        }
-
-        .invoice-title {
-          font-size: 32px;
-        }
-
-        .footer {
-          flex-direction: column;
-          gap: 20px;
-          text-align: center;
-        }
-
-        .footer-contact {
-          justify-content: center;
+        
+        .watermark {
+          display: block !important;
         }
       }
     `;
