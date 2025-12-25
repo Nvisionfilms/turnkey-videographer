@@ -3,8 +3,9 @@
   "appName": "TurnKey",
   "webDir": "dist",
   "server": {
+    "url": "https://helpmefilm.com",
     "androidScheme": "https",
-    "allowNavigation": ["*.railway.app", "backend-backend-c520.up.railway.app"],
+    "allowNavigation": ["*.railway.app", "backend-backend-c520.up.railway.app", "helpmefilm.com", "*.helpmefilm.com"],
     "cleartext": false
   },
   "android": {

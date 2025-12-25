@@ -1029,7 +1029,7 @@ export default function Calculator() {
             e.preventDefault();
             // Save quote to history
             if (calculations) {
-              saveToQuoteHistory(formData, calculations.total);
+              saveToQuoteHistory(formData, calculations, settings, 'UNFINALIZED');
               toast({
                 title: "Quote Saved",
                 description: "Added to quote history",
@@ -1061,7 +1061,7 @@ export default function Calculator() {
             e.preventDefault();
             // Duplicate current quote (save and keep data)
             if (calculations) {
-              saveToQuoteHistory(formData, calculations.total);
+              saveToQuoteHistory(formData, calculations, settings, 'UNFINALIZED');
               toast({
                 title: "Quote Duplicated",
                 description: "Saved to history. Continue editing.",
@@ -1447,7 +1447,7 @@ export default function Calculator() {
       navigator.clipboard.writeText(emailText);
       
       // Save to history
-      saveToQuoteHistory(formData, calculations.total);
+      saveToQuoteHistory(formData, calculations, settings, 'UNFINALIZED');
       
       toast({
         title: "Quote copied",
@@ -1461,7 +1461,7 @@ export default function Calculator() {
       if (!calculations) return;
       
       // Save to history
-      saveToQuoteHistory(formData, calculations.total);
+      saveToQuoteHistory(formData, calculations, settings, 'UNFINALIZED');
       
       const exportService = new ExportService(
         formData,
@@ -1588,7 +1588,7 @@ export default function Calculator() {
       if (!calculations) return;
       
       // Save to history
-      saveToQuoteHistory(formData, calculations.total);
+      saveToQuoteHistory(formData, calculations, settings, 'UNFINALIZED');
       
       const exportService = new ExportService(
         formData,

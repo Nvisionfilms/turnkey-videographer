@@ -7,7 +7,7 @@ import { format } from "date-fns";
 
 const STORAGE_KEY = 'quote_history';
 
-export default function QuoteHistory({ onLoadQuote }) {
+const QuoteHistory = React.forwardRef(({ onLoadQuote }, ref) => {
   const [quotes, setQuotes] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -26,23 +26,81 @@ export default function QuoteHistory({ onLoadQuote }) {
     }
   };
 
-  const saveQuote = (quoteData, total) => {
+  const saveQuote = (quoteData, calculations, settings, status = 'UNFINALIZED') => {
     try {
+      const now = new Date().toISOString();
+      
+      // Build calculation snapshot from calculations object
+      const calculationSnapshot = {
+        calculated_at: now,
+        line_items: (calculations?.lineItems || []).map((item, idx) => ({
+          id: `li_${idx}`,
+          label: item.description || '',
+          type: item.isSection ? 'SECTION' : 'DECISION',
+          category: item.category || 'OTHER',
+          quantity: item.quantity || 1,
+          rate: item.unitPrice || item.amount || 0,
+          total: item.amount || 0
+        })),
+        bases: {
+          labor_base_amount: calculations?.laborBase || 0,
+          labor_raw_amount: calculations?.laborRaw || 0
+        },
+        derived: {
+          overhead_percent: settings?.overhead_percent || 0,
+          profit_margin_percent: settings?.profit_margin_percent || 0,
+          effective_percent: (settings?.overhead_percent || 0) + (settings?.profit_margin_percent || 0),
+          overhead_margin_amount: (calculations?.overhead || 0) + (calculations?.profitMargin || 0)
+        },
+        totals: {
+          subtotal: calculations?.subtotal || 0,
+          tax_amount: calculations?.tax || 0,
+          final_decision: calculations?.total || 0
+        }
+      };
+      
+      // Build settings snapshot
+      const settingsSnapshot = {
+        show_overhead_margin_line: settings?.show_service_fee_on_invoice !== false,
+        overhead_percent: settings?.overhead_percent || 0,
+        profit_margin_percent: settings?.profit_margin_percent || 0,
+        tax_percent: settings?.tax_rate_percent || 0,
+        currency: 'USD'
+      };
+      
       const newQuote = {
         id: Date.now().toString(),
-        timestamp: new Date().toISOString(),
+        created_at: now,
+        updated_at: now,
+        status: status,
+        client: {
+          name: quoteData.client_name || 'Unnamed Client',
+          project_title: quoteData.project_title || 'Untitled Project'
+        },
+        formData: quoteData,
+        settings_snapshot: settingsSnapshot,
+        calculation_snapshot: calculationSnapshot,
+        // Legacy fields for backward compatibility
         client_name: quoteData.client_name || 'Unnamed Client',
         project_title: quoteData.project_title || 'Untitled Project',
-        total: total,
-        formData: quoteData
+        total: calculations?.total || 0,
+        timestamp: now
       };
+      
+      // If finalizing, add finalized_at and lock
+      if (status === 'FINAL') {
+        newQuote.finalized_at = now;
+      }
 
       const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const updated = [newQuote, ...existing].slice(0, 20); // Keep last 20
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       setQuotes(updated);
+      
+      return newQuote;
     } catch (error) {
       console.error('Error saving quote:', error);
+      return null;
     }
   };
 
@@ -62,6 +120,11 @@ export default function QuoteHistory({ onLoadQuote }) {
       setQuotes([]);
     }
   };
+
+  // Expose saveQuote function to parent
+  React.useImperativeHandle(ref, () => ({
+    saveQuote
+  }));
 
   return (
     <>
@@ -157,24 +220,84 @@ export default function QuoteHistory({ onLoadQuote }) {
       <div style={{ display: 'none' }} data-save-quote={saveQuote} />
     </>
   );
-}
+});
 
 // Export the save function for external use
-export function saveToQuoteHistory(quoteData, total) {
+export function saveToQuoteHistory(quoteData, calculations, settings, status = 'UNFINALIZED') {
   try {
+    const now = new Date().toISOString();
+    
+    // Build calculation snapshot from calculations object
+    const calculationSnapshot = {
+      calculated_at: now,
+      line_items: (calculations?.lineItems || []).map((item, idx) => ({
+        id: `li_${idx}`,
+        label: item.description || '',
+        type: item.isSection ? 'SECTION' : 'DECISION',
+        category: item.category || 'OTHER',
+        quantity: item.quantity || 1,
+        rate: item.unitPrice || item.amount || 0,
+        total: item.amount || 0
+      })),
+      bases: {
+        labor_base_amount: calculations?.laborBase || 0,
+        labor_raw_amount: calculations?.laborRaw || 0
+      },
+      derived: {
+        overhead_percent: settings?.overhead_percent || 0,
+        profit_margin_percent: settings?.profit_margin_percent || 0,
+        effective_percent: (settings?.overhead_percent || 0) + (settings?.profit_margin_percent || 0),
+        overhead_margin_amount: (calculations?.overhead || 0) + (calculations?.profitMargin || 0)
+      },
+      totals: {
+        subtotal: calculations?.subtotal || 0,
+        tax_amount: calculations?.tax || 0,
+        final_decision: calculations?.total || 0
+      }
+    };
+    
+    // Build settings snapshot
+    const settingsSnapshot = {
+      show_overhead_margin_line: settings?.show_service_fee_on_invoice !== false,
+      overhead_percent: settings?.overhead_percent || 0,
+      profit_margin_percent: settings?.profit_margin_percent || 0,
+      tax_percent: settings?.tax_rate_percent || 0,
+      currency: 'USD'
+    };
+    
     const newQuote = {
       id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
+      status: status,
+      client: {
+        name: quoteData.client_name || 'Unnamed Client',
+        project_title: quoteData.project_title || 'Untitled Project'
+      },
+      formData: quoteData,
+      settings_snapshot: settingsSnapshot,
+      calculation_snapshot: calculationSnapshot,
+      // Legacy fields for backward compatibility
       client_name: quoteData.client_name || 'Unnamed Client',
       project_title: quoteData.project_title || 'Untitled Project',
-      total: total,
-      formData: quoteData
+      total: calculations?.total || 0,
+      timestamp: now
     };
+    
+    // If finalizing, add finalized_at and lock
+    if (status === 'FINAL') {
+      newQuote.finalized_at = now;
+    }
 
     const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     const updated = [newQuote, ...existing].slice(0, 20);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    
+    return newQuote;
   } catch (error) {
     console.error('Error saving to quote history:', error);
+    return null;
   }
 }
+
+export default QuoteHistory;

@@ -105,7 +105,7 @@ export class EnhancedExportService {
     const displayLineItems = (() => {
       if (!Number.isFinite(diff) || Math.abs(diff) < 1.00) return combinedLineItems;
       const next = [...combinedLineItems];
-      const label = diff < 0 ? 'Discount' : 'Service Fee';
+      const label = diff < 0 ? 'Discount' : 'Overhead + Margin';
       next.push({ description: label, amount: diff, quantity: 1, unitPrice: diff });
       return next;
     })();

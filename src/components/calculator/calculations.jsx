@@ -366,14 +366,16 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     lineItems.push(...postProductionItems);
   }
   
-  // Add service fee as separate line item (your markup for scouting, hiring, coordination)
+  // Add overhead + margin as separate line item (your markup for scouting, hiring, coordination, profit)
   // Only show as separate line if show_service_fee_on_invoice is true
   const operationsFee = totalOperationsFeePercent > 0 ? round2(laborRaw * (totalOperationsFeePercent / 100)) : 0;
   const showServiceFeeOnInvoice = settings?.show_service_fee_on_invoice !== false;
   if (operationsFee > 0 && showServiceFeeOnInvoice) {
     lineItems.push({ 
-      description: `Service Fee (${totalOperationsFeePercent}%)`, 
-      amount: operationsFee 
+      description: `Overhead + Margin (${totalOperationsFeePercent}%)`, 
+      amount: operationsFee,
+      category: 'OVERHEAD_MARGIN',
+      type: 'DECISION'
     });
   }
 
