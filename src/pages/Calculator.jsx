@@ -1149,27 +1149,57 @@ export default function Calculator() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [calculations, formData, toast]);
 
-  const checkAccessAndProceed = (action) => {
+  const checkAccessAndProceed = async (action) => {
     if (isUnlocked) {
       action();
-    } else if (hasUsedFreeQuote) {
-      toast({
-        title: "Export limit reached",
-        description: "Enable recording to continue exporting.",
-        variant: "destructive",
-      });
-      navigate(createPageUrl("Unlock"));
-    } else {
-      markFreeQuoteUsed();
-      action();
-      toast({
-        title: "Export complete",
-        description: "This export was not recorded. Enable recording for history.",
-      });
-      setTimeout(() => {
-        navigate(createPageUrl("Unlock"));
-      }, 3000);
+      return;
     }
+    
+    // Check server for free quote usage (catches incognito mode)
+    try {
+      const deviceId = await getDeviceId();
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://backend-backend-c520.up.railway.app'}/api/free-quote/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId })
+      });
+      
+      const data = await response.json();
+      
+      if (data.hasUsedFree) {
+        // Already used free quote (by device OR IP)
+        toast({
+          title: "Export limit reached",
+          description: "Enable recording to continue exporting.",
+          variant: "destructive",
+        });
+        navigate(createPageUrl("Unlock"));
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to check free quote status:', error);
+      // Fallback to local check if server fails
+      if (hasUsedFreeQuote) {
+        toast({
+          title: "Export limit reached",
+          description: "Enable recording to continue exporting.",
+          variant: "destructive",
+        });
+        navigate(createPageUrl("Unlock"));
+        return;
+      }
+    }
+    
+    // Allow free quote and mark as used
+    await markFreeQuoteUsed();
+    action();
+    toast({
+      title: "Export complete",
+      description: "This export was not recorded. Enable recording for history.",
+    });
+    setTimeout(() => {
+      navigate(createPageUrl("Unlock"));
+    }, 3000);
   };
 
   const handleReset = () => {
@@ -1413,8 +1443,8 @@ export default function Calculator() {
     }
   };
 
-  const handleCopyEmail = () => {
-    checkAccessAndProceed(() => {
+  const handleCopyEmail = async () => {
+    await checkAccessAndProceed(() => {
       if (!calculations) return;
       
       const exportService = new ExportService(
@@ -1438,8 +1468,8 @@ export default function Calculator() {
     });
   };
 
-  const handlePrintReceipt = () => {
-    checkAccessAndProceed(() => {
+  const handlePrintReceipt = async () => {
+    await checkAccessAndProceed(() => {
       if (!calculations) return;
       
       // Save to history
@@ -1565,8 +1595,8 @@ export default function Calculator() {
     return merged;
   };
 
-  const handlePrint = () => {
-    checkAccessAndProceed(() => {
+  const handlePrint = async () => {
+    await checkAccessAndProceed(() => {
       if (!calculations) return;
       
       // Save to history
@@ -1587,8 +1617,8 @@ export default function Calculator() {
   };
 
   // Enhanced export handlers
-  const handleExportQuote = () => {
-    checkAccessAndProceed(() => {
+  const handleExportQuote = async () => {
+    await checkAccessAndProceed(() => {
       if (!calculations) return;
       
       // Mark free quote as used IMMEDIATELY (before generating PDF)
