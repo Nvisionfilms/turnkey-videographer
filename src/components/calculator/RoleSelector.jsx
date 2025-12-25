@@ -184,10 +184,17 @@ export default function RoleSelector({
                     </div>
                   </div>
                   
-                  {/* Role Name - smaller on mobile */}
+                  {/* Role Name - smaller on mobile, allows 2 rows */}
                   <h3 
-                    className="text-[10px] md:text-sm font-semibold leading-tight line-clamp-2" 
-                    style={{ color: 'var(--color-text-primary)' }}
+                    className="text-[10px] md:text-sm font-semibold leading-tight min-h-[2.5rem] md:min-h-[2.8rem] flex items-center justify-center px-1" 
+                    style={{ 
+                      color: 'var(--color-text-primary)',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      lineHeight: '1.25'
+                    }}
                   >
                     {rate.role}
                   </h3>

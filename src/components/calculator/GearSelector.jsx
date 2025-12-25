@@ -14,7 +14,8 @@ import {
   Battery,
   Disc,
   HardDrive,
-  Cpu
+  Cpu,
+  Key
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -46,7 +47,7 @@ export default function GearSelector({
     if (name.includes('recorder') || name.includes('capture')) return Disc;
     if (name.includes('computer') || name.includes('laptop')) return Cpu;
     if (name.includes('headphone')) return Headphones;
-    return Camera; // Default icon
+    return Key; // Default icon - Key for custom roles/gear
   };
 
   const handleGearToggle = (gearId, checked) => {

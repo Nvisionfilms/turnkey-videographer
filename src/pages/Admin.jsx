@@ -168,6 +168,19 @@ export default function Admin() {
     const updated = [...dayRates, newRateObj];
     setDayRates(updated);
     saveDataToStorage(STORAGE_KEYS.DAY_RATES, updated);
+    
+    // Automatically create a corresponding gear card for this role
+    const gearId = `gear_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const newGearCard = {
+      id: gearId,
+      item: data.role, // Use the role name as the gear item name
+      total_investment: 0, // Default to 0, admin can update later
+      include_by_default: false // Don't include by default
+    };
+    const updatedGear = [...gearCosts, newGearCard];
+    setGearCosts(updatedGear);
+    saveDataToStorage(STORAGE_KEYS.GEAR_COSTS, updatedGear);
+    
     setShowAddRate(false);
     setNewRate({
       role: "",
@@ -175,6 +188,11 @@ export default function Admin() {
       full_day_rate: 0,
       unit_type: "day",
       active: true
+    });
+    
+    toast({
+      title: "Role and Gear Card Created",
+      description: `Created role "${data.role}" and corresponding gear card.`,
     });
   };
 

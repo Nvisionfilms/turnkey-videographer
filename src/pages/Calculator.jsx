@@ -3027,6 +3027,7 @@ export default function Calculator() {
       {/* Mobile Floating Total */}
       <MobileFloatingTotal 
         total={calculations?.total}
+        isUnlocked={isUnlocked}
         onExpand={(expanded) => {
           // Could scroll to quote card when expanded
           if (expanded) {

@@ -110,25 +110,6 @@ export default function Unlock() {
   const handleUnlock = async () => {
     const code = unlockCode.trim().toUpperCase();
     
-    // Check for trial code (keep local for now)
-    if (code === "TRIAL3DAY" || code === "NVISION3DAY") {
-      const result = activateTrial();
-      
-      if (result.success) {
-        toast({
-          title: "Temporary recording enabled",
-          description: "Recording active for evaluation period.",
-        });
-        navigate(createPageUrl("Calculator"));
-      } else {
-        toast({
-          title: "Temporary access unavailable",
-          description: "Recording not enabled.",
-          variant: "destructive"
-        });
-      }
-      return;
-    }
     
     // Validate email is provided
     if (!email.trim()) {
@@ -284,33 +265,7 @@ export default function Unlock() {
       {/* PRICING OPTIONS */}
       <section id="pricing" className="px-6 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* FREE */}
-            <div className="rounded-lg p-5" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}>
-              <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Limited</h3>
-              <div className="text-2xl font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>$0</div>
-              <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>No recording</p>
-              <ul className="space-y-1 mb-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                <li>- 1 export</li>
-                <li>- No history</li>
-                <li>- Watermarked</li>
-              </ul>
-              <button
-                onClick={() => !mustUnlock && navigate(createPageUrl("Calculator"))}
-                disabled={mustUnlock}
-                className="w-full py-2 rounded text-xs"
-                style={{ 
-                  background: mustUnlock ? 'var(--color-bg-primary)' : 'var(--color-bg-tertiary)', 
-                  color: mustUnlock ? 'var(--color-text-muted)' : 'var(--color-text-primary)', 
-                  border: '1px solid var(--color-border)',
-                  cursor: mustUnlock ? 'not-allowed' : 'pointer',
-                  opacity: mustUnlock ? 0.5 : 1
-                }}
-              >
-                {mustUnlock ? 'Export Limit Reached' : 'Continue'}
-              </button>
-            </div>
-
+          <div className="grid md:grid-cols-2 gap-4">
             {/* OPERATOR MONTHLY */}
             <div className="rounded-lg p-5" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
               <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>Operator</h3>
@@ -371,32 +326,6 @@ export default function Unlock() {
             Enter access code
           </h2>
           
-          {/* Temporary Access Option */}
-          {!trialAlreadyUsed && (
-            <div className="p-4 rounded-lg mb-6" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
-              <p className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
-                Temporary recording access
-              </p>
-              <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>
-                For short-term evaluation only. Full recording enabled. Automatically expires.
-              </p>
-              <div className="p-3 rounded" style={{ background: 'var(--color-bg-primary)' }}>
-                <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>Temporary access code:</p>
-                <code className="text-lg font-mono" style={{ color: 'var(--color-text-primary)' }}>
-                  TRIAL3DAY
-                </code>
-              </div>
-            </div>
-          )}
-          
-          {trialAlreadyUsed && (
-            <div className="p-4 rounded-lg mb-6" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border)' }}>
-              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                Temporary access expired. Recording has stopped.
-              </p>
-            </div>
-          )}
-
           {/* Access Code Input */}
           <div className="space-y-4">
             <div>

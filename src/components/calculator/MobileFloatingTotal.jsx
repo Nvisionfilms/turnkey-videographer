@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, ChevronUp, ChevronDown } from 'lucide-react';
 
-export default function MobileFloatingTotal({ total, onExpand }) {
+export default function MobileFloatingTotal({ total, onExpand, isUnlocked = true }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
 
@@ -27,7 +27,7 @@ export default function MobileFloatingTotal({ total, onExpand }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (!total) return null;
+  if (!total && isUnlocked) return null;
 
   const handleArrowClick = () => {
     if (isAtBottom) {
@@ -65,7 +65,7 @@ export default function MobileFloatingTotal({ total, onExpand }) {
                 Scope-Locked Total
               </div>
               <div className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                ${total.toLocaleString()}
+                {isUnlocked ? `$${total.toLocaleString()}` : 'HIDDEN'}
               </div>
             </div>
           </div>
