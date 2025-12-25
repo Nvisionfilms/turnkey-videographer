@@ -124,26 +124,36 @@ export function useUnlockStatus() {
       if (storedEmail && storedCode) {
         // Has credentials - validate with server silently
         const isValid = await validateWithServer();
-        setIsUnlocked(isValid);
         
         if (isValid) {
-          // Valid - set localStorage flags silently
+          // Valid - set localStorage flags and state
           localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
           localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
+          setIsUnlocked(true);
         } else {
           // Invalid - clear all localStorage silently
-          // User will see locked state naturally when they try to use features
           localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
           localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
           localStorage.removeItem('userEmail');
           localStorage.removeItem('unlockCode');
+          setIsUnlocked(false);
         }
       } else {
-        // No credentials - ensure locked silently
-        localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
-        localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
-        setIsUnlocked(false);
+        // No credentials - check if unlock flags are set (legacy)
+        const isUnlockedStored = localStorage.getItem(STORAGE_KEYS.UNLOCKED) === 'true';
+        const directUnlock = localStorage.getItem(STORAGE_KEYS.DIRECT_UNLOCK) === 'true';
+        
+        if (isUnlockedStored || directUnlock) {
+          // Has unlock flags but no credentials - keep unlocked but validate on next mount
+          setIsUnlocked(true);
+        } else {
+          // No credentials and no flags - locked
+          setIsUnlocked(false);
+        }
       }
+      
+      // Also check free quote status
+      checkStatus();
     };
     
     validateOnMount();
