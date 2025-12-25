@@ -2988,10 +2988,29 @@ export default function Calculator() {
 
           {/* Right Column - Live Totals */}
           <div className="lg:col-span-1 space-y-4">
+            {!isUnlocked && (
+              <Card className="shadow-lg sticky top-6" style={{ background: 'var(--color-bg-secondary)', borderColor: 'var(--color-border)' }}>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Unlock Required</h3>
+                  <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+                    Pricing calculations are hidden. Enable recording to see all numbers and export quotes.
+                  </p>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => navigate(createPageUrl("Unlock"))}
+                    style={{ background: 'var(--color-accent-primary)', color: '#000' }}
+                  >
+                    <Lock className="w-4 h-4 mr-2" />
+                    Unlock Calculator
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
             <LiveTotalsPanel 
               calculations={calculations} 
               settings={settings} 
               formData={{...formData, cameras}}
+              isUnlocked={isUnlocked}
               dayRates={dayRates}
               onUpdateCustomPrice={(price) => {
                 setFormData(prev => ({...prev, custom_price_override: price}));

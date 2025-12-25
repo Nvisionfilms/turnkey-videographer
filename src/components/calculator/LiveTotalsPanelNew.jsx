@@ -5,7 +5,7 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function LiveTotalsPanel({ calculations, settings, formData, dayRates, onUpdateCustomPrice, onUpdateDiscount }) {
+export default function LiveTotalsPanel({ calculations, settings, formData, dayRates, onUpdateCustomPrice, onUpdateDiscount, isUnlocked }) {
   const { toast } = useToast();
   if (!calculations) {
     return (
@@ -151,7 +151,7 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
             {/* Crew Scope Total */}
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-text-secondary)' }}>Crew Scope Total</span>
-              <span style={{ color: 'var(--color-text-primary)' }}>${(calc.laborSubtotal || 0).toLocaleString()}</span>
+              <span style={{ color: 'var(--color-text-primary)' }}>{isUnlocked ? `$${(calc.laborSubtotal || 0).toLocaleString()}` : 'HIDDEN'}</span>
             </div>
             <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               Labor cost for defined crew and schedule.
@@ -160,7 +160,7 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
             {/* Responsibility Add-Ons */}
             <div className="flex justify-between pt-2">
               <span style={{ color: 'var(--color-text-secondary)' }}>Responsibility Add-Ons</span>
-              <span style={{ color: 'var(--color-text-primary)' }}>${((calc.gearAmortized || 0) + (calc.travelCost || 0) + (calc.rentalCost || 0)).toLocaleString()}</span>
+              <span style={{ color: 'var(--color-text-primary)' }}>{isUnlocked ? `$${((calc.gearAmortized || 0) + (calc.travelCost || 0) + (calc.rentalCost || 0)).toLocaleString()}` : 'HIDDEN'}</span>
             </div>
             <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               Gear, travel, rentals, and other scope items.
@@ -169,7 +169,7 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
             {/* Complexity Multiplier */}
             <div className="flex justify-between pt-2">
               <span style={{ color: 'var(--color-text-secondary)' }}>Complexity Multiplier</span>
-              <span style={{ color: 'var(--color-text-primary)' }}>${(calc.operationsFee || 0).toLocaleString()}</span>
+              <span style={{ color: 'var(--color-text-primary)' }}>{isUnlocked ? `$${(calc.operationsFee || 0).toLocaleString()}` : 'HIDDEN'}</span>
             </div>
             <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               Overhead and margin applied to scope.
@@ -178,7 +178,7 @@ export default function LiveTotalsPanel({ calculations, settings, formData, dayR
             {/* Scope-Locked Total */}
             <div className="flex justify-between pt-3 mt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
               <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>Scope-Locked Total</span>
-              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>${(calc.total || 0).toLocaleString()}</span>
+              <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{isUnlocked ? `$${(calc.total || 0).toLocaleString()}` : 'HIDDEN'}</span>
             </div>
           </div>
           
