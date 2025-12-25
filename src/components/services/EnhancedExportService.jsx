@@ -748,15 +748,8 @@ export class EnhancedExportService {
         .parties-grid,
         .bottom-section,
         .signature-section,
-        .footer,
-        .watermark {
+        .footer {
           page-break-inside: avoid;
-        }
-        
-        .watermark {
-          display: block !important;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
         }
       }
 

@@ -2008,18 +2008,16 @@ export default function Calculator() {
                 <Download className="w-4 h-4 mr-2" />
                 Export Quote
               </Button>
-              {isUnlocked && (
-                <Button
-                  onClick={handleExportInvoice}
-                  variant="outline"
-                  size="sm"
-                  disabled={!calculations}
-                  style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Invoice
-                </Button>
-              )}
+              <Button
+                onClick={handleExportInvoice}
+                variant="outline"
+                size="sm"
+                disabled={!calculations}
+                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Invoice
+              </Button>
               <Button
                 onClick={handlePrint}
                 variant="outline"
