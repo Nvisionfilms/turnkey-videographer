@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-export default function NegotiationTicker({ calculations, settings, customPriceOverride, onPriceChange }) {
+export default function NegotiationTicker({ calculations, settings, customPriceOverride, onPriceChange, isUnlocked }) {
   const prevCurrentRef = useRef(null);
   
   if (!calculations || !calculations.total) {
@@ -98,7 +98,7 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             FLOOR
           </div>
           <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#8B5E34' }}>
-            {formatMoney(minimum)}
+            {isUnlocked ? formatMoney(minimum) : 'HIDDEN'}
           </div>
           <div 
             className="text-xs font-medium transition-all duration-150 hidden md:block" 
@@ -126,7 +126,7 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             className="text-lg md:text-2xl font-bold mb-1" 
             style={{ color: '#4C6FFF' }}
           >
-            {formatMoney(current)}
+            {isUnlocked ? formatMoney(current) : 'HIDDEN'}
           </div>
           <div 
             className="text-xs font-medium hidden md:block" 
@@ -151,7 +151,7 @@ export default function NegotiationTicker({ calculations, settings, customPriceO
             INTENT
           </div>
           <div className="text-lg md:text-2xl font-bold mb-1" style={{ color: '#3A7F5A' }}>
-            {formatMoney(desired)}
+            {isUnlocked ? formatMoney(desired) : 'HIDDEN'}
           </div>
           <div className="text-xs hidden md:block" style={{ color: 'rgba(58, 127, 90, 0.80)' }}>
             {getIntentText()}

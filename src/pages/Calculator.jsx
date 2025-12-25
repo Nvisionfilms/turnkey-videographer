@@ -2104,6 +2104,7 @@ export default function Calculator() {
                 calculations={calculations} 
                 settings={settings}
                 customPriceOverride={formData.custom_price_override}
+                isUnlocked={isUnlocked}
                 onPriceChange={(price) => setFormData(prev => ({
                   ...prev, 
                   custom_price_override: price,
