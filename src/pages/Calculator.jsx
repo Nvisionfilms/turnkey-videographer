@@ -1173,7 +1173,7 @@ export default function Calculator() {
           description: "Enable recording to continue exporting.",
           variant: "destructive",
         });
-        navigate(createPageUrl("Unlock"));
+        // Don't auto-navigate - let user dismiss toast and click unlock button
         return;
       }
     } catch (error) {
@@ -1185,7 +1185,7 @@ export default function Calculator() {
           description: "Enable recording to continue exporting.",
           variant: "destructive",
         });
-        navigate(createPageUrl("Unlock"));
+        // Don't auto-navigate - let user dismiss toast and click unlock button
         return;
       }
     }
