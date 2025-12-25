@@ -1184,13 +1184,10 @@ export default function Calculator() {
     // Allow free quote and mark as used
     await markFreeQuoteUsed();
     action();
-    toast({
-      title: "Export complete",
-      description: "This export was not recorded. Enable recording for history.",
-    });
+    // Redirect to unlock page after export (no toast)
     setTimeout(() => {
       navigate(createPageUrl("Unlock"));
-    }, 3000);
+    }, 1000);
   };
 
   const handleReset = () => {
