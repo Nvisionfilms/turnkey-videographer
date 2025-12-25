@@ -85,18 +85,11 @@ export function useUnlockStatus() {
   }, []);
 
   const checkStatus = () => {
-    // STRICT: No localStorage checks - only server validation
-    // All legacy localStorage access is cleared in validateWithServer
-    const legacyUnlocked = false;
-    const directUnlock = false;
-    const hasActiveSubscription = false;
-    const subDetails = null;
-    const trialActive = false;
-    const daysLeft = null;
-    
-    // Clear any remaining trial data
-    localStorage.removeItem(STORAGE_KEYS.TRIAL_START);
-    localStorage.removeItem(STORAGE_KEYS.TRIAL_END);
+    // Check if user has valid credentials stored
+    const storedEmail = localStorage.getItem('userEmail');
+    const storedCode = localStorage.getItem('unlockCode');
+    const directUnlock = localStorage.getItem(STORAGE_KEYS.DIRECT_UNLOCK) === 'true';
+    const isUnlockedStored = localStorage.getItem(STORAGE_KEYS.UNLOCKED) === 'true';
     
     // Check free quote usage (check both localStorage and sessionStorage)
     const usedFreeLocal = localStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
@@ -112,11 +105,14 @@ export function useUnlockStatus() {
       }
     }
     
-    setIsUnlocked(DEV_FORCE_UNLOCKED || legacyUnlocked || directUnlock || hasActiveSubscription || trialActive);
-    setIsTrialActive(trialActive);
-    setTrialDaysLeft(daysLeft);
+    // User is unlocked if they have valid credentials OR the unlock flag is set
+    const shouldBeUnlocked = DEV_FORCE_UNLOCKED || (storedEmail && storedCode && (directUnlock || isUnlockedStored));
+    
+    setIsUnlocked(shouldBeUnlocked);
+    setIsTrialActive(false);
+    setTrialDaysLeft(null);
     setHasUsedFreeQuote(usedFree);
-    setSubscriptionDetails(subDetails);
+    setSubscriptionDetails(null);
   };
 
   useEffect(() => {
