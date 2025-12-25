@@ -2,26 +2,29 @@ import { Toast, ToastClose, ToastDescription, ToastTitle, ToastViewport } from "
 import { useToast } from "@/components/ui/use-toast"
 import { useEffect, useState } from "react"
 
-function ToastItem({ id, title, description, action, onDismiss, ...props }) {
+function ToastItem({ id, title, description, action, onDismiss, variant, ...props }) {
   const [isVisible, setIsVisible] = useState(true)
   const [isFading, setIsFading] = useState(false)
 
-  // Start fade at 1.5 seconds, remove at 2.5 seconds
+  // Destructive toasts stay longer (5s), others dismiss at 2.5s
+  const dismissTime = variant === 'destructive' ? 5000 : 2500
+  const fadeTime = variant === 'destructive' ? 4000 : 1500
+
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
       setIsFading(true)
-    }, 1500)
+    }, fadeTime)
     
     const removeTimer = setTimeout(() => {
       setIsVisible(false)
       onDismiss(id)
-    }, 2500)
+    }, dismissTime)
     
     return () => {
       clearTimeout(fadeTimer)
       clearTimeout(removeTimer)
     }
-  }, [id, onDismiss])
+  }, [id, onDismiss, fadeTime, dismissTime])
 
   const handleClose = () => {
     setIsFading(true)
