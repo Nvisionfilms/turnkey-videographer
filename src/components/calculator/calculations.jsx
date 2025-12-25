@@ -255,7 +255,6 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
 
   // === LABOR COSTS ===
   const lineItems = [];
-  let laborRaw = 0;
   let laborBase = 0; // Base cost before experience/region multipliers (actual cost you pay)
 
   // Separate production crew from post-production
@@ -279,7 +278,6 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
       const adjustedCost = roleCost * experienceMultiplier * industryIndex * regionMultiplier;
 
       if (adjustedCost > 0) {
-        laborRaw += adjustedCost;
         laborBase += roleCost; // Track base cost (before multipliers)
 
         let desc = rate.role;
@@ -318,8 +316,9 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
           lineItem = { description: desc, amount: adjustedCost };
         }
         
-        // Add category info to line item
-        lineItem.category = rate.category || 'btl';
+        // Add category and type info to line item
+        lineItem.category = 'LABOR';
+        lineItem.type = 'DECISION';
         
         // Categorize: post-production vs production crew
         const isPostProduction = rate.unit_type === "per_5_min" || 
@@ -344,8 +343,12 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
       // Use appropriate rate based on day type
       const baseRate = dayType === 'half' ? audioRate.half_day_rate : audioRate.full_day_rate;
       const audioCost = baseRate * experienceMultiplier * industryIndex * regionMultiplier;
-      laborRaw += audioCost;
-      postProductionItems.push({ description: "Audio Pre & Post Production", amount: audioCost });
+      postProductionItems.push({ 
+        description: "Audio Pre & Post Production", 
+        amount: audioCost,
+        category: 'LABOR',
+        type: 'DECISION'
+      });
     }
   }
 
@@ -357,14 +360,19 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
 
   // Build final line items with sections (base rates shown)
   if (productionCrewItems.length > 0) {
-    lineItems.push({ description: "Production & Crew", amount: 0, isSection: true });
+    lineItems.push({ description: "Production & Crew", amount: 0, isSection: true, type: 'SECTION' });
     lineItems.push(...productionCrewItems);
   }
   
   if (postProductionItems.length > 0) {
-    lineItems.push({ description: "Post-Production", amount: 0, isSection: true });
+    lineItems.push({ description: "Post-Production", amount: 0, isSection: true, type: 'SECTION' });
     lineItems.push(...postProductionItems);
   }
+  
+  // Calculate laborRaw deterministically from line items tagged as LABOR
+  const laborRaw = lineItems
+    .filter(item => item.category === 'LABOR' && !item.isSection)
+    .reduce((sum, item) => sum + (item.amount || 0), 0);
   
   // Add overhead + margin as separate line item (your markup for scouting, hiring, coordination, profit)
   // Only show as separate line if show_service_fee_on_invoice is true
@@ -440,27 +448,52 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
   // === ADD OTHER COSTS AS LINE ITEMS ===
   // Add gear amortization
   if (gearAmortized > 0) {
-    lineItems.push({ description: "Equipment & Gear", amount: round2(gearAmortized) });
+    lineItems.push({ 
+      description: "Equipment & Gear", 
+      amount: round2(gearAmortized),
+      category: 'GEAR',
+      type: 'DECISION'
+    });
   }
   
   // Add travel costs
   if (travelCost > 0) {
-    lineItems.push({ description: `Travel (${travelMiles} miles @ $${mileageRate}/mi)`, amount: round2(travelCost) });
+    lineItems.push({ 
+      description: `Travel (${travelMiles} miles @ $${mileageRate}/mi)`, 
+      amount: round2(travelCost),
+      category: 'OTHER',
+      type: 'DECISION'
+    });
   }
   
   // Add rental costs
   if (rentalCosts > 0) {
-    lineItems.push({ description: "Rental Costs", amount: round2(rentalCosts) });
+    lineItems.push({ 
+      description: "Rental Costs", 
+      amount: round2(rentalCosts),
+      category: 'OTHER',
+      type: 'DECISION'
+    });
   }
   
   // Add usage rights
   if (usageRightsCost > 0) {
-    lineItems.push({ description: "Usage Rights & Licensing", amount: round2(usageRightsCost) });
+    lineItems.push({ 
+      description: "Usage Rights & Licensing", 
+      amount: round2(usageRightsCost),
+      category: 'OTHER',
+      type: 'DECISION'
+    });
   }
   
   // Add talent fees
   if (talentFees > 0) {
-    lineItems.push({ description: "Talent Fees", amount: round2(talentFees) });
+    lineItems.push({ 
+      description: "Talent Fees", 
+      amount: round2(talentFees),
+      category: 'OTHER',
+      type: 'DECISION'
+    });
   }
   
   // Overhead and profit margin are calculated and included in pricing
@@ -468,17 +501,32 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
   
   // Add rush fee
   if (rushFee > 0) {
-    lineItems.push({ description: `Rush Fee (${rushFeePercent}%)`, amount: round2(rushFee) });
+    lineItems.push({ 
+      description: `Rush Fee (${rushFeePercent}%)`, 
+      amount: round2(rushFee),
+      category: 'OTHER',
+      type: 'TRADE_OFF'
+    });
   }
   
   // Add nonprofit discount
   if (nonprofitDiscount > 0) {
-    lineItems.push({ description: `Nonprofit Discount (${nonprofitDiscountPercent}%)`, amount: -round2(nonprofitDiscount) });
+    lineItems.push({ 
+      description: `Nonprofit Discount (${nonprofitDiscountPercent}%)`, 
+      amount: -round2(nonprofitDiscount),
+      category: 'OTHER',
+      type: 'TRADE_OFF'
+    });
   }
   
   // Add tax
   if (tax > 0) {
-    lineItems.push({ description: `Tax (${taxRatePercent}%)`, amount: round2(tax) });
+    lineItems.push({ 
+      description: `Tax (${taxRatePercent}%)`, 
+      amount: round2(tax),
+      category: 'TAX',
+      type: 'DECISION'
+    });
   }
 
   // === FINAL TOTALS ===
@@ -528,6 +576,8 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
 
   return {
     lineItems,
+    laborRaw: round2(laborRaw),
+    laborBase: round2(laborBase),
     laborSubtotal: round2(laborRaw),
     laborBase: round2(laborBase), // Base cost before experience multiplier
     operationsFee: round2(operationsFee), // Operations fee (overhead + profit margin)
