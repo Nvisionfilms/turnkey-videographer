@@ -44,12 +44,19 @@ function HeroSection({ onLaunch }) {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-              You already have the talent —
-              <span style={{ color: 'var(--color-accent-primary)' }}> now get the clarity to match.</span>
+              TurnKey Pricing Ledger
             </h1>
             
+            <p className="text-lg md:text-xl mb-4 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+              Pricing records for creative work.
+            </p>
+            
             <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-              Charge what you're worth. Send quotes with confidence. Run your creative business like a pro.
+              Not estimates. Not memory.
+            </p>
+            
+            <p className="text-base mb-8 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              TurnKey records how prices are set, so they don't drift later.
             </p>
             
             <Button 
@@ -58,7 +65,7 @@ function HeroSection({ onLaunch }) {
               className="px-8 py-4 text-lg font-semibold hover:scale-105 transition-transform"
               style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
             >
-              Launch the Calculator
+              Start a record
             </Button>
           </div>
           
@@ -76,24 +83,30 @@ function RealProblemSection() {
     <section className="py-16 px-6" style={{ background: 'var(--color-bg-card)' }}>
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold mb-8 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-          The struggle isn't your talent.
+          What TurnKey Is
         </h2>
         
         <div className="space-y-4 text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
           <p>
-            It's the <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>anxiety before you hit send</span> on a quote.
+            TurnKey is a pricing ledger for creative services.
           </p>
           
           <p>
-            It's wondering if you're <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>charging too much</span> or <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>leaving money on the table</span>.
+            It captures:
           </p>
           
-          <p>
-            It's being <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>busy but not profitable</span>.
+          <ul className="list-disc list-inside space-y-2 ml-4">
+            <li>what was priced</li>
+            <li>when it was priced</li>
+            <li>under what conditions</li>
+          </ul>
+          
+          <p className="pt-4">
+            So pricing decisions remain consistent over time.
           </p>
           
-          <p className="text-xl font-bold pt-6" style={{ color: 'var(--color-accent-primary)' }}>
-            Confidence doesn't come from talent — it comes from clarity.
+          <p className="text-base pt-4" style={{ color: 'var(--color-text-muted)' }}>
+            No motivation. No optimization tricks. Just records.
           </p>
         </div>
       </div>
@@ -107,35 +120,34 @@ function StorySection() {
     <section className="py-16 px-6">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <Coffee className="w-10 h-10 mb-4" style={{ color: 'var(--color-accent-primary)' }} />
           <h2 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: 'var(--color-text-primary)' }}>
-            Here's the truth:
+            What It Replaces
           </h2>
         </div>
         
         <div className="space-y-4 text-base md:text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
           <p>
-            I hit <span className="font-bold" style={{ color: 'var(--color-accent-primary)' }}>100K without burning out</span>.
+            Spreadsheets.
           </p>
           
           <p>
-            Not because I worked harder. Not because I got lucky.
+            Gut checks.
+          </p>
+          
+          <p>
+            Re-explaining old prices.
+          </p>
+          
+          <p>
+            Re-negotiating forgotten decisions.
+          </p>
+          
+          <p className="text-lg pt-4" style={{ color: 'var(--color-text-primary)' }}>
+            TurnKey doesn't make pricing easier.
           </p>
           
           <p className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-            Because I finally valued my time.
-          </p>
-          
-          <p>
-            I built this calculator because I was tired of watching talented creatives undercharge, overwork, and wonder why they're exhausted.
-          </p>
-          
-          <p>
-            This isn't a course. It's not a masterclass. It's not going to teach you cinematography.
-          </p>
-          
-          <p className="text-lg font-semibold pt-3" style={{ color: 'var(--color-text-primary)' }}>
-            It's just a tool that gives you a number you can trust.
+            It makes pricing visible.
           </p>
         </div>
       </div>
@@ -148,14 +160,14 @@ function WhatThisIsSection({ onLaunch }) {
     <section className="py-16 px-6" style={{ background: 'var(--color-bg-card)' }}>
       <div className="max-w-3xl mx-auto">
         <h2 className="text-2xl md:text-3xl font-bold mb-8" style={{ color: 'var(--color-text-primary)' }}>
-          What this actually is:
+          How It Works
         </h2>
         
         <div className="space-y-6">
           <Card style={{ background: 'var(--color-bg-primary)', border: 'none' }}>
             <CardContent className="p-6">
               <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                A calculator that factors in your <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>gear</span>, your <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>experience</span>, and your <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>time</span> to give you a baseline number.
+                Build a quote from defined components
               </p>
             </CardContent>
           </Card>
@@ -163,7 +175,7 @@ function WhatThisIsSection({ onLaunch }) {
           <Card style={{ background: 'var(--color-bg-primary)', border: 'none' }}>
             <CardContent className="p-6">
               <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                It generates a <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>professional quote</span> you can send to clients without second-guessing yourself.
+                Record trade-offs and scope decisions
               </p>
             </CardContent>
           </Card>
@@ -171,11 +183,23 @@ function WhatThisIsSection({ onLaunch }) {
           <Card style={{ background: 'var(--color-bg-primary)', border: 'none' }}>
             <CardContent className="p-6">
               <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                It helps you <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>stop undercharging</span> and start building a sustainable creative business.
+                Lock the record
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card style={{ background: 'var(--color-bg-primary)', border: 'none' }}>
+            <CardContent className="p-6">
+              <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                Render a client-friendly quote or invoice
               </p>
             </CardContent>
           </Card>
         </div>
+        
+        <p className="text-base mt-8 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+          The ledger stays intact. The document stays clear.
+        </p>
         
         <div className="mt-10 text-center">
           <Button 
@@ -184,7 +208,7 @@ function WhatThisIsSection({ onLaunch }) {
             className="px-8 py-4 text-lg font-semibold"
             style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
           >
-            Try it now <ArrowRight className="w-5 h-5 ml-2" />
+            View how it works <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
       </div>
@@ -196,14 +220,12 @@ function SimpleCTASection({ onLaunch }) {
   return (
     <section className="py-20 px-6">
       <div className="max-w-3xl mx-auto text-center">
-        <Heart className="w-12 h-12 mx-auto mb-6" style={{ color: 'var(--color-accent-primary)' }} />
-        
         <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-          You deserve to be paid what you're worth.
+          TurnKey exists so pricing decisions don't disappear.
         </h2>
         
         <p className="text-lg mb-8 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-          This tool just makes it easier to figure out what that is.
+          Records pricing decisions so they can't be forgotten.
         </p>
         
         <Button 
@@ -212,7 +234,7 @@ function SimpleCTASection({ onLaunch }) {
           className="px-10 py-6 text-xl font-semibold hover:scale-105 transition-transform"
           style={{ background: 'var(--color-accent-primary)', color: 'var(--color-button-text)' }}
         >
-          Launch Calculator
+          Start a record
         </Button>
       </div>
     </section>
