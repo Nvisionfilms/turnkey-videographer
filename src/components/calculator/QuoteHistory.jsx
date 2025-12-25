@@ -26,7 +26,7 @@ const QuoteHistory = React.forwardRef(({ onLoadQuote }, ref) => {
     }
   };
 
-  const saveQuote = (quoteData, calculations, settings, status = 'UNFINALIZED') => {
+  const saveQuote = (quoteData, calculations, settings, status = 'DRAFT') => {
     try {
       const now = new Date().toISOString();
       
@@ -223,7 +223,8 @@ const QuoteHistory = React.forwardRef(({ onLoadQuote }, ref) => {
 });
 
 // Export the save function for external use
-export function saveToQuoteHistory(quoteData, calculations, settings, status = 'UNFINALIZED') {
+// Status options: DRAFT (internal), PRESENTED (client-facing quote), FINAL (invoice)
+export function saveToQuoteHistory(quoteData, calculations, settings, status = 'DRAFT') {
   try {
     const now = new Date().toISOString();
     

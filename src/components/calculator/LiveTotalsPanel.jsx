@@ -57,12 +57,12 @@ export default function LiveTotalsPanel({ calculations, settings }) {
           </div>
         )}
 
-        {/* Overhead + Margin (Combined) */}
+        {/* Production Management (internal: Overhead + Margin) */}
         {(calc.overhead > 0 || calc.profitMargin > 0) && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span style={{ color: 'var(--color-text-secondary)' }}>
-                Overhead + Margin ({((settings?.overhead_percent || 0) + (settings?.profit_margin_percent || 0))}%)
+                Production Management
               </span>
               <span className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
                 ${((calc.overhead || 0) + (calc.profitMargin || 0)).toFixed(2)}

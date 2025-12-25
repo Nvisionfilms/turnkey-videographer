@@ -39,7 +39,8 @@ export class EnhancedExportService {
     return `${this._formatDate(sortedDates[0])} - ${this._formatDate(sortedDates[sortedDates.length - 1])} (${sortedDates.length} days)`;
   }
 
-  // Generate Ledger-style HTML (Quote or Invoice - same design, different state)
+  // Generate client-facing document (Quote or Invoice)
+  // Internal ledger tags (category, type) are preserved in snapshot but not shown to client
   generateHTML(documentType = 'invoice') {
     const shootDatesText = this.formatShootDates();
     const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -120,13 +121,13 @@ export class EnhancedExportService {
       <body>
         <div class="invoice-header">
           <div class="header-left">
-            <div class="ledger-title">TurnKey Pricing Ledger</div>
-            <div class="ledger-subtitle">${documentType === 'invoice' ? 'Invoice Record' : 'Quote Record'}</div>
+            <div class="ledger-title">${companyName}</div>
+            <div class="ledger-subtitle">${documentType === 'invoice' ? 'Invoice' : 'Quote'}</div>
           </div>
           <div class="header-right">
-            <div class="meta-row"><span class="meta-label">${documentType === 'invoice' ? 'Invoice ID:' : 'Quote ID:'}</span> <span class="meta-value">${docNumber}</span></div>
-            <div class="meta-row"><span class="meta-label">${documentType === 'invoice' ? 'Decision Date:' : 'Draft Date:'}</span> <span class="meta-value">${currentDate}</span></div>
-            <div class="meta-row"><span class="meta-label">Status:</span> <span class="meta-value">${documentType === 'invoice' ? 'Final' : 'Unfinalized'}</span></div>
+            <div class="meta-row"><span class="meta-label">${documentType === 'invoice' ? 'Invoice #:' : 'Quote #:'}</span> <span class="meta-value">${docNumber}</span></div>
+            <div class="meta-row"><span class="meta-label">Date:</span> <span class="meta-value">${currentDate}</span></div>
+            <div class="meta-row"><span class="meta-label">Status:</span> <span class="meta-value">${documentType === 'invoice' ? 'Final' : 'Presented'}</span></div>
           </div>
         </div>
 
@@ -141,11 +142,10 @@ export class EnhancedExportService {
         <table class="ledger-table">
           <thead>
             <tr>
-              <th class="col-items">Item</th>
-              <th class="col-type">Type</th>
+              <th class="col-items">Description</th>
               <th class="col-qty">Quantity</th>
               <th class="col-price">Rate</th>
-              <th class="col-total">Recorded Total</th>
+              <th class="col-total">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -157,19 +157,21 @@ export class EnhancedExportService {
                 }
 
                 lineNumber += 1;
-                const mainDesc = (item.description || '').split(' - ')[0];
+                // Client-facing label: rename Overhead + Margin to Production Management
+                let clientDesc = (item.description || '').split(' - ')[0];
+                if (clientDesc.includes('Overhead + Margin')) {
+                  clientDesc = clientDesc.replace(/Overhead \+ Margin \(\d+%\)/, 'Production Management');
+                }
+                
                 const amount = Number(item.amount || 0);
                 const qty = typeof item?.quantity === 'number' ? item.quantity : 1;
                 const unitPrice = typeof item?.unitPrice === 'number'
                   ? item.unitPrice
                   : (qty > 0 ? (amount / qty) : amount);
                 
-                const itemType = amount < 0 ? 'Adjustment' : (qty > 1 ? 'Decision' : 'Decision');
-                
                 return `
                 <tr>
-                  <td class="col-items">${mainDesc}</td>
-                  <td class="col-type">${itemType}</td>
+                  <td class="col-items">${clientDesc}</td>
                   <td class="col-qty">${qty}</td>
                   <td class="col-price">$${unitPrice.toFixed(2)}</td>
                   <td class="col-total">$${amount.toFixed(2)}</td>
@@ -181,16 +183,18 @@ export class EnhancedExportService {
         </table>
 
         <div class="totals-section">
-          <div class="totals-row"><span>Subtotal:</span> <span>$${targetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-          <div class="totals-row"><span>Adjustments:</span> <span>$0.00</span></div>
-          <div class="totals-row totals-final"><span>Final Decision:</span> <span>$${targetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+          <div class="totals-row totals-final"><span>${documentType === 'invoice' ? 'Total Due:' : 'Total:'}</span> <span>$${targetTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
         </div>
 
+        ${documentType === 'invoice' ? `
         <div class="ledger-footnote">
-          ${documentType === 'invoice' 
-            ? 'This invoice reflects recorded pricing decisions at the time they were made.<br>It does not interpret outcomes or adjust for negotiation.'
-            : 'This quote reflects recorded pricing decisions at the time they were drafted.<br>It may change prior to finalization.'}
+          Payment is due upon receipt. Please reference invoice number ${docNumber} with payment.
         </div>
+        ` : `
+        <div class="ledger-footnote">
+          This quote is valid for 14 days from the date above. To proceed, please confirm acceptance via email or signature.
+        </div>
+        `}
 
         ${showPaymentSchedule && this.settings?.deposit_enabled !== false && this.calc.depositDue > 0 ? `
         <div class="payment-section">

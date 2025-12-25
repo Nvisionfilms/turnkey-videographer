@@ -375,12 +375,13 @@ export function calculateQuote(formData, dayRates, gearCosts, settings, delivera
     .reduce((sum, item) => sum + (item.amount || 0), 0);
   
   // Add overhead + margin as separate line item (your markup for scouting, hiring, coordination, profit)
-  // Only show as separate line if show_service_fee_on_invoice is true
+  // Internal label preserves percentage for ledger tracking
+  // Client-facing view will render as "Production Management"
   const operationsFee = totalOperationsFeePercent > 0 ? round2(laborRaw * (totalOperationsFeePercent / 100)) : 0;
   const showServiceFeeOnInvoice = settings?.show_service_fee_on_invoice !== false;
   if (operationsFee > 0 && showServiceFeeOnInvoice) {
     lineItems.push({ 
-      description: `Overhead + Margin (${totalOperationsFeePercent}%)`, 
+      description: `Overhead + Margin (${totalOperationsFeePercent}%)`, // Internal ledger label
       amount: operationsFee,
       category: 'OVERHEAD_MARGIN',
       type: 'DECISION'

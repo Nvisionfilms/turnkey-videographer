@@ -1029,7 +1029,7 @@ export default function Calculator() {
             e.preventDefault();
             // Save quote to history
             if (calculations) {
-              saveToQuoteHistory(formData, calculations, settings, 'UNFINALIZED');
+              saveToQuoteHistory(formData, calculations, settings, 'DRAFT');
               toast({
                 title: "Quote Saved",
                 description: "Added to quote history",
@@ -1061,7 +1061,7 @@ export default function Calculator() {
             e.preventDefault();
             // Duplicate current quote (save and keep data)
             if (calculations) {
-              saveToQuoteHistory(formData, calculations, settings, 'UNFINALIZED');
+              saveToQuoteHistory(formData, calculations, settings, 'DRAFT');
               toast({
                 title: "Quote Duplicated",
                 description: "Saved to history. Continue editing.",
