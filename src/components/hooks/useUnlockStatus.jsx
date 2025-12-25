@@ -30,12 +30,6 @@ export function useUnlockStatus() {
     const storedEmail = localStorage.getItem('userEmail');
     const storedCode = localStorage.getItem('unlockCode');
     
-    // Clear any legacy localStorage-only access immediately
-    localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
-    localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
-    localStorage.removeItem(STORAGE_KEYS.TRIAL_STARTED);
-    localStorage.removeItem(STORAGE_KEYS.TRIAL_END_DATE);
-    
     if (!storedEmail || !storedCode) {
       return false;
     }
@@ -57,11 +51,13 @@ export function useUnlockStatus() {
         localStorage.removeItem('userEmail');
         localStorage.removeItem('unlockCode');
         localStorage.removeItem('stripeSessionId');
+        localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+        localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
         return false;
       }
       
       if (response.isActive) {
-        // Valid subscription - ONLY set minimal flags for session
+        // Valid subscription - set flags for session
         localStorage.setItem(STORAGE_KEYS.UNLOCKED, 'true');
         localStorage.setItem(STORAGE_KEYS.DIRECT_UNLOCK, 'true');
         return true;
@@ -70,14 +66,14 @@ export function useUnlockStatus() {
         localStorage.removeItem('userEmail');
         localStorage.removeItem('unlockCode');
         localStorage.removeItem('stripeSessionId');
+        localStorage.removeItem(STORAGE_KEYS.UNLOCKED);
+        localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
         return false;
       }
     } catch (error) {
-      // API error - NO FALLBACK to localStorage, require server validation
-      console.warn('Server validation failed, access denied:', error.message);
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('unlockCode');
-      localStorage.removeItem('stripeSessionId');
+      // API error - keep credentials but don't unlock
+      console.error('Server validation failed:', error.message);
+      // Don't clear credentials on network error - let user retry
       return false;
     } finally {
       setIsValidating(false);
