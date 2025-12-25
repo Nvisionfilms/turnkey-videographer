@@ -1652,11 +1652,6 @@ export default function Calculator() {
       printWindow.document.write(enhancedExport.generateHTML('quote'));
       printWindow.document.close();
       
-      toast({
-        title: "Quote Generated!",
-        description: isUnlocked ? "Professional quote ready to print or save as PDF" : "Free quote generated! Upgrade for unlimited quotes.",
-      });
-      
       // Show post-export reflection modal after brief delay
       setTimeout(() => {
         const text = getReflectionCopy({
@@ -1669,66 +1664,60 @@ export default function Calculator() {
   };
 
   const handleExportInvoice = () => {
-    checkAccessAndProceed(() => {
-      if (!calculations) return;
-      
-      // Mark free quote as used IMMEDIATELY (before generating PDF)
-      if (!isUnlocked) {
-        markFreeQuoteUsed();
-      }
-      
-      saveToQuoteHistory(formData, calculations.total);
-      
-      // Record behavior for reflection layer
-      const finalPrice = formData.custom_price_override || calculations.total;
-      recordFinalizedQuote({ calculations, formData, finalPrice });
+    if (!isUnlocked) {
+      // Redirect to unlock page - no invoice for free users
+      navigate(createPageUrl("Unlock"));
+      return;
+    }
+    
+    if (!calculations) return;
+    
+    saveToQuoteHistory(formData, calculations.total);
+    
+    // Record behavior for reflection layer
+    const finalPrice = formData.custom_price_override || calculations.total;
+    recordFinalizedQuote({ calculations, formData, finalPrice });
 
-      recordExportedDecision({
-        formData,
-        calculations,
-        exportType: 'invoice',
-        finalPrice
-      });
-
-      let exportCalculations = calculations;
-      if (includeDeliverablesInExport) {
-        try {
-          const deliverableRaw = localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE);
-          const deliverablePayload = deliverableRaw ? JSON.parse(deliverableRaw) : null;
-
-          exportCalculations = buildHybridExportCalculations(exportCalculations, deliverablePayload);
-        } catch {
-          // ignore
-        }
-      }
-      
-      const enhancedExport = new EnhancedExportService(
-        formData,
-        exportCalculations,
-        dayRates,
-        gearCosts,
-        settings,
-        isUnlocked
-      );
-      
-      const printWindow = window.open('', '', 'width=900,height=700');
-      printWindow.document.write(enhancedExport.generateHTML('invoice'));
-      printWindow.document.close();
-      
-      toast({
-        title: "Invoice Generated!",
-        description: isUnlocked ? "Professional invoice ready to print or save as PDF" : "Free invoice generated! Upgrade for unlimited invoices.",
-      });
-      
-      // Show post-export reflection modal after brief delay
-      setTimeout(() => {
-        const text = getReflectionCopy({
-          finalPrice,
-          minimumPrice: calculations.negotiationLow
-        });
-        setReflectionText(text);
-      }, 400);
+    recordExportedDecision({
+      formData,
+      calculations,
+      exportType: 'invoice',
+      finalPrice
     });
+
+    let exportCalculations = calculations;
+    if (includeDeliverablesInExport) {
+      try {
+        const deliverableRaw = localStorage.getItem(STORAGE_KEYS.DELIVERABLE_ESTIMATE);
+        const deliverablePayload = deliverableRaw ? JSON.parse(deliverableRaw) : null;
+
+        exportCalculations = buildHybridExportCalculations(exportCalculations, deliverablePayload);
+      } catch {
+        // ignore
+      }
+    }
+    
+    const enhancedExport = new EnhancedExportService(
+      formData,
+      exportCalculations,
+      dayRates,
+      gearCosts,
+      settings,
+      isUnlocked
+    );
+    
+    const printWindow = window.open('', '', 'width=900,height=700');
+    printWindow.document.write(enhancedExport.generateHTML('invoice'));
+    printWindow.document.close();
+    
+    // Show post-export reflection modal after brief delay
+    setTimeout(() => {
+      const text = getReflectionCopy({
+        finalPrice,
+        minimumPrice: calculations.negotiationLow
+      });
+      setReflectionText(text);
+    }, 400);
   };
 
   // Show loading screen while initializing
