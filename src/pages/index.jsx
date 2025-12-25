@@ -40,8 +40,8 @@ import AmIReady from "./AmIReady";
 
 import DeleteAccount from "./DeleteAccount";
 
-import { BrowserRouter as Router, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
-import { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, useLocation, useSearchParams, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { setReferralCookie, getReferralCookie } from '../utils/affiliateUtils';
 
 // Global ref code persistence - captures ?ref= and stores it for the entire session
@@ -106,6 +106,23 @@ function _getCurrentPage(url) {
     return pageName || Object.keys(PAGES)[0];
 }
 
+// Component to handle first-time visitor routing
+function HomeRoute() {
+    const [hasVisited, setHasVisited] = useState(() => {
+        return localStorage.getItem('nvision_has_visited') === 'true';
+    });
+
+    useEffect(() => {
+        if (!hasVisited) {
+            localStorage.setItem('nvision_has_visited', 'true');
+            setHasVisited(true);
+        }
+    }, [hasVisited]);
+
+    // First-time visitors see LandingPage, returning users see Calculator
+    return hasVisited ? <Calculator /> : <Navigate to="/LandingPage" replace />;
+}
+
 // Create a wrapper component that uses useLocation inside the Router context
 function PagesContent() {
     const location = useLocation();
@@ -117,7 +134,7 @@ function PagesContent() {
             <RefCodePersistence />
             <Routes>            
                 
-                    <Route path="/" element={<Calculator />} />
+                    <Route path="/" element={<HomeRoute />} />
                 
                 
                 <Route path="/LandingPage" element={<LandingPage />} />
