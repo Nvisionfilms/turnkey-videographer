@@ -1084,10 +1084,12 @@ export default function DeliverableCalculator() {
                         <Download className="w-4 h-4 mr-2" />
                         Generate Scope-Locked Quote
                       </Button>
-                      <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={handleExportInvoice}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Generate Scope-Locked Invoice
-                      </Button>
+                      {isUnlocked && (
+                        <Button className="w-full" variant="outline" disabled={selections.deliverables.length === 0} onClick={handleExportInvoice}>
+                          <Download className="w-4 h-4 mr-2" />
+                          Generate Scope-Locked Invoice
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
 

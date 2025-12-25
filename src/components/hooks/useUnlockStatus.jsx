@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { isSubscriptionActive, activateSubscriptionCode, getSubscriptionDetails } from '@/services/serialCodeService';
 import { apiCall, API_ENDPOINTS } from '../../config/api';
+import { getDeviceId } from '@/utils/deviceFingerprint';
 
 const STORAGE_KEYS = {
   UNLOCKED: 'nvision_is_unlocked',
@@ -84,7 +85,7 @@ export function useUnlockStatus() {
     }
   }, []);
 
-  const checkStatus = () => {
+  const checkStatus = async () => {
     // STRICT: No localStorage checks - only server validation
     // All legacy localStorage access is cleared in validateWithServer
     const legacyUnlocked = false;
@@ -98,17 +99,36 @@ export function useUnlockStatus() {
     localStorage.removeItem(STORAGE_KEYS.TRIAL_START);
     localStorage.removeItem(STORAGE_KEYS.TRIAL_END);
     
-    // Check free quote usage (check both localStorage and sessionStorage)
-    const usedFreeLocal = localStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
-    const usedFreeSession = sessionStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
-    const usedFree = usedFreeLocal || usedFreeSession;
-    
-    // If found in sessionStorage but not localStorage, sync it
-    if (usedFreeSession && !usedFreeLocal) {
-      localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
-      const sessionTimestamp = sessionStorage.getItem('nvision_free_quote_timestamp');
-      if (sessionTimestamp) {
-        localStorage.setItem('nvision_free_quote_timestamp', sessionTimestamp);
+    // Check free quote usage with device fingerprinting
+    let usedFree = false;
+    try {
+      const deviceId = await getDeviceId();
+      
+      // Check server for device/IP usage
+      const response = await apiCall('/api/free-quote/check', {
+        method: 'POST',
+        body: JSON.stringify({ deviceId })
+      });
+      
+      if (response.hasUsedFree) {
+        usedFree = true;
+        // Sync to localStorage for offline checks
+        localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+      }
+    } catch (error) {
+      // Fallback to localStorage if server check fails
+      console.warn('Server check failed, using localStorage fallback');
+      const usedFreeLocal = localStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
+      const usedFreeSession = sessionStorage.getItem(STORAGE_KEYS.USED_FREE) === 'true';
+      usedFree = usedFreeLocal || usedFreeSession;
+      
+      // If found in sessionStorage but not localStorage, sync it
+      if (usedFreeSession && !usedFreeLocal) {
+        localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+        const sessionTimestamp = sessionStorage.getItem('nvision_free_quote_timestamp');
+        if (sessionTimestamp) {
+          localStorage.setItem('nvision_free_quote_timestamp', sessionTimestamp);
+        }
       }
     }
     
@@ -148,6 +168,9 @@ export function useUnlockStatus() {
         localStorage.removeItem(STORAGE_KEYS.DIRECT_UNLOCK);
         setIsUnlocked(false);
       }
+      
+      // CRITICAL: Check free quote status on mount (even in incognito)
+      await checkStatus();
     };
     
     validateOnMount();
@@ -170,20 +193,51 @@ export function useUnlockStatus() {
     };
   }, [validateWithServer]);
 
-  const markFreeQuoteUsed = () => {
+  const markFreeQuoteUsed = async () => {
     const timestamp = Date.now().toString();
-    localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
-    localStorage.setItem('nvision_free_quote_timestamp', timestamp);
     
-    // Also try to persist in sessionStorage as backup
     try {
-      sessionStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
-      sessionStorage.setItem('nvision_free_quote_timestamp', timestamp);
-    } catch (e) {
-      console.warn('SessionStorage not available');
+      // Get device fingerprint
+      const deviceId = await getDeviceId();
+      
+      // Record usage on server with device ID and IP
+      await apiCall('/api/free-quote/mark-used', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          deviceId,
+          timestamp 
+        })
+      });
+      
+      // Also persist locally
+      localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+      localStorage.setItem('nvision_free_quote_timestamp', timestamp);
+      
+      // Also try to persist in sessionStorage as backup
+      try {
+        sessionStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+        sessionStorage.setItem('nvision_free_quote_timestamp', timestamp);
+      } catch (e) {
+        console.warn('SessionStorage not available');
+      }
+      
+      setHasUsedFreeQuote(true);
+    } catch (error) {
+      console.error('Failed to mark free quote as used on server:', error);
+      
+      // Fallback to local storage only
+      localStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+      localStorage.setItem('nvision_free_quote_timestamp', timestamp);
+      
+      try {
+        sessionStorage.setItem(STORAGE_KEYS.USED_FREE, 'true');
+        sessionStorage.setItem('nvision_free_quote_timestamp', timestamp);
+      } catch (e) {
+        console.warn('SessionStorage not available');
+      }
+      
+      setHasUsedFreeQuote(true);
     }
-    
-    setHasUsedFreeQuote(true);
   };
 
   const hasUsedTrialBefore = () => {

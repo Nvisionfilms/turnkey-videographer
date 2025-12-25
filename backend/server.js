@@ -565,6 +565,83 @@ app.get('/api/conversions/affiliate/:code', async (req, res) => {
   }
 });
 
+// ==================== FREE QUOTE TRACKING ROUTES ====================
+
+// Check if device/IP has used free quote
+app.post('/api/free-quote/check', async (req, res) => {
+  try {
+    const { deviceId } = req.body;
+    const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
+    
+    if (!deviceId) {
+      return res.status(400).json({ error: 'Device ID is required' });
+    }
+    
+    // Check if device or IP has used free quote
+    const result = await pool.query(
+      `SELECT id FROM free_quote_usage 
+       WHERE device_id = $1 OR ip_address = $2
+       LIMIT 1`,
+      [deviceId, ipAddress]
+    );
+    
+    res.json({ 
+      hasUsedFree: result.rows.length > 0,
+      deviceId,
+      ipAddress: ipAddress?.split(',')[0]?.trim() // Return first IP if multiple
+    });
+  } catch (error) {
+    console.error('Free quote check error:', error);
+    res.status(500).json({ error: 'Failed to check free quote status' });
+  }
+});
+
+// Mark device/IP as having used free quote
+app.post('/api/free-quote/mark-used', async (req, res) => {
+  try {
+    const { deviceId, timestamp } = req.body;
+    const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    
+    if (!deviceId) {
+      return res.status(400).json({ error: 'Device ID is required' });
+    }
+    
+    // Check if already exists
+    const existing = await pool.query(
+      `SELECT id FROM free_quote_usage 
+       WHERE device_id = $1 OR ip_address = $2
+       LIMIT 1`,
+      [deviceId, ipAddress]
+    );
+    
+    if (existing.rows.length > 0) {
+      return res.json({ 
+        success: true, 
+        message: 'Already marked as used',
+        alreadyExists: true 
+      });
+    }
+    
+    // Insert new record
+    await pool.query(
+      `INSERT INTO free_quote_usage (device_id, ip_address, user_agent, used_at)
+       VALUES ($1, $2, $3, $4)`,
+      [deviceId, ipAddress, userAgent, new Date(parseInt(timestamp))]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Free quote marked as used',
+      deviceId,
+      ipAddress: ipAddress?.split(',')[0]?.trim()
+    });
+  } catch (error) {
+    console.error('Mark free quote used error:', error);
+    res.status(500).json({ error: 'Failed to mark free quote as used' });
+  }
+});
+
 // ==================== UNLOCK CODE ROUTES ====================
 
 // Verify unlock (email + code) for multi-device use
