@@ -1977,46 +1977,60 @@ export default function Calculator() {
                   Clear Saved
                 </Button>
               )}
-              <Button
-                onClick={handleCopyEmail}
-                variant="outline"
-                size="sm"
-                disabled={!calculations}
-                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Copy Text
-              </Button>
-              <Button
-                onClick={handleExportQuote}
-                variant="outline"
-                size="sm"
-                disabled={!calculations}
-                style={{ background: 'var(--color-accent-primary)', color: '#000', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export Quote
-              </Button>
-              <Button
-                onClick={handleExportInvoice}
-                variant="outline"
-                size="sm"
-                disabled={!calculations}
-                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export Invoice
-              </Button>
-              <Button
-                onClick={handlePrint}
-                variant="outline"
-                size="sm"
-                disabled={!calculations}
-                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Old Quote
-              </Button>
+              {isUnlocked ? (
+                <>
+                  <Button
+                    onClick={handleCopyEmail}
+                    variant="outline"
+                    size="sm"
+                    disabled={!calculations}
+                    style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Copy Text
+                  </Button>
+                  <Button
+                    onClick={handleExportQuote}
+                    variant="outline"
+                    size="sm"
+                    disabled={!calculations}
+                    style={{ background: 'var(--color-accent-primary)', color: '#000', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Quote
+                  </Button>
+                  <Button
+                    onClick={handleExportInvoice}
+                    variant="outline"
+                    size="sm"
+                    disabled={!calculations}
+                    style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-accent-primary)', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Invoice
+                  </Button>
+                  <Button
+                    onClick={handlePrint}
+                    variant="outline"
+                    size="sm"
+                    disabled={!calculations}
+                    style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border-light)' }}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Old Quote
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => navigate(createPageUrl("Unlock"))}
+                  variant="outline"
+                  size="sm"
+                  style={{ background: 'var(--color-accent-primary)', color: '#000', borderColor: 'var(--color-accent-primary)', fontWeight: '600' }}
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Unlock to Export
+                </Button>
+              )}
               <QuoteHistory 
                 onLoadQuote={(savedFormData) => {
                   setFormData({
