@@ -39,7 +39,7 @@ export class EnhancedExportService {
     return `${this._formatDate(sortedDates[0])} - ${this._formatDate(sortedDates[sortedDates.length - 1])} (${sortedDates.length} days)`;
   }
 
-  // Generate Ledger-style HTML (Invoice only - no quotes)
+  // Generate Ledger-style HTML (Quote or Invoice - same design, different state)
   generateHTML(documentType = 'invoice') {
     const shootDatesText = this.formatShootDates();
     const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -121,12 +121,12 @@ export class EnhancedExportService {
         <div class="invoice-header">
           <div class="header-left">
             <div class="ledger-title">TurnKey Pricing Ledger</div>
-            <div class="ledger-subtitle">Invoice Record</div>
+            <div class="ledger-subtitle">${documentType === 'invoice' ? 'Invoice Record' : 'Quote Record'}</div>
           </div>
           <div class="header-right">
-            <div class="meta-row"><span class="meta-label">Invoice ID:</span> <span class="meta-value">${docNumber}</span></div>
-            <div class="meta-row"><span class="meta-label">Decision Date:</span> <span class="meta-value">${currentDate}</span></div>
-            <div class="meta-row"><span class="meta-label">Status:</span> <span class="meta-value">Final</span></div>
+            <div class="meta-row"><span class="meta-label">${documentType === 'invoice' ? 'Invoice ID:' : 'Quote ID:'}</span> <span class="meta-value">${docNumber}</span></div>
+            <div class="meta-row"><span class="meta-label">${documentType === 'invoice' ? 'Decision Date:' : 'Draft Date:'}</span> <span class="meta-value">${currentDate}</span></div>
+            <div class="meta-row"><span class="meta-label">Status:</span> <span class="meta-value">${documentType === 'invoice' ? 'Final' : 'Unfinalized'}</span></div>
           </div>
         </div>
 
@@ -187,8 +187,9 @@ export class EnhancedExportService {
         </div>
 
         <div class="ledger-footnote">
-          This invoice reflects recorded pricing decisions at the time they were made.<br>
-          It does not interpret outcomes or adjust for negotiation.
+          ${documentType === 'invoice' 
+            ? 'This invoice reflects recorded pricing decisions at the time they were made.<br>It does not interpret outcomes or adjust for negotiation.'
+            : 'This quote reflects recorded pricing decisions at the time they were drafted.<br>It may change prior to finalization.'}
         </div>
 
         ${showPaymentSchedule && this.settings?.deposit_enabled !== false && this.calc.depositDue > 0 ? `
